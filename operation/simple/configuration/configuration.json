@@ -1,0 +1,48 @@
+{
+    "robot": {
+        "wheel": {
+            "radius": 0.03
+        },
+        "velocity": {
+            "maximum": 30
+        }
+    },
+    "team": {
+        "blue": {
+            "number-robots": 1
+        },
+        "yellow": {
+            "number-robots": 1
+        }
+    },
+    "motion": {
+        "pid": {
+            "contants": {
+                "Kp": 20,
+                "Ki": 0,
+                "Kd": 2.5
+            }
+        }
+    },
+    "FIRASim": {
+        "yellow-team": true,
+        "control": {
+            "ip": "127.0.0.1",
+            "port": 20011
+        },
+        "vision": {
+            "ip": "224.0.0.1",
+            "port": 10002
+        }
+    },
+    "field": {
+        "length": 2.2,
+        "width": 1.8,
+        "goal": {
+            "width": 0.4
+        },
+        "ball": {
+            "radius": 0.0215
+        }
+    }
+}
