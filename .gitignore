@@ -1,0 +1,12 @@
+# Arquivos e diretórios gerados pelo Python
+__pycache__/
+*.py[cod]
+
+# Arquivos gerados pelo protobuf
+*.pb.py
+*.pb2.py
+*_pb2.py
+
+# Ambiente virtual do Python (opcional, se você estiver usando um)
+venv/
+env/
