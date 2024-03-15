@@ -1,5 +1,7 @@
 import logging
 
+from ..helpers.firasim_helper import FIRASimHelper
+
 from .receiver import Receiver
 from .protocols import packet_pb2
 from ..core.data import FieldData, EntityData
@@ -59,14 +61,15 @@ class ProtoVision(Receiver):
 
 
     def _entity_from_dict(self, entity_data: EntityData, data_dict, rotate_field=False):
+        # TODO: verificar normalizações
         multiplier = 1 if rotate_field is False else -1
         sum_to_angle = 0 if rotate_field is False else np.pi
 
-        entity_data.position.x = data_dict.get('x', 0) * multiplier
-        entity_data.position.y = data_dict.get('y', 0) * multiplier
+        entity_data.position.x = FIRASimHelper.normalizePosition(data_dict.get('x', 0) * multiplier)
+        entity_data.position.y = FIRASimHelper.normalizePosition(data_dict.get('y', 0) * multiplier)
 
         # The ball dict does not contain 'orientation' so it will always be 0
-        entity_data.position.theta = self._assert_angle(data_dict.get('orientation', 0) + sum_to_angle)
+        entity_data.position.theta = FIRASimHelper.normalizeAngle(self._assert_angle(data_dict.get('orientation', 0) + sum_to_angle))
 
         entity_data.velocity.x = data_dict.get('vx', 0) * multiplier
         entity_data.velocity.y = data_dict.get('vy', 0) * multiplier
