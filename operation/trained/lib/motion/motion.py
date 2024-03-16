@@ -7,12 +7,13 @@ import math
 
 class Motion:
     @staticmethod
-    def pid(robot: EntityData, 
+    def goToPoint(robot: EntityData, 
             targetPosition: tuple[float, float],
             lastError: float = 0):
         configuration = ConfigurationHelper.getConfiguration()
 
         position = robot.position
+        
         positionX = position.x
         positionY = position.y
         robotAngle = position.theta
@@ -37,14 +38,14 @@ class Motion:
 
         baseSpeed = configuration["robot"]["speed"]["base"]
 
-        motorSpeed = RobotHelper.truncateMotorSpeed(motorSpeed)
+        motorSpeed = RobotHelper.truncateMotorSpeed(motorSpeed, baseSpeed)
 
-        leftMotorSpeed, rightMotorSpeed = Motion.getSpeeds(motorSpeed, baseSpeed, reversed)
+        leftMotorSpeed, rightMotorSpeed = Motion._getSpeeds(motorSpeed, baseSpeed, reversed)
 
         return leftMotorSpeed, rightMotorSpeed, error
     
     @staticmethod
-    def getSpeeds(motorSpeed: float, baseSpeed: float, reversed: bool):
+    def _getSpeeds(motorSpeed: float, baseSpeed: float, reversed: bool):
         if reversed:
             if motorSpeed > 0:
                 leftMotorSpeed = -baseSpeed + motorSpeed
