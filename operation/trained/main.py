@@ -6,8 +6,8 @@ from lib.geometry.geometry import Geometry
 
 from lib.helpers.configuration_helper import ConfigurationHelper
 from lib.motion.motion import Motion
-from lib.helpers.firasim_helper import FIRASimHelper
 from lib.helpers.field_helper import FieldHelper
+from lib.helpers.firasim_helper import FIRASimHelper
 
 def main():
     configuration = ConfigurationHelper.getConfiguration()
@@ -30,7 +30,7 @@ def main():
         control_ip=controlIp, 
         control_port=controlPort)
     
-    targetPosition = FIRASimHelper.normalizePosition(-0.5, -0.5, isLeftTeam)
+    targetPosition = (-0.5, 0.5)
     robot = fieldData.robots[0]
     position = robot.position
     error = 0
@@ -39,10 +39,10 @@ def main():
     
     while not Geometry.isClose(
         (position.x, position.y),
-        targetPosition,
+        FIRASimHelper.normalizePosition(targetPosition[0], targetPosition[1], isLeftTeam),
         0.1):
-        
-        velocities = Motion.goToPoint(robot, targetPosition, error)
+
+        velocities = Motion.goToPoint(robot, targetPosition, isLeftTeam, error)
 
         (leftSpeed, rightSpeed, error) = velocities
 

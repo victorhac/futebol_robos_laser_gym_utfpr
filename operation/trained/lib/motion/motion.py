@@ -2,6 +2,7 @@ from ..core.data import EntityData
 from ..geometry.geometry import Geometry
 from ..helpers.configuration_helper import ConfigurationHelper
 from ..helpers.robot_helper import RobotHelper
+from ..helpers.firasim_helper import FIRASimHelper
 
 import math
 
@@ -9,16 +10,17 @@ class Motion:
     @staticmethod
     def goToPoint(robot: EntityData, 
             targetPosition: tuple[float, float],
+            isLeftTeam: bool,
             lastError: float = 0):
         configuration = ConfigurationHelper.getConfiguration()
 
         position = robot.position
-        
+
         positionX = position.x
         positionY = position.y
         robotAngle = position.theta
 
-        xTarget, yTarget = targetPosition
+        xTarget, yTarget = FIRASimHelper.normalizePosition(targetPosition[0], targetPosition[1], isLeftTeam)
 
         angleToTarget = math.atan2(yTarget - positionY, xTarget - positionX)
 
