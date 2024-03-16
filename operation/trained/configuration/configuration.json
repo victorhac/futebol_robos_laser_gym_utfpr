@@ -3,11 +3,13 @@
         "wheel": {
             "radius": 0.03
         },
-        "velocity": {
-            "maximum": 30
+        "speed": {
+            "base": 30
         }
     },
     "team": {
+        "is-yellow-left-team": true,
+        "is-yellow-team": false,
         "blue": {
             "number-robots": 1
         },
@@ -17,7 +19,7 @@
     },
     "motion": {
         "pid": {
-            "contants": {
+            "constants": {
                 "Kp": 20,
                 "Ki": 0,
                 "Kd": 2.5
@@ -25,7 +27,6 @@
         }
     },
     "FIRASim": {
-        "yellow-team": true,
         "control": {
             "ip": "127.0.0.1",
             "port": 20011
