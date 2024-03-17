@@ -22,7 +22,6 @@ class ProtoVision(Receiver):
         self.field_data = field_data
         self.configuration = ConfigurationHelper.getConfiguration()
 
-
     def receive(self):
         data = super().receive()
         return data
@@ -63,11 +62,8 @@ class ProtoVision(Receiver):
             self._field_data_from_dict(self.field_data, vision_data_dict)
 
 
-    def _entity_from_dict(self, entity_data: EntityData, data_dict, rotate_field=False):
-        sum_to_angle = 0 if rotate_field is False else np.pi
-
-        isYellowLeftTeam = self.configuration['team']['is-yellow-left-team']
-        isLeftTeam = FieldHelper.isLeftTeam(self.team_color_yellow, isYellowLeftTeam)
+    def _entity_from_dict(self, entity_data: EntityData, data_dict, isLeftTeam=False):
+        sum_to_angle = 0 if not isLeftTeam else np.pi
 
         entity_data.position.x, entity_data.position.y = \
             FIRASimHelper.normalizePosition(
@@ -91,17 +87,20 @@ class ProtoVision(Receiver):
 
 
     def _field_data_from_dict(self, field_data: FieldData, raw_data_dict):
+        isYellowLeftTeam = self.configuration['team']['is-yellow-left-team']
+        isLeftTeam = FieldHelper.isLeftTeam(self.team_color_yellow, isYellowLeftTeam)
+
+        rotate_field = isLeftTeam
+        
         if self.team_color_yellow == True:
             team_list_of_dicts = raw_data_dict.get('robotsYellow')
             foes_list_of_dicts = raw_data_dict.get('robotsBlue')
-            rotate_field = True
         else:
             team_list_of_dicts = raw_data_dict.get('robotsBlue')
             foes_list_of_dicts = raw_data_dict.get('robotsYellow')
-            rotate_field = False
 
         if 'ball' in raw_data_dict:
-            self._entity_from_dict(field_data.ball, raw_data_dict['ball'], rotate_field)
+            self._entity_from_dict(field_data.ball, raw_data_dict['ball'], True)
 
         for i in range(len(team_list_of_dicts)):
             self._entity_from_dict(field_data.robots[i], team_list_of_dicts[i], rotate_field)
