@@ -27,7 +27,7 @@ class Receiver(ABC):
         Receive packet.
         """
 
-        data, _ = self.receiver_socket.recvfrom(1024)
+        data = self.receiver_socket.recv(1024)
 
         return data
 

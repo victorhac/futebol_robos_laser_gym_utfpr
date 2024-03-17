@@ -1,5 +1,9 @@
 import logging
 
+from ..helpers.field_helper import FieldHelper
+from ..helpers.configuration_helper import ConfigurationHelper
+from ..helpers.firasim_helper import FIRASimHelper
+
 from .receiver import Receiver
 from .protocols import packet_pb2
 from ..core.data import FieldData, EntityData
@@ -16,7 +20,7 @@ class ProtoVision(Receiver):
 
         self.team_color_yellow = team_color_yellow
         self.field_data = field_data
-
+        self.configuration = ConfigurationHelper.getConfiguration()
 
     def receive(self):
         data = super().receive()
@@ -58,35 +62,45 @@ class ProtoVision(Receiver):
             self._field_data_from_dict(self.field_data, vision_data_dict)
 
 
-    def _entity_from_dict(self, entity_data: EntityData, data_dict, rotate_field=False):
-        multiplier = 1 if rotate_field is False else -1
-        sum_to_angle = 0 if rotate_field is False else np.pi
+    def _entity_from_dict(self, entity_data: EntityData, data_dict, isLeftTeam=False):
+        sum_to_angle = 0 if not isLeftTeam else np.pi
 
-        entity_data.position.x = data_dict.get('x', 0) * multiplier
-        entity_data.position.y = data_dict.get('y', 0) * multiplier
+        entity_data.position.x, entity_data.position.y = \
+            FIRASimHelper.normalizePosition(
+                data_dict.get('x', 0), 
+                data_dict.get('y', 0),
+                isLeftTeam)
 
         # The ball dict does not contain 'orientation' so it will always be 0
-        entity_data.position.theta = self._assert_angle(data_dict.get('orientation', 0) + sum_to_angle)
+        entity_data.position.theta = \
+            FIRASimHelper.normalizeAngle(
+                self._assert_angle(data_dict.get('orientation', 0) + sum_to_angle))
 
-        entity_data.velocity.x = data_dict.get('vx', 0) * multiplier
-        entity_data.velocity.y = data_dict.get('vy', 0) * multiplier
+        entity_data.velocity.x, entity_data.velocity.y = \
+            FIRASimHelper.normalizeSpeed(
+                data_dict.get('vx', 0),
+                data_dict.get('vy', 0),
+                isLeftTeam)
 
         # The ball dict does not contain 'vorientation' so it will always be 0
         entity_data.velocity.theta = data_dict.get('vorientation', 0)
 
 
     def _field_data_from_dict(self, field_data: FieldData, raw_data_dict):
+        isYellowLeftTeam = self.configuration['team']['is-yellow-left-team']
+        isLeftTeam = FieldHelper.isLeftTeam(self.team_color_yellow, isYellowLeftTeam)
+
+        rotate_field = isLeftTeam
+        
         if self.team_color_yellow == True:
             team_list_of_dicts = raw_data_dict.get('robotsYellow')
             foes_list_of_dicts = raw_data_dict.get('robotsBlue')
-            rotate_field = True
         else:
             team_list_of_dicts = raw_data_dict.get('robotsBlue')
             foes_list_of_dicts = raw_data_dict.get('robotsYellow')
-            rotate_field = False
 
         if 'ball' in raw_data_dict:
-            self._entity_from_dict(field_data.ball, raw_data_dict['ball'], rotate_field)
+            self._entity_from_dict(field_data.ball, raw_data_dict['ball'], True)
 
         for i in range(len(team_list_of_dicts)):
             self._entity_from_dict(field_data.robots[i], team_list_of_dicts[i], rotate_field)

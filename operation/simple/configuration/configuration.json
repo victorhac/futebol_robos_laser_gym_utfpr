@@ -3,11 +3,13 @@
         "wheel": {
             "radius": 0.03
         },
-        "velocity": {
-            "maximum": 30
+        "speed": {
+            "base": 30
         }
     },
     "team": {
+        "is-yellow-left-team": true,
+        "is-yellow-team": true,
         "blue": {
             "number-robots": 1
         },
@@ -17,15 +19,14 @@
     },
     "motion": {
         "pid": {
-            "contants": {
+            "constants": {
                 "Kp": 20,
                 "Ki": 0,
-                "Kd": 2.5
+                "Kd": 0.1
             }
         }
     },
     "FIRASim": {
-        "yellow-team": true,
         "control": {
             "ip": "127.0.0.1",
             "port": 20011
@@ -36,13 +37,16 @@
         }
     },
     "field": {
-        "length": 2.2,
-        "width": 1.8,
+        "length": 1.5,
+        "width": 1.3,
         "goal": {
             "width": 0.4
         },
         "ball": {
             "radius": 0.0215
         }
+    },
+    "execucao": {
+        "step-time": 1
     }
 }
