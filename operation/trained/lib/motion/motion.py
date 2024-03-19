@@ -1,4 +1,4 @@
-from ..core.data import EntityData
+from ..domain.robot import Robot
 from ..geometry.geometry import Geometry
 from ..helpers.configuration_helper import ConfigurationHelper
 from ..helpers.robot_helper import RobotHelper
@@ -8,10 +8,11 @@ import math
 
 class Motion:
     @staticmethod
-    def goToPoint(robot: EntityData, 
-            targetPosition: tuple[float, float],
-            isLeftTeam: bool,
-            lastError: float = 0):
+    def goToPoint(
+        robot: Robot, 
+        targetPosition: tuple[float, float],
+        lastError: float = 0
+    ):
         configuration = ConfigurationHelper.getConfiguration()
 
         position = robot.position
@@ -20,7 +21,7 @@ class Motion:
         positionY = position.y
         robotAngle = position.theta
 
-        xTarget, yTarget = FIRASimHelper.normalizePosition(targetPosition[0], targetPosition[1], isLeftTeam)
+        xTarget, yTarget = (targetPosition[0], targetPosition[1])
 
         angleToTarget = math.atan2(yTarget - positionY, xTarget - positionX)
 

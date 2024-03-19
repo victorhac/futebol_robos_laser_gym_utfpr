@@ -1,10 +1,5 @@
-import logging
-from typing import List
-
 from .transmitter import Transmitter
 from .protocols import vssref_placement_pb2
-from ..core.data import EntityData
-
 
 class ReplacerComm(Transmitter):
     def __init__(self, team_color_yellow: bool, replacer_ip='224.5.23.2', replacer_port=10004):
