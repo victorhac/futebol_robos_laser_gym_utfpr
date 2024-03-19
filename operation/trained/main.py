@@ -1,6 +1,7 @@
 import time
+import math
+
 from lib.comm.vision import ProtoVision
-from lib.core.data import FieldData
 from lib.comm.control import ProtoControl
 from lib.geometry.geometry import Geometry
 
@@ -9,46 +10,184 @@ from lib.motion.motion import Motion
 from lib.helpers.field_helper import FieldHelper
 from lib.helpers.firasim_helper import FIRASimHelper
 
+from lib.domain.field_data import FieldData
+from lib.domain.robot import Robot
+from lib.domain.rectangle import Rectangle
+from lib.helpers.robot_helper import RobotHelper
+
+CONFIGURATION = ConfigurationHelper.getConfiguration()
+
+IS_YELLOW_TEAM = CONFIGURATION["team"]["is-yellow-team"]
+IS_YELLOW_LEFT_TEAM = CONFIGURATION["team"]["is-yellow-left-team"]
+
+IS_LEFT_TEAM = FieldHelper.isLeftTeam(IS_YELLOW_TEAM, IS_YELLOW_LEFT_TEAM)
+
+ROBOT_LENGTH = CONFIGURATION["robot"]["length"]
+ROBOT_WIDTH = CONFIGURATION["robot"]["width"]
+
+FIELD_WIDTH = CONFIGURATION["field"]["width"]
+FIELD_LENGTH = CONFIGURATION["field"]["length"]
+
+FIRASIM_CONTROL_IP = CONFIGURATION["FIRASim"]["control"]["ip"]
+FIRASIM_CONTROL_PORT = CONFIGURATION["FIRASim"]["control"]["port"]
+FIRASIM_VISION_IP = CONFIGURATION["FIRASim"]["vision"]["ip"]
+FIRASIM_VISION_PORT = CONFIGURATION["FIRASim"]["vision"]["port"]
+
+def findObstacles(
+    robotId: int,
+    fieldData: FieldData,
+    opponentFieldData: FieldData,
+    targetPosition: tuple[float, float]
+) -> list[Robot] | None:
+    robot = fieldData.robots[robotId]
+    obstacles = []
+
+    center = Geometry.getMidpoint((robot.position.x, robot.position.y), targetPosition)
+    width = Geometry.distance((robot.position.x, robot.position.y), targetPosition)
+    height = ROBOT_LENGTH
+    angle = math.atan2(targetPosition[1] - robot.position.y, targetPosition[0] - robot.position.x)
+
+    rectangle = Rectangle(center, width, height, angle)
+
+    for i in range(len(opponentFieldData.robots)):
+        otherRobot = opponentFieldData.robots[i]
+
+        otherRobotRectangle = RobotHelper.getRectangle(otherRobot, ROBOT_WIDTH, ROBOT_LENGTH)
+
+        if Geometry.hasIntersection(rectangle, otherRobotRectangle):
+            obstacles.append(otherRobot)
+
+    for i in range(len(fieldData.robots)):
+        if i == robotId:
+            continue
+        
+        otherRobot = fieldData.robots[i]
+
+        otherRobotRectangle = RobotHelper.getRectangle(otherRobot, ROBOT_WIDTH, ROBOT_LENGTH)
+
+        if Geometry.hasIntersection(rectangle, otherRobotRectangle):
+            obstacles.append(otherRobot)
+
+    return obstacles
+
+def findClosestObstacle(
+    robotId: int,
+    fieldData: FieldData,
+    oponnentFieldData: FieldData,
+    targetPosition: tuple[float, float]
+) -> Robot | None:
+    obstacles = findObstacles(robotId, fieldData, oponnentFieldData, targetPosition)
+
+    if len(obstacles) == 0:
+        return None
+
+    robot = fieldData.robots[robotId]
+    closestObstacle = obstacles[0]
+
+    minDistance = Geometry.distance(
+        (robot.position.x, robot.position.y),
+        (closestObstacle.position.x, closestObstacle.position.y))
+
+    for obstacle in obstacles:
+        distance = Geometry.distance(
+            (robot.position.x, robot.position.y),
+            (obstacle.position.x, obstacle.position.y))
+
+        if distance < minDistance:
+            closestObstacle = obstacle
+            minDistance = distance
+
+    return closestObstacle
+
+def findTangentPointObstacle(
+    robotId: int,
+    fieldData: FieldData,
+    opponentFieldData: FieldData,
+    targetPosition: tuple[float, float]
+):
+    obstacleRobot = findClosestObstacle(
+        robotId,
+        fieldData,
+        opponentFieldData,
+        targetPosition)
+
+    if obstacleRobot is None:
+        return None
+
+    robot = fieldData.robots[robotId]
+    center = (obstacleRobot.position.x, obstacleRobot.position.y)
+    point = (robot.position.x, robot.position.y)
+
+    distance = Geometry.distance(center, point)
+
+    circleRadius = 0.2
+
+    if not distance > circleRadius:
+        circleRadius = distance - 0.01
+
+    tangentPoints = Geometry.getTangentPoints(center, circleRadius, point)
+
+    if tangentPoints is None:
+        return None
+    
+    # TODO: verificar quais pontos são válidos e qual é o melhor
+    
+    return tangentPoints[0]
+
+def getProtoVision(isYellowTeam: bool, fieldData: FieldData):
+    return ProtoVision(
+        team_color_yellow=isYellowTeam,
+        field_data=fieldData,
+        vision_ip=FIRASIM_VISION_IP,
+        vision_port=FIRASIM_VISION_PORT)
+
+def getProtoControl():
+    return ProtoControl(
+        team_color_yellow=IS_YELLOW_TEAM, 
+        control_ip=FIRASIM_CONTROL_IP, 
+        control_port=FIRASIM_CONTROL_PORT)
+
+def updateVisions(vision: ProtoVision, oppositeTeamVision: ProtoVision):
+    vision.update()
+    oppositeTeamVision.update()
+
 def main():
-    configuration = ConfigurationHelper.getConfiguration()
-
     fieldData = FieldData()
+    opponentFieldData = FieldData()
 
-    isYellowTeam = configuration["team"]["is-yellow-team"]
-    isYellowLeftTeam = configuration["team"]["is-yellow-left-team"]
-    controlIp = configuration["FIRASim"]["control"]["ip"]
-    controlPort = configuration["FIRASim"]["control"]["port"]
-
-    isLeftTeam = FieldHelper.isLeftTeam(isYellowTeam, isYellowLeftTeam)
-
-    vision = ProtoVision(
-        team_color_yellow=isYellowTeam, 
-        field_data=fieldData)
+    vision = getProtoVision(IS_YELLOW_TEAM, fieldData)
+    opponentVision = getProtoVision(not IS_YELLOW_TEAM, opponentFieldData)
     
-    teamControl = ProtoControl(
-        team_color_yellow=isYellowTeam, 
-        control_ip=controlIp, 
-        control_port=controlPort)
+    teamControl = getProtoControl()
     
-    targetPosition = (-0.5, 0.5)
+    targetPosition = FIRASimHelper.normalizePosition(x=0.6, y=0.6, isLeftTeam=IS_LEFT_TEAM)
+
+    currentTargetPosition = targetPosition
     robot = fieldData.robots[0]
     position = robot.position
     error = 0
 
-    vision.update()
+    updateVisions(vision, opponentVision)
     
     while not Geometry.isClose(
         (position.x, position.y),
-        FIRASimHelper.normalizePosition(targetPosition[0], targetPosition[1], isLeftTeam),
+        (targetPosition[0], targetPosition[1]),
         0.1):
 
-        velocities = Motion.goToPoint(robot, targetPosition, isLeftTeam, error)
+        tangentPoint = findTangentPointObstacle(0, fieldData, opponentFieldData, targetPosition)
+
+        if tangentPoint is not None:
+            currentTargetPosition = tangentPoint
+
+        velocities = Motion.goToPoint(robot, currentTargetPosition, error)
 
         (leftSpeed, rightSpeed, error) = velocities
 
         teamControl.transmit_robot(0, leftSpeed, rightSpeed)
 
-        vision.update()
+        currentTargetPosition = targetPosition
+
+        updateVisions(vision, opponentVision)
 
     teamControl.transmit_robot(0, 0, 0)
 

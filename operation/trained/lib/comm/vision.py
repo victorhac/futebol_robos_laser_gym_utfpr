@@ -4,18 +4,26 @@ from ..helpers.field_helper import FieldHelper
 from ..helpers.configuration_helper import ConfigurationHelper
 from ..helpers.firasim_helper import FIRASimHelper
 
+from ..domain.field_data import FieldData
+from ..domain.robot import Robot
+from ..domain.ball import Ball
+
 from .receiver import Receiver
 from .protocols import packet_pb2
-from ..core.data import FieldData, EntityData
 from .thread_job import Job
 
 import json
 from google.protobuf.json_format import MessageToJson
 import numpy as np
 
-
 class ProtoVision(Receiver):
-    def __init__(self, team_color_yellow: bool, field_data: FieldData = None, vision_ip='224.0.0.1', vision_port=10002):
+    def __init__(
+        self,
+        team_color_yellow: bool,
+        field_data: FieldData = None,
+        vision_ip='224.0.0.1',
+        vision_port=10002
+    ):
         super(ProtoVision, self).__init__(vision_ip, vision_port)
 
         self.team_color_yellow = team_color_yellow
@@ -62,7 +70,7 @@ class ProtoVision(Receiver):
             self._field_data_from_dict(self.field_data, vision_data_dict)
 
 
-    def _entity_from_dict(self, entity_data: EntityData, data_dict, isLeftTeam=False):
+    def _entity_from_dict(self, entity_data: (Robot | Ball), data_dict, isLeftTeam: bool):
         sum_to_angle = 0 if not isLeftTeam else np.pi
 
         entity_data.position.x, entity_data.position.y = \
@@ -88,11 +96,13 @@ class ProtoVision(Receiver):
 
     def _field_data_from_dict(self, field_data: FieldData, raw_data_dict):
         isYellowLeftTeam = self.configuration['team']['is-yellow-left-team']
-        isLeftTeam = FieldHelper.isLeftTeam(self.team_color_yellow, isYellowLeftTeam)
+        isYellowTeam = self.configuration['team']['is-yellow-team']
+
+        isLeftTeam = FieldHelper.isLeftTeam(isYellowTeam, isYellowLeftTeam)
 
         rotate_field = isLeftTeam
         
-        if self.team_color_yellow == True:
+        if self.team_color_yellow:
             team_list_of_dicts = raw_data_dict.get('robotsYellow')
             foes_list_of_dicts = raw_data_dict.get('robotsBlue')
         else:
