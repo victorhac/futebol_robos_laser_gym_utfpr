@@ -28,6 +28,8 @@ ROBOT_WIDTH = CONFIGURATION["robot"]["width"]
 FIELD_WIDTH = CONFIGURATION["field"]["width"]
 FIELD_LENGTH = CONFIGURATION["field"]["length"]
 
+MOTION_COLLISION_AVOIDANCE_MIN_DISTANCE = CONFIGURATION["motion"]["collision-avoidance"]["min-distance"]
+
 FIRASIM_CONTROL_IP = CONFIGURATION["FIRASim"]["control"]["ip"]
 FIRASIM_CONTROL_PORT = CONFIGURATION["FIRASim"]["control"]["port"]
 FIRASIM_VISION_IP = CONFIGURATION["FIRASim"]["vision"]["ip"]
@@ -60,7 +62,7 @@ def findObstacles(
     for i in range(len(fieldData.robots)):
         if i == robotId:
             continue
-        
+
         otherRobot = fieldData.robots[i]
 
         otherRobotRectangle = RobotHelper.getRectangle(otherRobot, ROBOT_WIDTH, ROBOT_LENGTH)
@@ -120,7 +122,7 @@ def findTangentPointObstacle(
 
     distance = Geometry.distance(center, point)
 
-    circleRadius = 0.2
+    circleRadius = MOTION_COLLISION_AVOIDANCE_MIN_DISTANCE
 
     if not distance > circleRadius:
         circleRadius = distance - 0.01
@@ -129,10 +131,28 @@ def findTangentPointObstacle(
 
     if tangentPoints is None:
         return None
+
+    rectangleField = Rectangle((0,0), FIELD_WIDTH, FIELD_LENGTH, 0)
+
+    angleToTangent1 = math.atan2(tangentPoints[0][1] - robot.position.y, tangentPoints[0][0] - robot.position.x)
+    rectangleTangent1 = Rectangle(tangentPoints[0], ROBOT_LENGTH, ROBOT_WIDTH, angleToTangent1)
+
+    angleToTangent2 = math.atan2(tangentPoints[1][1] - robot.position.y, tangentPoints[1][0] - robot.position.x)
+    rectangleTangent2 = Rectangle(tangentPoints[1], ROBOT_LENGTH, ROBOT_WIDTH, angleToTangent2)
+
+    isTangent1InsideField = Geometry.contains(rectangleField, rectangleTangent1)
+    isTangent2InsideField = Geometry.contains(rectangleField, rectangleTangent2)
+
+    if isTangent1InsideField and isTangent2InsideField:
+        # TODO: verificar quais pontos são válidos e qual é o melhor pelo número de obstáculos 
+        # a partir de cada ponto ou pela distância até o objetivo
+        return tangentPoints[1]
+    elif isTangent1InsideField:
+        return tangentPoints[0]
+    elif isTangent2InsideField:
+        return tangentPoints[1]
     
-    # TODO: verificar quais pontos são válidos e qual é o melhor
-    
-    return tangentPoints[0]
+    return tangentPoints[1]
 
 def getProtoVision(isYellowTeam: bool, fieldData: FieldData):
     return ProtoVision(
@@ -164,15 +184,15 @@ def main():
 
     currentTargetPosition = targetPosition
     robot = fieldData.robots[0]
+    ball = fieldData.ball
     position = robot.position
     error = 0
 
     updateVisions(vision, opponentVision)
     
-    while not Geometry.isClose(
-        (position.x, position.y),
-        (targetPosition[0], targetPosition[1]),
-        0.1):
+    while True:
+
+        targetPosition = FIRASimHelper.normalizePosition(ball.position.x, ball.position.y, IS_LEFT_TEAM)
 
         tangentPoint = findTangentPointObstacle(0, fieldData, opponentFieldData, targetPosition)
 

@@ -128,29 +128,26 @@ class Geometry:
         rectangle1: Rectangle,
         rectangle2: Rectangle
     ):
-        """
-        Check if there is an intersection between two rotated rectangles.
+        rectangle1Vertices = Geometry.getRotatedRectangleVertices(rectangle1)
+        rectangle2Vertices = Geometry.getRotatedRectangleVertices(rectangle2)
 
-        Args:
-        - rect1_center: Center coordinates of the first rectangle (x, y).
-        - rect1_width: Width of the first rectangle.
-        - rect1_height: Height of the first rectangle.
-        - rect1_angle: Rotation angle of the first rectangle in degrees.
-        - rect2_center: Center coordinates of the second rectangle (x, y).
-        - rect2_width: Width of the second rectangle.
-        - rect2_height: Height of the second rectangle.
-        - rect2_angle: Rotation angle of the second rectangle in radians.
-
-        Returns:
-        - True if the rectangles intersect, False otherwise.
-        """
-        rect1_vertices = Geometry.getRotatedRectangleVertices(rectangle1)
-        rect2_vertices = Geometry.getRotatedRectangleVertices(rectangle2)
-
-        poly1 = Polygon(rect1_vertices)
-        poly2 = Polygon(rect2_vertices)
+        poly1 = Polygon(rectangle1Vertices)
+        poly2 = Polygon(rectangle2Vertices)
 
         return poly1.intersects(poly2)
+    
+    @staticmethod
+    def contains(
+        rectangle1: Rectangle,
+        rectangle2: Rectangle
+    ):
+        rectangle1Vertices = Geometry.getRotatedRectangleVertices(rectangle1)
+        rectangle2Vertices = Geometry.getRotatedRectangleVertices(rectangle2)
+
+        poly1 = Polygon(rectangle1Vertices)
+        poly2 = Polygon(rectangle2Vertices)
+
+        return poly1.contains(poly2)
     
     @staticmethod
     def getTangentPoints(center: tuple[float, float], radius: float, point: tuple[float, float]):

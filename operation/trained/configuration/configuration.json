@@ -11,7 +11,7 @@
     },
     "team": {
         "is-yellow-left-team": true,
-        "is-yellow-team": true,
+        "is-yellow-team": false,
         "blue": {
             "number-robots": 1
         },
@@ -26,6 +26,9 @@
                 "Ki": 0,
                 "Kd": 2.5
             }
+        },
+        "collision-avoidance": {
+            "min-distance": 0.2
         }
     },
     "FIRASim": {
