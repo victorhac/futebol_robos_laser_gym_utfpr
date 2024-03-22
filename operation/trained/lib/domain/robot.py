@@ -13,4 +13,4 @@ class Robot():
         return msg
 
     def __repr__(self):
-        return f'EntityData({self})'
+        return f'Robot({self})'

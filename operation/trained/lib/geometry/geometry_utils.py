@@ -3,7 +3,7 @@ from shapely.geometry import Polygon
 
 from ..domain.rectangle import Rectangle
 
-class Geometry:
+class GeometryUtils:
     @staticmethod
     def smallestAngleDiff(angle1: float, angle2: float):
         PI = math.pi
@@ -30,7 +30,7 @@ class Geometry:
     @staticmethod
     def normalizeInPI(radians: float):
         PI = math.pi
-        return Geometry.normalizeAngle(radians, 0, PI)
+        return GeometryUtils.normalizeAngle(radians, 0, PI)
 
     @staticmethod
     def distance(position1: tuple[float, float], position2: tuple[float, float]):
@@ -45,7 +45,7 @@ class Geometry:
         position2: tuple[float, float],
         tolerance: float):
 
-        return Geometry.distance(position1, position2) < tolerance
+        return GeometryUtils.distance(position1, position2) < tolerance
     
     @staticmethod
     def findIntersection(line1: tuple[float, float, float], line2: tuple[float, float, float]):
@@ -128,8 +128,8 @@ class Geometry:
         rectangle1: Rectangle,
         rectangle2: Rectangle
     ):
-        rectangle1Vertices = Geometry.getRotatedRectangleVertices(rectangle1)
-        rectangle2Vertices = Geometry.getRotatedRectangleVertices(rectangle2)
+        rectangle1Vertices = GeometryUtils.getRotatedRectangleVertices(rectangle1)
+        rectangle2Vertices = GeometryUtils.getRotatedRectangleVertices(rectangle2)
 
         poly1 = Polygon(rectangle1Vertices)
         poly2 = Polygon(rectangle2Vertices)
@@ -141,8 +141,8 @@ class Geometry:
         rectangle1: Rectangle,
         rectangle2: Rectangle
     ):
-        rectangle1Vertices = Geometry.getRotatedRectangleVertices(rectangle1)
-        rectangle2Vertices = Geometry.getRotatedRectangleVertices(rectangle2)
+        rectangle1Vertices = GeometryUtils.getRotatedRectangleVertices(rectangle1)
+        rectangle2Vertices = GeometryUtils.getRotatedRectangleVertices(rectangle2)
 
         poly1 = Polygon(rectangle1Vertices)
         poly2 = Polygon(rectangle2Vertices)
@@ -197,3 +197,7 @@ class Geometry:
             return minValue
         else:
             return value
+        
+    @staticmethod
+    def convertAngleToRadians(angle: float):
+        return angle * (math.pi / 180.0)
