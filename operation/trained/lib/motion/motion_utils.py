@@ -55,7 +55,7 @@ class MotionUtils:
 
         motorSpeed = RobotHelper.truncateMotorSpeed(motorSpeed, baseSpeed)
 
-        leftMotorSpeed, rightMotorSpeed = Motion._getSpeeds(motorSpeed, baseSpeed, reversed)
+        leftMotorSpeed, rightMotorSpeed = MotionUtils._getSpeeds(motorSpeed, baseSpeed, reversed)
 
         return leftMotorSpeed, rightMotorSpeed, error
     
@@ -130,7 +130,7 @@ class MotionUtils:
         oponnentFieldData: FieldData,
         targetPosition: tuple[float, float]
     ) -> Robot | None:
-        obstacles = Motion.findObstacles(robotId, fieldData, oponnentFieldData, targetPosition)
+        obstacles = MotionUtils.findObstacles(robotId, fieldData, oponnentFieldData, targetPosition)
 
         if len(obstacles) == 0:
             return None
@@ -160,7 +160,7 @@ class MotionUtils:
         opponentFieldData: FieldData,
         targetPosition: tuple[float, float]
     ):
-        obstacleRobot = Motion.findClosestObstacle(
+        obstacleRobot = MotionUtils.findClosestObstacle(
             robotId,
             fieldData,
             opponentFieldData,
