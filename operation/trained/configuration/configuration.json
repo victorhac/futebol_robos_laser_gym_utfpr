@@ -11,9 +11,9 @@
     },
     "team": {
         "is-yellow-left-team": true,
-        "is-yellow-team": false,
+        "is-yellow-team": true,
         "blue": {
-            "number-robots": 1
+            "number-robots": 3
         },
         "yellow": {
             "number-robots": 1
@@ -51,7 +51,7 @@
             "radius": 0.0215
         }
     },
-    "execucao": {
-        "step-time": 1
+    "training": {
+        "time-step": 0.025
     }
 }

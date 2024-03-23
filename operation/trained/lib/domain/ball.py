@@ -13,4 +13,4 @@ class Ball:
         return msg
 
     def __repr__(self):
-        return f'EntityData({self})'
+        return f'Ball({self})'
