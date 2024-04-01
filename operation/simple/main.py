@@ -143,15 +143,17 @@ def testToChangeAttackAndDeffense(
 
     print(DEFENSE_ROBOT_ID, ATACKER_ROBOT_ID)
 
-    if IS_LEFT_TEAM:
-        distance = atackerRobot.position.x - defenseRobot.position.x
-    else:
-        distance = defenseRobot.position.x - atackerRobot.position.x
+    #if IS_LEFT_TEAM:
+    distance = atackerRobot.position.x - defenseRobot.position.x
+    #else:
+    #    distance = defenseRobot.position.x - atackerRobot.position.x
 
     if distance < 0: #If the defender is in front of the atacker, then change functions.
         OLD_ATTACKER = ATACKER_ROBOT_ID
         ATACKER_ROBOT_ID = DEFENSE_ROBOT_ID
         DEFENSE_ROBOT_ID = OLD_ATTACKER
+
+
 
 def defensePlayerThread(
     fieldData: FieldData,
