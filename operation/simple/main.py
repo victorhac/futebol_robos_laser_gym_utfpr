@@ -213,11 +213,28 @@ def goalkeeperPlayerThread(
                     intersection,
                     vision,
                     teamControl)
-                spinIfCloseToBall(
+            elif(ball.position.y > GOAL_WIDTH/2):
+                placeRobot(
                     GOALKEEPER_ROBOT_ID,
-                    goalkeeperRobot,
+                    fieldData,
+                    (xCoordinateGoalkeeper, GOAL_WIDTH/2),
                     vision,
                     teamControl)
+            else:
+                placeRobot(
+                    GOALKEEPER_ROBOT_ID,
+                    fieldData,
+                    (xCoordinateGoalkeeper, -GOAL_WIDTH/2),
+                    vision,
+                    teamControl)
+
+
+
+            spinIfCloseToBall(
+                GOALKEEPER_ROBOT_ID,
+                goalkeeperRobot,
+                vision,
+                teamControl)
 
 def atackerPlayerThread(
     fieldData: FieldData,
