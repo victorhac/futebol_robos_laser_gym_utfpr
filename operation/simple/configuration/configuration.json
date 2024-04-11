@@ -9,7 +9,7 @@
     },
     "team": {
         "is-yellow-left-team": true,
-        "is-yellow-team": false,
+        "is-yellow-team": true,
         "blue": {
             "number-robots": 1
         },

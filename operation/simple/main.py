@@ -128,7 +128,7 @@ def spinIfCloseToBall(
 
     teamControl.transmit_robot(id, 0, 0)
 
-def testToChangeAttackAndDeffense(
+def testToChangeAttackAndDefense(
     vision: ProtoVision,
     teamControl: ProtoControl,
     fieldData: FieldData
@@ -140,8 +140,6 @@ def testToChangeAttackAndDeffense(
 
     defenseRobot = fieldData.robots[DEFENSE_ROBOT_ID]
     atackerRobot = fieldData.robots[ATACKER_ROBOT_ID]
-
-    print(DEFENSE_ROBOT_ID, ATACKER_ROBOT_ID)
 
     #if IS_LEFT_TEAM:
     distance = atackerRobot.position.x - defenseRobot.position.x
@@ -181,12 +179,23 @@ def defensePlayerThread(
     while True:
         vision.update()
 
-        ballPosition = (ball.position.x, ball.position.y)
+        #ballPosition = (ball.position.x, ball.position.y) 
         
+        if IS_LEFT_TEAM:
+            positionToDefendGoalY = ( (xCoordinateDefensor + 0.75) * (ball.position.y) / (ball.position.x + 0.75) )
+        else:
+            positionToDefendGoalY = ( (0.75 - xCoordinateDefensor) * ball.position.y / (0.75 - ball.position.x) )
+
+        print(IS_LEFT_TEAM)
+
+        print(0.75 - xCoordinateDefensor, ball.position.y, 0.75 - ball.position.x)
+
+        print(positionToDefendGoalY)
+
         placeRobot(
             DEFENSE_ROBOT_ID, 
             fieldData, 
-            (xCoordinateDefensor, ballPosition[1]),
+            (xCoordinateDefensor, positionToDefendGoalY),
             vision,
             teamControl
         )
@@ -262,7 +271,7 @@ def atackerPlayerThread(
             vision,
             teamControl)
 
-        testToChangeAttackAndDeffense(
+        testToChangeAttackAndDefense(
             vision,
             teamControl,
             fieldData
