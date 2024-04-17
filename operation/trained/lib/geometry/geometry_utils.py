@@ -183,7 +183,7 @@ class GeometryUtils:
         return tangent1, tangent2
     
     @staticmethod
-    def truncate(value: float, minValue: float = None, maxValue: float = None) -> float:
+    def clip(value: float, minValue: float = None, maxValue: float = None) -> float:
         if minValue is None and maxValue is None:
             return value
         elif minValue is None:

@@ -6,6 +6,8 @@ from gym.spaces import Box
 from rsoccer_gym.Entities import Ball, Frame, Robot
 from rsoccer_gym.vss.vss_gym_base import VSSBaseEnv
 
+from ..geometry.geometry_utils import GeometryUtils
+
 from ..helpers.field_helper import FieldHelper
 from ..training.training_utils import TrainingUtils
 
@@ -27,7 +29,9 @@ FIELD_WIDTH = CONFIGURATION["field"]["width"]
 
 TRAINING_TIME_STEP = CONFIGURATION["training"]["time-step"]
 
-class Environment(VSSBaseEnv):
+ROBOT_WIDTH = CONFIGURATION["robot"]["width"]
+
+class Environment2(VSSBaseEnv):
     def __init__(self, episodeTime=10):
         super().__init__(
             field_type=0,
@@ -74,73 +78,60 @@ class Environment(VSSBaseEnv):
         return np.array(observations)
 
     def _frame_to_observations(self):
-        # observations = []
-
-        # observations.append(self.frame.ball)
-
-        # ball = self.frame.ball
-        # robot = self.frame.robots_yellow[0]
-
-        # observations = [
-        #     ball.x,
-        #     ball.y,
-        #     ball.v_x,
-        #     ball.v_y,
-        #     robot.x,
-        #     robot.y,
-        #     math.sin(robot.theta),
-        #     math.cos(robot.theta),
-        #     robot.v_x,
-        #     robot.v_y,
-        #     robot.v_theta
-        # ]
-        
-        # return np.array(observations)
         return self.get_state()
 
     def _get_commands(self, actions):
         state = self.get_state()
-
         fieldData, _ = RSoccerHelper.getFieldDatas(state, IS_YELLOW_TEAM)
 
-        # robot = fieldData.robots[0]
-
-        # targetPosition = (actions[0][0], actions[0][1])
-
-        # velocities = MotionUtils.goToPoint(robot, targetPosition, self.error)
-
-        # (leftSpeed, rightSpeed, self.error) = velocities
-
-        self.ballPast = self.frame.ball
-
-        # return [RSoccerHelper.getRSoccerRobotAction(0, IS_YELLOW_TEAM, leftSpeed, rightSpeed)]
         self.robotPast = fieldData.robots[0]
 
         return actions
+    
+    def calcular_vetor_movimento(self, v_esquerda, v_direita, angulo):
+        v_linear = (v_esquerda + v_direita) / 2.0
+
+        vetor_x = v_linear * math.cos(angulo)
+        vetor_y = v_linear * math.sin(angulo)
+
+        angulo_vetor = angulo + (math.pi / 2.0)
+
+        return vetor_x, vetor_y, angulo_vetor
+    
+    def _calculate_reward(self):
+        state = self.get_state()
+        fieldData, _ = RSoccerHelper.getFieldDatas(state, IS_YELLOW_TEAM)
+
+        robot = fieldData.robots[0]
+        ball = fieldData.ball
+
+        rSoccerRobot = self.frame.robots_yellow[0] if IS_YELLOW_TEAM else self.frame.robots_blue[0]
+
+        distance = GeometryUtils.distance((robot.position.x, robot.position.y), (self.frame.ball.x, self.frame.ball.y))
+
+        rewardDistance = -1 if distance >= 1 else 1 - distance
+
+        vetor_1_x, vetor_1_y, _ = self.calcular_vetor_movimento(rSoccerRobot.v_x, rSoccerRobot.v_y, rSoccerRobot.theta)
+
+        print(f"Speed 1: {vetor_1_x}, Speed 2: {vetor_1_y}")
+
+        oponnentGoalPosition = FieldHelper.getOwnGoalPosition(FIELD_LENGTH, IS_YELLOW_TEAM)
+
+        vetor_2_x, vetor_2_y = oponnentGoalPosition[0] - ball.position.x, oponnentGoalPosition[1] - ball.position.y
+
+        angle = math.atan2(vetor_2_y - vetor_1_y, vetor_2_x - vetor_1_x)
+
+        return angle
 
     def _calculate_reward_and_done(self):
         state = self.get_state()
         fieldData, _ = RSoccerHelper.getFieldDatas(state, IS_YELLOW_TEAM)
 
-        # reward = TrainingUtils.rewardAttack(
-        #     0,
-        #     fieldData.robots,
-        #     RSoccerHelper.toBall(self.ballPast),
-        #     fieldData.ball,
-        #     FieldHelper.getOpponentGoalPosition(FIELD_LENGTH, IS_YELLOW_TEAM),
-        # )
-
-        reward = TrainingUtils.reward(
-            fieldData.robots[0],
-            self.robotPast,
-            fieldData.ball,
-            FieldHelper.getOpponentGoalPosition(FIELD_LENGTH, IS_YELLOW_TEAM))
-
-        print(f"Reward: {reward}")
+        reward = self._calculate_reward()
 
         currentTime = time.time()
 
-        isTimeExceded = False#currentTime - self.episodeInitialTime > self.episodeTime
+        isTimeExceded = False
 
         done = self.frame.ball.x > self.field.length / 2 \
             or self.frame.ball.x < -self.field.length / 2 \

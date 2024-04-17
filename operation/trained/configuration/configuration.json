@@ -13,7 +13,7 @@
         "is-yellow-left-team": true,
         "is-yellow-team": true,
         "blue": {
-            "number-robots": 3
+            "number-robots": 1
         },
         "yellow": {
             "number-robots": 1
