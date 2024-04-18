@@ -17,7 +17,7 @@ for i in range(1):
     leftSpeed, rightSpeed = 0, 0
 
     while not done:
-        action = [RSoccerHelper.getRSoccerRobotAction(0, IS_YELLOW_TEAM, -1, 1)]
+        action = [RSoccerHelper.getRSoccerRobotAction(0, IS_YELLOW_TEAM, 1 / 20, -1 / 20)]
         next_state, reward, done, _ = env.step(action)
 
         fieldData, opponentFieldData = RSoccerHelper.getFieldDatas(next_state, IS_YELLOW_TEAM)
