@@ -141,10 +141,7 @@ def testToChangeAttackAndDefense(
     defenseRobot = fieldData.robots[DEFENSE_ROBOT_ID]
     atackerRobot = fieldData.robots[ATACKER_ROBOT_ID]
 
-    #if IS_LEFT_TEAM:
     distance = atackerRobot.position.x - defenseRobot.position.x
-    #else:
-    #    distance = defenseRobot.position.x - atackerRobot.position.x
 
     if distance < 0: #If the defender is in front of the atacker, then change functions.
         OLD_ATTACKER = ATACKER_ROBOT_ID
@@ -179,18 +176,10 @@ def defensePlayerThread(
     while True:
         vision.update()
 
-        #ballPosition = (ball.position.x, ball.position.y) 
-        
         if IS_LEFT_TEAM:
             positionToDefendGoalY = ( (xCoordinateDefensor + 0.75) * (ball.position.y) / (ball.position.x + 0.75) )
         else:
             positionToDefendGoalY = ( (0.75 - xCoordinateDefensor) * ball.position.y / (0.75 - ball.position.x) )
-
-        print(IS_LEFT_TEAM)
-
-        print(0.75 - xCoordinateDefensor, ball.position.y, 0.75 - ball.position.x)
-
-        print(positionToDefendGoalY)
 
         placeRobot(
             DEFENSE_ROBOT_ID, 
