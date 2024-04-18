@@ -128,6 +128,28 @@ def spinIfCloseToBall(
 
     teamControl.transmit_robot(id, 0, 0)
 
+def testToChangeAttackAndDefense(
+    vision: ProtoVision,
+    teamControl: ProtoControl,
+    fieldData: FieldData
+):
+    vision.update()
+
+    global DEFENSE_ROBOT_ID
+    global ATACKER_ROBOT_ID
+
+    defenseRobot = fieldData.robots[DEFENSE_ROBOT_ID]
+    atackerRobot = fieldData.robots[ATACKER_ROBOT_ID]
+
+    distance = atackerRobot.position.x - defenseRobot.position.x
+
+    if distance < 0: #If the defender is in front of the atacker, then change functions.
+        OLD_ATTACKER = ATACKER_ROBOT_ID
+        ATACKER_ROBOT_ID = DEFENSE_ROBOT_ID
+        DEFENSE_ROBOT_ID = OLD_ATTACKER
+
+
+
 def defensePlayerThread(
     fieldData: FieldData,
     vision: ProtoVision,
@@ -154,12 +176,15 @@ def defensePlayerThread(
     while True:
         vision.update()
 
-        ballPosition = (ball.position.x, ball.position.y)
-        
+        if IS_LEFT_TEAM:
+            positionToDefendGoalY = ( (xCoordinateDefensor + 0.75) * (ball.position.y) / (ball.position.x + 0.75) )
+        else:
+            positionToDefendGoalY = ( (0.75 - xCoordinateDefensor) * ball.position.y / (0.75 - ball.position.x) )
+
         placeRobot(
             DEFENSE_ROBOT_ID, 
             fieldData, 
-            (xCoordinateDefensor, ballPosition[1]),
+            (xCoordinateDefensor, positionToDefendGoalY),
             vision,
             teamControl
         )
@@ -213,28 +238,11 @@ def goalkeeperPlayerThread(
                     intersection,
                     vision,
                     teamControl)
-            elif(ball.position.y > GOAL_WIDTH/2):
-                placeRobot(
+                spinIfCloseToBall(
                     GOALKEEPER_ROBOT_ID,
-                    fieldData,
-                    (xCoordinateGoalkeeper, GOAL_WIDTH/2),
+                    goalkeeperRobot,
                     vision,
                     teamControl)
-            else:
-                placeRobot(
-                    GOALKEEPER_ROBOT_ID,
-                    fieldData,
-                    (xCoordinateGoalkeeper, -GOAL_WIDTH/2),
-                    vision,
-                    teamControl)
-
-
-
-            spinIfCloseToBall(
-                GOALKEEPER_ROBOT_ID,
-                goalkeeperRobot,
-                vision,
-                teamControl)
 
 def atackerPlayerThread(
     fieldData: FieldData,
@@ -244,13 +252,21 @@ def atackerPlayerThread(
     atackerRobot = fieldData.robots[ATACKER_ROBOT_ID]
 
     while True:
-        followBall(ATACKER_ROBOT_ID, fieldData, vision, teamControl)
         
+        followBall(ATACKER_ROBOT_ID, fieldData, vision, teamControl)
+
         spinIfCloseToBall(
             ATACKER_ROBOT_ID,
             atackerRobot,
             vision,
             teamControl)
+
+        testToChangeAttackAndDefense(
+            vision,
+            teamControl,
+            fieldData
+        )        
+
 
 def main():
     fieldData = FieldData()
