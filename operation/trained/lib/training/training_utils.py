@@ -41,12 +41,8 @@ class TrainingUtils():
     
         magnitude_ba = np.linalg.norm(ba)
         magnitude_bc = np.linalg.norm(bc)
-
-        angle_rad = np.arccos(dot_product / (magnitude_ba * magnitude_bc))
-
-        angle_deg = np.degrees(angle_rad)
         
-        return angle_deg
+        return np.arccos(dot_product / (magnitude_ba * magnitude_bc))
     
     @staticmethod
     def rPos(
@@ -68,9 +64,7 @@ class TrainingUtils():
         bPosition = (ball.position.x, ball.position.y)
         cPosition = goalOpponentPosition
 
-        rPos = TrainingUtils.rPos(aPosition, bPosition, cPosition)
-
-        return GeometryUtils.clip(rPos, -1, 0)
+        return TrainingUtils.rPos(aPosition, bPosition, cPosition)
     
     @staticmethod
     def rDef(
@@ -81,10 +75,8 @@ class TrainingUtils():
         aPosition = (robot.position.x, robot.position.y)
         bPosition = (ball.position.x, ball.position.y)
         cPosition = ownGoalPosition
-
-        rPos = TrainingUtils.rPos(aPosition, bPosition, cPosition)
         
-        return GeometryUtils.clip(rPos, -1, 0)
+        return TrainingUtils.rPos(aPosition, bPosition, cPosition)
 
 
     # TODO: colocar constantes em configuration.json
@@ -135,3 +127,38 @@ class TrainingUtils():
         endTime: float
     ):
         return (10 if isGoalMade else -10) * (endTime - startTime) / endTime
+    
+    @staticmethod
+    def rewardDistanceRobotBall(
+        robot: Robot,
+        ball: Ball
+    ):
+        distanceRobotBall = GeometryUtils.distance((robot.position.x, robot.position.y), (ball.position.x, ball.position.y))
+
+        return -1 if distanceRobotBall >= 1 else 2 * (1 - distanceRobotBall) - 1
+    
+    @staticmethod
+    def rewardAngleToGoal(
+        robot: Robot,
+        ball: Ball,
+        opponentGoalPosition: tuple[float, float]
+    ):
+        robot_vector = GeometryUtils.calculateVectorCoordinates(
+            robot.position.x,
+            robot.position.y,
+            robot.position.theta,
+            1)
+
+        vector1 = [robot_vector[0] - robot.position.x, robot_vector[1] - robot.position.y]
+        vector2 = [opponentGoalPosition[0] - ball.position.x, opponentGoalPosition[1] - ball.position.y]
+
+        return 2 * (1 - GeometryUtils.angleBetweenVectors(vector1, vector2) / math.pi) - 1
+
+    @staticmethod
+    def rewardDistanceBallOpponentGoal(
+        ball: Ball,
+        opponentGoalPosition: tuple[float, float]
+    ):
+        distanceBallOpponentGoal = GeometryUtils.distance((ball.position.x, ball.position.y), opponentGoalPosition)
+
+        return -1 if distanceBallOpponentGoal >= 1.5 else 2 * (1.5 - distanceBallOpponentGoal) / 1.5 - 1

@@ -1,3 +1,6 @@
+import random
+import math
+
 class FieldHelper:
     @staticmethod
     def isLeftTeam(isYellowTeam: bool, isYellowLeftTeam: bool):
@@ -31,3 +34,11 @@ class FieldHelper:
             return (-fieldLength / 2, 0)
         else:
             return (fieldLength / 2, 0)
+        
+    @staticmethod
+    def getFieldRandomPosition(fieldLength: float, fieldWidth: float):
+        return random.uniform(-fieldLength / 2, fieldLength / 2), random.uniform(-fieldWidth / 2, fieldWidth / 2)
+    
+    @staticmethod
+    def getRandomTheta():
+        return random.uniform(-math.pi, math.pi)
