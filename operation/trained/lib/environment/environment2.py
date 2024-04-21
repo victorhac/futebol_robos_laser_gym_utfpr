@@ -59,7 +59,6 @@ class Environment2(VSSBaseEnv):
         self.episodeInitialTime = 0
         self.firstBall = None
         self.firstRobot = None
-        self.touchedBall = False
 
     def get_state(self):
         observations = []
@@ -82,8 +81,6 @@ class Environment2(VSSBaseEnv):
         return self.get_state()
 
     def _get_commands(self, actions):
-        self.episodeInitialTime = time.time()
-        self.touchedBall = False
         return actions
     
     def _calculate_reward(self):
@@ -94,21 +91,8 @@ class Environment2(VSSBaseEnv):
         ball = fieldData.ball
 
         opponentGoalPosition = FieldHelper.getOpponentGoalPosition(FIELD_LENGTH, IS_LEFT_TEAM)
-        ownGoalPosition = FieldHelper.getOwnGoalPosition(FIELD_LENGTH, IS_LEFT_TEAM)
-
-        # opponentGoalPosition = FieldHelper.getOpponentGoalPosition(FIELD_LENGTH, IS_LEFT_TEAM)
-
-        # rewardAngleToGoal = TrainingUtils.rewardAngleToGoal(robot, ball, opponentGoalPosition)
-
-        # rewardDistanceRobotBall = TrainingUtils.rewardDistanceRobotBall(robot, ball)
 
         rewardOfe = TrainingUtils.rOfe(robot, ball, opponentGoalPosition)
-
-        # rewardSpeed = TrainingUtils.rSpeed(self.ballPast, ball, opponentGoalPosition)
-
-        # rewardDist = TrainingUtils.rDist(fieldData.robots, ball)
-
-        # return 0.7 * rewardSpeed + 0.15 * rewardDist + 0.15 * rewardOfe
 
         distanceToBall = GeometryUtils.distance(
             (robot.position.x, robot.position.y),
@@ -152,9 +136,13 @@ class Environment2(VSSBaseEnv):
         if not self._has_goal_scored():
             return .2 * rewardDistanceToBall + .6 * rewardDistanceBallToGoal + .2 * rewardOfe
         else:
-            return .4 * rewardDistanceToBall + .6 * rewardDistanceBallToGoal
+            reward = .4 * rewardDistanceToBall + .6 * rewardDistanceBallToGoal
+            return reward + TrainingUtils.rewardGoal(
+                self._is_goal_received(),
+                self.episodeInitialTime,
+                time.sleep()
+            )
         
-    
     def _has_goal_scored(self):
         if self.frame.ball.x > self.field.length / 2:
             return True
@@ -172,19 +160,11 @@ class Environment2(VSSBaseEnv):
     def _calculate_reward_and_done(self):
         reward = self._calculate_reward()
 
-        currentTime = time.time()
-
         done = self._has_goal_scored()
 
         print(f"Reward: {reward}")
         
-        if done:
-            reward = self._calculate_reward()
-            reward += TrainingUtils.rewardGoal(
-                self._is_goal_received(),
-                self.episodeInitialTime,
-                currentTime
-            )
+        reward = self._calculate_reward()
         
         return reward, done
     
@@ -194,36 +174,38 @@ class Environment2(VSSBaseEnv):
     def _get_random_theta(self):
         return FieldHelper.getRandomTheta()
     
+    def _get_random_robot(self, id: float, is_yellow_team: bool):
+        robot_pos_x, robot_pos_y = self._get_field_random_position()
+        robot_theta = self._get_random_theta()
+
+        return Robot(
+            id=id,
+            x=robot_pos_x,
+            y=robot_pos_y,
+            theta=robot_theta,
+            yellow=is_yellow_team)
+    
+    def _get_random_ball(self):
+        ball_pos_x, ball_pos_y = self._get_field_random_position()
+
+        return Ball(x=ball_pos_x, y=ball_pos_y)
+    
     def _get_initial_positions_frame(self):
         pos_frame: Frame = Frame()
 
-        robot_blue_pos_x, robot_blue_pos_y = self._get_field_random_position()
-        robot_blue_theta = self._get_random_theta()
+        pos_frame.robots_blue[0] = self._get_random_robot(0, False)
 
-        robot_yellow_pos_x, robot_yellow_pos_y = self._get_field_random_position()
-        robot_yellow_theta = self._get_random_theta()
+        robot_yellow = self._get_random_robot(0, True)
+
+        pos_frame.robots_yellow[0] = robot_yellow
         
-        ball_pos_x, ball_pos_y = self._get_field_random_position()
-
-        pos_frame.robots_blue[0] = Robot(
-            id=0,
-            x=robot_blue_pos_x,
-            y=robot_blue_pos_y,
-            theta=robot_blue_theta,
-            yellow=False)
-
-        pos_frame.robots_yellow[0] = Robot(
-            id=0,
-            x=robot_yellow_pos_x,
-            y=robot_yellow_pos_y,
-            theta=robot_yellow_theta,
-            yellow=True)
-        
-        ball = Ball(x=ball_pos_x, y=ball_pos_y)
+        ball = self._get_random_ball()
 
         pos_frame.ball = ball
 
         self.firstBall = RSoccerHelper.toBall(ball)
-        self.firstRobot = RSoccerHelper.toRobot(pos_frame.robots_yellow[0])
+        self.firstRobot = RSoccerHelper.toRobot(robot_yellow)
+
+        self.episodeInitialTime = time.time()
         
         return pos_frame
