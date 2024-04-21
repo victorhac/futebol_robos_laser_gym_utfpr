@@ -242,3 +242,14 @@ class GeometryUtils:
     @staticmethod
     def vectorMagnitude(v: list[float]):
         return math.sqrt(sum(a**2 for a in v))
+    
+    @staticmethod
+    def isInsideCircle(
+        x: float,
+        y: float,
+        circle_x: float,
+        circle_y: float,
+        radius: float
+    ):
+        distance = math.sqrt((x - circle_x)**2 + (y - circle_y)**2)
+        return distance <= radius

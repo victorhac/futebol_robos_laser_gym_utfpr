@@ -8,6 +8,8 @@ from gym.spaces import Box
 from rsoccer_gym.Entities import Ball, Frame, Robot
 from rsoccer_gym.vss.vss_gym_base import VSSBaseEnv
 
+from ..geometry.geometry_utils import GeometryUtils
+
 from ..helpers.field_helper import FieldHelper
 from ..training.training_utils import TrainingUtils
 
@@ -55,7 +57,9 @@ class Environment2(VSSBaseEnv):
         )
 
         self.episodeInitialTime = 0
-        self.ballPast = None
+        self.firstBall = None
+        self.firstRobot = None
+        self.touchedBall = False
 
     def get_state(self):
         observations = []
@@ -79,6 +83,7 @@ class Environment2(VSSBaseEnv):
 
     def _get_commands(self, actions):
         self.episodeInitialTime = time.time()
+        self.touchedBall = False
         return actions
     
     def _calculate_reward(self):
@@ -89,6 +94,7 @@ class Environment2(VSSBaseEnv):
         ball = fieldData.ball
 
         opponentGoalPosition = FieldHelper.getOpponentGoalPosition(FIELD_LENGTH, IS_LEFT_TEAM)
+        ownGoalPosition = FieldHelper.getOwnGoalPosition(FIELD_LENGTH, IS_LEFT_TEAM)
 
         # opponentGoalPosition = FieldHelper.getOpponentGoalPosition(FIELD_LENGTH, IS_LEFT_TEAM)
 
@@ -98,11 +104,56 @@ class Environment2(VSSBaseEnv):
 
         rewardOfe = TrainingUtils.rOfe(robot, ball, opponentGoalPosition)
 
-        rewardSpeed = TrainingUtils.rSpeed(self.ballPast, ball, opponentGoalPosition)
+        # rewardSpeed = TrainingUtils.rSpeed(self.ballPast, ball, opponentGoalPosition)
 
-        rewardDist = TrainingUtils.rDist(fieldData.robots, ball)
+        # rewardDist = TrainingUtils.rDist(fieldData.robots, ball)
 
-        return 0.7 * rewardSpeed + 0.15 * rewardDist + 0.15 * rewardOfe
+        # return 0.7 * rewardSpeed + 0.15 * rewardDist + 0.15 * rewardOfe
+
+        distanceToBall = GeometryUtils.distance(
+            (robot.position.x, robot.position.y),
+            (ball.position.x, ball.position.y)
+        )
+
+        distanceBallToGoal = GeometryUtils.distance(
+            (ball.position.x, ball.position.y),
+            opponentGoalPosition
+        )
+
+        distanceFirstBallToGoal = GeometryUtils.distance(
+            (self.firstBall.position.x, self.firstBall.position.y),
+            opponentGoalPosition
+        )
+
+        firstDistanceToBall = GeometryUtils.distance(
+            (self.firstRobot.position.x, self.firstRobot.position.y),
+            (self.firstBall.position.x, self.firstBall.position.y)
+        )
+
+        isCloseToBall = GeometryUtils.isClose(
+            (robot.position.x, robot.position.y),
+            (ball.position.x, ball.position.y),
+            ROBOT_WIDTH * 1.25
+        )
+
+        if distanceBallToGoal > distanceBallToGoal:
+            rewardDistanceBallToGoal = -1
+        else:
+            rewardDistanceBallToGoal = 1 - distanceBallToGoal / distanceFirstBallToGoal
+
+        if distanceToBall > firstDistanceToBall:
+            rewardDistanceToBall = -1
+        else:
+            if isCloseToBall:
+                rewardDistanceToBall = 1
+            else:
+                rewardDistanceToBall = 1 - distanceToBall / firstDistanceToBall
+
+        if not self._has_goal_scored():
+            return .2 * rewardDistanceToBall + .6 * rewardDistanceBallToGoal + .2 * rewardOfe
+        else:
+            return .4 * rewardDistanceToBall + .6 * rewardDistanceBallToGoal
+        
     
     def _has_goal_scored(self):
         if self.frame.ball.x > self.field.length / 2:
@@ -128,6 +179,7 @@ class Environment2(VSSBaseEnv):
         print(f"Reward: {reward}")
         
         if done:
+            reward = self._calculate_reward()
             reward += TrainingUtils.rewardGoal(
                 self._is_goal_received(),
                 self.episodeInitialTime,
@@ -162,15 +214,16 @@ class Environment2(VSSBaseEnv):
 
         pos_frame.robots_yellow[0] = Robot(
             id=0,
-            x=-.4,
-            y=-.3,
-            theta=0,
+            x=robot_yellow_pos_x,
+            y=robot_yellow_pos_y,
+            theta=robot_yellow_theta,
             yellow=True)
         
         ball = Ball(x=ball_pos_x, y=ball_pos_y)
 
         pos_frame.ball = ball
 
-        self.ballPast = RSoccerHelper.toBall(ball)
+        self.firstBall = RSoccerHelper.toBall(ball)
+        self.firstRobot = RSoccerHelper.toRobot(pos_frame.robots_yellow[0])
         
         return pos_frame

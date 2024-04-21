@@ -1,6 +1,8 @@
 import random
 import math
 
+from ..geometry.geometry_utils import GeometryUtils
+
 class FieldHelper:
     @staticmethod
     def isLeftTeam(isYellowTeam: bool, isYellowLeftTeam: bool):
@@ -42,3 +44,18 @@ class FieldHelper:
     @staticmethod
     def getRandomTheta():
         return random.uniform(-math.pi, math.pi)
+    
+    @staticmethod
+    def getMaxDistanceToPoint(
+        position: tuple[float, float],
+        fieldLength: float,
+        fieldWidth: float
+    ):
+        distances = [
+            GeometryUtils.distance(position, (fieldLength / 2, fieldWidth / 2)),
+            GeometryUtils.distance(position, (fieldLength / 2, -fieldWidth / 2)),
+            GeometryUtils.distance(position, (-fieldLength / 2, fieldWidth / 2)),
+            GeometryUtils.distance(position, (-fieldLength / 2, -fieldWidth / 2))
+        ]
+        
+        return max(distances)

@@ -64,7 +64,7 @@ class TrainingUtils():
         bPosition = (ball.position.x, ball.position.y)
         cPosition = goalOpponentPosition
 
-        return TrainingUtils.rPos(aPosition, bPosition, cPosition)
+        return 2 * (TrainingUtils.rPos(aPosition, bPosition, cPosition) + 1) - 1
     
     @staticmethod
     def rDef(
