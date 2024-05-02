@@ -1,13 +1,11 @@
 from lib.helpers.configuration_helper import ConfigurationHelper
 from lib.helpers.rsoccer_helper import RSoccerHelper
 from lib.motion.motion_utils import MotionUtils
-from lib.environment.environment2 import Environment2
+from lib.environment.rsoccer_validation.environment import Environment
 
-CONFIGURATION = ConfigurationHelper.getConfiguration()
+IS_YELLOW_TEAM = ConfigurationHelper.getTeamIsYellowTeam()
 
-IS_YELLOW_TEAM = CONFIGURATION["team"]["is-yellow-team"]
-
-env = Environment2()
+env = Environment()
 
 env.reset()
 

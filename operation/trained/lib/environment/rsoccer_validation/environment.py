@@ -8,31 +8,28 @@ from gym.spaces import Box
 from rsoccer_gym.Entities import Ball, Frame, Robot
 from rsoccer_gym.vss.vss_gym_base import VSSBaseEnv
 
-from ..geometry.geometry_utils import GeometryUtils
+from ...geometry.geometry_utils import GeometryUtils
 
-from ..helpers.field_helper import FieldHelper
-from ..training.training_utils import TrainingUtils
+from ...helpers.field_helper import FieldHelper
+from ...training.training_utils import TrainingUtils
 
-from ..helpers.rsoccer_helper import RSoccerHelper
+from ...helpers.rsoccer_helper import RSoccerHelper
 
-from ..helpers.configuration_helper import ConfigurationHelper
+from ...helpers.configuration_helper import ConfigurationHelper
 
-CONFIGURATION = ConfigurationHelper.getConfiguration()
+TEAM_BLUE_NUMBER_ROBOTS = ConfigurationHelper.getTeamBlueNumberRobots()
+TEAM_YELLOW_NUMBER_ROBOTS = ConfigurationHelper.getTeamYellowNumberRobots()
+IS_YELLOW_TEAM = ConfigurationHelper.getTeamIsYellowTeam()
+IS_LEFT_TEAM = ConfigurationHelper.isLeftTeam()
 
-TEAM_BLUE_NUMBER_ROBOTS = CONFIGURATION["team"]["blue"]["number-robots"]
-TEAM_YELLOW_NUMBER_ROBOTS = CONFIGURATION["team"]["yellow"]["number-robots"]
-IS_YELLOW_TEAM = CONFIGURATION["team"]["is-yellow-team"]
-IS_YELLOW_LEFT_TEAM = CONFIGURATION["team"]["is-yellow-left-team"]
-IS_LEFT_TEAM = FieldHelper.isLeftTeam(IS_YELLOW_TEAM, IS_YELLOW_LEFT_TEAM)
+FIELD_LENGTH = ConfigurationHelper.getFieldLength()
+FIELD_WIDTH = ConfigurationHelper.getFieldWidth()
 
-FIELD_LENGTH = CONFIGURATION["field"]["length"]
-FIELD_WIDTH = CONFIGURATION["field"]["width"]
+TRAINING_TIME_STEP = ConfigurationHelper.getTrainingTimeStep()
 
-TRAINING_TIME_STEP = CONFIGURATION["training"]["time-step"]
+ROBOT_WIDTH = ConfigurationHelper.getRobotWidth()
 
-ROBOT_WIDTH = CONFIGURATION["robot"]["width"]
-
-class Environment2(VSSBaseEnv):
+class Environment(VSSBaseEnv):
     def __init__(self):
         super().__init__(
             field_type=0,

@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
@@ -9,7 +10,7 @@ import time
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
-from lib.environment.environment import Environment
+from lib.environment.ball_following.environment import Environment
 
 env = Environment()
 
@@ -164,6 +165,32 @@ def policy(state, noise_object):
 
     return [np.squeeze(legal_action)]
 
+def create_folder_if_not_exists(folder_path):
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+def save_weights():
+    current_datetime = datetime.now()
+
+    year = current_datetime.year
+    month = current_datetime.month
+    day = current_datetime.day
+    hour = current_datetime.hour
+    minute = current_datetime.minute
+    second = current_datetime.second
+
+    datetime_name = f"{year}_{month}_{day}_{hour}_{minute}_{second}"
+
+    models_path = f"models/{datetime_name}"
+
+    create_folder_if_not_exists(models_path)
+
+    actor_model.save_weights(f"{models_path}/actor_{datetime_name}.weights.h5")
+    critic_model.save_weights(f"{models_path}/critic_{datetime_name}.weights.h5")
+
+    target_actor.save_weights(f"{models_path}/target_actor_{datetime_name}.weights.h5")
+    target_critic.save_weights(f"{models_path}/target_critic_{datetime_name}.weights.h5")
+
 std_dev = 0.2
 ou_noise = OUActionNoise(mean=np.zeros(1), std_deviation=float(std_dev) * np.ones(1))
 
@@ -173,8 +200,21 @@ critic_model = get_critic()
 target_actor = get_actor()
 target_critic = get_critic()
 
-target_actor.set_weights(actor_model.get_weights())
-target_critic.set_weights(critic_model.get_weights())
+should_load_weights = True
+
+if should_load_weights:
+    tempo = "2024_4_29_16_47_5"
+    models_path = f"models/{tempo}"
+
+    print(f"Modelo carregado")
+
+    actor_model.load_weights(f"{models_path}/actor_{tempo}.weights.h5")
+    critic_model.load_weights(f"{models_path}/critic_{tempo}.weights.h5")
+    target_actor.load_weights(f"{models_path}/target_actor_{tempo}.weights.h5")
+    target_critic.load_weights(f"{models_path}/target_critic_{tempo}.weights.h5")
+else:
+    target_actor.set_weights(actor_model.get_weights())
+    target_critic.set_weights(critic_model.get_weights())
 
 critic_lr = 0.002
 actor_lr = 0.001
@@ -182,7 +222,7 @@ actor_lr = 0.001
 critic_optimizer = keras.optimizers.Adam(critic_lr)
 actor_optimizer = keras.optimizers.Adam(actor_lr)
 
-total_episodes = 1000
+total_episodes = 10000
 gamma = 0.99
 tau = 0.005
 
@@ -191,46 +231,45 @@ buffer = Buffer(50000, 64)
 ep_reward_list = []
 avg_reward_list = []
 
-for ep in range(total_episodes):
-    prev_state = env.reset()
-    episodic_reward = 0
-    env.episodeInitialTime = time.time()
+episode_time = 10
 
-    while True:
-        tf_prev_state = keras.ops.expand_dims(
-            keras.ops.convert_to_tensor(prev_state), 0
-        )
+try:
+    for ep in range(total_episodes):
+        prev_state = env.reset()
+        episodic_reward = 0
+        eposide_initial_time = time.time()
 
-        action = policy(tf_prev_state, ou_noise)
+        while time.time() - eposide_initial_time < episode_time:
+            tf_prev_state = keras.ops.expand_dims(
+                keras.ops.convert_to_tensor(prev_state), 0
+            )
 
-        state, reward, done, truncated = env.step(action)
+            action = policy(tf_prev_state, ou_noise)
 
-        buffer.record((prev_state, action, reward, state))
-        episodic_reward += reward
+            state, reward, done, truncated = env.step(action)
 
-        buffer.learn()
+            buffer.record((prev_state, action, reward, state))
+            episodic_reward += reward
 
-        update_target(target_actor, actor_model, tau)
-        update_target(target_critic, critic_model, tau)
+            buffer.learn()
 
-        if done or truncated:
-            break
+            update_target(target_actor, actor_model, tau)
+            update_target(target_critic, critic_model, tau)
 
-        prev_state = state
+            if done or truncated:
+                break
 
-        ep_reward_list.append(episodic_reward)
+            prev_state = state
 
-        avg_reward = np.mean(ep_reward_list[-40:])
-        print("Episode * {} * Avg Reward is ==> {}".format(ep, avg_reward))
-        avg_reward_list.append(avg_reward)
+            ep_reward_list.append(episodic_reward)
+
+            avg_reward = np.mean(ep_reward_list[-40:])
+            print("Episode * {} * Avg Reward is ==> {}".format(ep, avg_reward))
+            avg_reward_list.append(avg_reward)
+finally:
+    save_weights()
 
 plt.plot(avg_reward_list)
 plt.xlabel("Episode")
 plt.ylabel("Avg. Episodic Reward")
 plt.show()
-
-actor_model.save_weights("actor.weights.h5")
-critic_model.save_weights("critic.weights.h5")
-
-target_actor.save_weights("target_actor.weights.h5")
-target_critic.save_weights("target_critic.weights.h5")
