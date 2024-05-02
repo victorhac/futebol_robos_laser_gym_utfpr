@@ -8,15 +8,13 @@ from ..helpers.robot_helper import RobotHelper
 
 import math
 
-CONFIGURATION = ConfigurationHelper.getConfiguration()
+ROBOT_LENGTH = ConfigurationHelper.getRobotLength()
+ROBOT_WIDTH = ConfigurationHelper.getRobotWidth()
 
-ROBOT_LENGTH = CONFIGURATION["robot"]["length"]
-ROBOT_WIDTH = CONFIGURATION["robot"]["width"]
+FIELD_WIDTH = ConfigurationHelper.getFieldWidth()
+FIELD_LENGTH = ConfigurationHelper.getFieldLength()
 
-FIELD_WIDTH = CONFIGURATION["field"]["width"]
-FIELD_LENGTH = CONFIGURATION["field"]["length"]
-
-MOTION_COLLISION_AVOIDANCE_MIN_DISTANCE = CONFIGURATION["motion"]["collision-avoidance"]["min-distance"]
+MOTION_COLLISION_AVOIDANCE_MIN_DISTANCE = ConfigurationHelper.getMotionCollisionAvoidanceMinDistance()
 
 class MotionUtils:
     @staticmethod
@@ -25,8 +23,6 @@ class MotionUtils:
         targetPosition: tuple[float, float],
         lastError: float = 0
     ):
-        configuration = ConfigurationHelper.getConfiguration()
-
         position = robot.position
 
         positionX = position.x
@@ -46,12 +42,12 @@ class MotionUtils:
         else:
             reversed = False
 
-        kP = configuration["motion"]["pid"]["constants"]["Kp"]
-        kD = configuration["motion"]["pid"]["constants"]["Kd"]
+        kP = ConfigurationHelper.getMotionPIDConstanstsKp()
+        kD = ConfigurationHelper.getMotionPIDConstanstsKd()
 
         motorSpeed = (kP * error) + (kD * (error - lastError))
 
-        baseSpeed = configuration["robot"]["speed"]["base"]
+        baseSpeed = ConfigurationHelper.getRobotSpeedBase()
 
         motorSpeed = RobotHelper.truncateMotorSpeed(motorSpeed, baseSpeed)
 
