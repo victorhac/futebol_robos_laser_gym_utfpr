@@ -42,7 +42,7 @@ class Environment(VSSBaseEnv):
         self.action_space = Box(
             low=np.array([-FIELD_LENGTH / 2, -FIELD_WIDTH / 2]),
             high=np.array([FIELD_LENGTH / 2, FIELD_WIDTH / 2]),
-            dtype=np.float32,
+            dtype=np.float64,
             shape=(2,)
         )
 
@@ -61,7 +61,7 @@ class Environment(VSSBaseEnv):
                 FIELD_LENGTH / 2,
                 FIELD_WIDTH / 2
             ]),
-            dtype=np.float32,
+            dtype=np.float64,
             shape=(5,)
         )
 

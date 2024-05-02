@@ -1,1 +1,7 @@
 funcionando corretamente
+
+std_dev = 0.2
+tau = 0.005
+gamma = 0.99
+learning_rate = 0.001
+policy = "MlpPolicy"
