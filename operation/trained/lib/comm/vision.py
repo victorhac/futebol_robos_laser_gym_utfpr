@@ -28,7 +28,6 @@ class ProtoVision(Receiver):
 
         self.team_color_yellow = team_color_yellow
         self.field_data = field_data
-        self.configuration = ConfigurationHelper.getConfiguration()
 
     def receive(self):
         data = super().receive()
@@ -95,10 +94,7 @@ class ProtoVision(Receiver):
 
 
     def _field_data_from_dict(self, field_data: FieldData, raw_data_dict):
-        isYellowLeftTeam = self.configuration['team']['is-yellow-left-team']
-        isYellowTeam = self.configuration['team']['is-yellow-team']
-
-        isLeftTeam = FieldHelper.isLeftTeam(isYellowTeam, isYellowLeftTeam)
+        isLeftTeam = ConfigurationHelper.isLeftTeam()
 
         rotate_field = isLeftTeam
         

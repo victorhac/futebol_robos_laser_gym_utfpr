@@ -183,7 +183,7 @@ class GeometryUtils:
         return tangent1, tangent2
     
     @staticmethod
-    def truncate(value: float, minValue: float = None, maxValue: float = None) -> float:
+    def clip(value: float, minValue: float = None, maxValue: float = None) -> float:
         if minValue is None and maxValue is None:
             return value
         elif minValue is None:
@@ -201,3 +201,55 @@ class GeometryUtils:
     @staticmethod
     def convertAngleToRadians(angle: float):
         return angle * (math.pi / 180.0)
+    
+    @staticmethod
+    def calculateVectorCoordinates(
+        magnitude: float,
+        angle: float,
+        x: float,
+        y: float
+    ):
+        # verificar para o time da direita
+        delta_x = magnitude * math.cos(angle)
+        delta_y = magnitude * math.sin(angle)
+        
+        new_x = x + delta_x
+        new_y = y + delta_y
+        
+        return new_x, new_y
+    
+    @staticmethod
+    def angleBetweenVectors(
+        v1: list[float],
+        v2: list[float]
+    ):
+        dot_prod = GeometryUtils.dotProduct(v1, v2)
+
+        mag_v1 = GeometryUtils.vectorMagnitude(v1)
+        mag_v2 = GeometryUtils.vectorMagnitude(v2)
+
+        cosine_angle = dot_prod / (mag_v1 * mag_v2)
+
+        return math.acos(cosine_angle)
+    
+    @staticmethod
+    def dotProduct(
+        v1: list[float],
+        v2: list[float]
+    ):
+        return sum((a * b) for a, b in zip(v1, v2))
+
+    @staticmethod
+    def vectorMagnitude(v: list[float]):
+        return math.sqrt(sum(a**2 for a in v))
+    
+    @staticmethod
+    def isInsideCircle(
+        x: float,
+        y: float,
+        circle_x: float,
+        circle_y: float,
+        radius: float
+    ):
+        distance = math.sqrt((x - circle_x)**2 + (y - circle_y)**2)
+        return distance <= radius
