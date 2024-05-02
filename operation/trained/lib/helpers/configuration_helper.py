@@ -1,7 +1,7 @@
 import json
 import os
 
-from operation.trained.lib.helpers.field_helper import FieldHelper
+from ..helpers.field_helper import FieldHelper
 
 class ConfigurationHelper:
     __configuration = None

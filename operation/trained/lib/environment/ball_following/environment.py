@@ -166,8 +166,7 @@ class Environment(VSSBaseEnv):
         return GeometryUtils.isClose(
             robot.get_position_tuple(),
             ball.get_position_tuple(),
-            0.1
-        )
+            0.1)
     
     def _calculate_reward(self):
         reward = .5 * self.robot_towards_ball_reward() + .5 * self.distance_to_ball_reward()
