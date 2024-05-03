@@ -128,6 +128,11 @@ class ConfigurationHelper:
         return configuration["field"]["goal"]["width"]
     
     @staticmethod
+    def getFieldGoalAreaWidth():
+        configuration = ConfigurationHelper.getConfiguration()
+        return configuration["field"]["goal-area"]["width"]
+    
+    @staticmethod
     def getFieldBallRadius():
         configuration = ConfigurationHelper.getConfiguration()
         return configuration["field"]["ball"]["radius"]

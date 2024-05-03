@@ -24,6 +24,8 @@ IS_LEFT_TEAM = ConfigurationHelper.isLeftTeam()
 FIELD_LENGTH = ConfigurationHelper.getFieldLength()
 FIELD_WIDTH = ConfigurationHelper.getFieldWidth()
 FIELD_GOAL_WIDTH = ConfigurationHelper.getFieldGoalWidth()
+FIELD_GOAL_AREA_WIDTH = ConfigurationHelper.getFieldGoalAreaWidth()
+FIELD_GOAL_AREA_WIDTH = ConfigurationHelper.getFieldGoalAreaWidth()
 
 TRAINING_TIME_STEP = ConfigurationHelper.getTrainingTimeStep()
 
@@ -39,10 +41,10 @@ class Environment(VSSBaseEnv):
         )
 
         self.action_space = Box(
-            low=np.array([-FIELD_LENGTH / 2, -FIELD_WIDTH / 2, -1]),
-            high=np.array([FIELD_LENGTH / 2, FIELD_WIDTH / 2, 1]),
+            low=np.array([-FIELD_LENGTH / 2, -FIELD_WIDTH / 2]),
+            high=np.array([FIELD_LENGTH / 2, FIELD_WIDTH / 2]),
             dtype=np.float64,
-            shape=(3,)
+            shape=(2,)
         )
 
         self.observation_space = Box(

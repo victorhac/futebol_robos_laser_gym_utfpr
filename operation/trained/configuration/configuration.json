@@ -47,6 +47,10 @@
         "goal": {
             "width": 0.4
         },
+        "goal-area": {
+            "length": 0.2,
+            "width": 0.6
+        },
         "ball": {
             "radius": 0.0215
         }
