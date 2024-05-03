@@ -1,5 +1,6 @@
 import math
 from shapely.geometry import Polygon
+import random
 
 from ..domain.rectangle import Rectangle
 
@@ -253,3 +254,7 @@ class GeometryUtils:
     ):
         distance = math.sqrt((x - circle_x)**2 + (y - circle_y)**2)
         return distance <= radius
+    
+    @staticmethod
+    def getRandomUniform(minValue: float, maxValue: float):
+        return random.uniform(minValue, maxValue)

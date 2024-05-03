@@ -23,11 +23,8 @@ class MotionUtils:
         targetPosition: tuple[float, float],
         lastError: float = 0
     ):
-        position = robot.position
-
-        positionX = position.x
-        positionY = position.y
-        robotAngle = position.theta
+        positionX, positionY = robot.get_position_tuple()
+        robotAngle = robot.position.theta
 
         xTarget, yTarget = (targetPosition[0], targetPosition[1])
 
@@ -75,7 +72,7 @@ class MotionUtils:
         return leftMotorSpeed, rightMotorSpeed
     
     @staticmethod
-    def spin(clockwise, spinPower):
+    def spin(clockwise: bool, spinPower: float):
         if clockwise:
             return spinPower, -spinPower
         
