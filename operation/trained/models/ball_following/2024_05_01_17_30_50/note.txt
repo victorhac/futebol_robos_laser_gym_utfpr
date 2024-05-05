@@ -1,5 +1,7 @@
 funcionando corretamente
 
+time-step = 0.025,
+episode-duration = 10
 std_dev = 0.2
 tau = 0.005
 gamma = 0.99

@@ -120,10 +120,10 @@ class MotionUtils:
     def findClosestObstacle(
         robotId: int,
         fieldData: FieldData,
-        oponnentFieldData: FieldData,
+        opponentFieldData: FieldData,
         targetPosition: tuple[float, float]
     ) -> Robot | None:
-        obstacles = MotionUtils.findObstacles(robotId, fieldData, oponnentFieldData, targetPosition)
+        obstacles = MotionUtils.findObstacles(robotId, fieldData, opponentFieldData, targetPosition)
 
         if len(obstacles) == 0:
             return None

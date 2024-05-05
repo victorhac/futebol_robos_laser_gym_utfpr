@@ -84,6 +84,17 @@ class GeometryUtils:
         return -m, 1, b
     
     @staticmethod
+    def lineEquationByPointAndAngle(point: tuple[float, float], angle: float):
+        """
+        Return the equation of the line passing through a point with a given angle in the form (a, b, c): (ax + by = c).
+        """
+        x, y = point
+        m = math.tan(angle)
+        b = y - m * x
+
+        return -m, 1, b
+    
+    @staticmethod
     def getMidpoint(point1: tuple[float, float], point2: tuple[float, float]):
         """
         Return the midpoint of two points.

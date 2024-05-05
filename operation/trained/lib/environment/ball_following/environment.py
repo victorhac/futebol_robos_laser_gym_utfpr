@@ -182,13 +182,6 @@ class Environment(VSSBaseEnv):
         elif self.frame.ball.x < -self.field.length / 2:
             return True
         return False
-    
-    def _is_goal_received(self):
-        if self.frame.ball.x > self.field.length / 2:
-            return IS_LEFT_TEAM
-        elif self.frame.ball.x < -self.field.length / 2:
-            return not IS_LEFT_TEAM
-        return False
 
     def _calculate_reward_and_done(self):
         reward = self._calculate_reward()
