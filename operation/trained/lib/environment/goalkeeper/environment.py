@@ -81,6 +81,7 @@ class Environment(VSSBaseEnv):
         self.episodeInitialTime = 0
         self.distanceOpponentRobotToGoal = 0
         self.distanceRobotToGoal = 0
+        self.speedFactor = 0
 
     def _get_state(self):
         observations = []
@@ -152,12 +153,14 @@ class Environment(VSSBaseEnv):
             self.opponentError
         )
 
+        getSpeed = lambda item: item * self.speedFactor
+
         rSoccer_robot_actions.append(
             RSoccerHelper.getRSoccerRobotAction(
                 0,
                 not IS_YELLOW_TEAM,
-                leftSpeed,
-                rightSpeed
+                getSpeed(leftSpeed),
+                getSpeed(rightSpeed)
             )
         )
 
@@ -348,6 +351,7 @@ class Environment(VSSBaseEnv):
         pos_frame.ball = ball
 
         self.episodeInitialTime = time.time()
+        self.speedFactor = GeometryUtils.getRandomUniform(1 / 5, 1)
 
         self.distanceOpponentRobotToGoal = GeometryUtils.distance(
             robotBluePosition,
