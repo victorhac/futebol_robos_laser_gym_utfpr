@@ -23,7 +23,7 @@ MOTION_COLLISION_AVOIDANCE_MIN_DISTANCE = ConfigurationHelper.getMotionCollision
 FIRASIM_CONTROL_IP = ConfigurationHelper.getFIRASimControlIp()
 FIRASIM_CONTROL_PORT = ConfigurationHelper.getFIRASimControlPort()
 FIRASIM_VISION_IP = ConfigurationHelper.getFIRASimVisionIp()
-FIRASIM_VISION_PORT = ConfigurationHelper.getFIRASimControlPort()
+FIRASIM_VISION_PORT = ConfigurationHelper.getFIRASimVisionPort()
 
 def getProtoVision(isYellowTeam: bool):
     fieldData = FieldData()

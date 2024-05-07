@@ -34,7 +34,7 @@
     "FIRASim": {
         "control": {
             "ip": "127.0.0.1",
-            "port": 20011
+            "port": 20027
         },
         "vision": {
             "ip": "224.0.0.1",
@@ -57,7 +57,7 @@
     },
     "training": {
         "time-step": 0.025,
-        "episode-duration": 10,
+        "episode-duration": 5,
         "velocity-clip-value": 1.2
     }
 }
