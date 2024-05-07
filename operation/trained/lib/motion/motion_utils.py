@@ -23,11 +23,8 @@ class MotionUtils:
         targetPosition: tuple[float, float],
         lastError: float = 0
     ):
-        position = robot.position
-
-        positionX = position.x
-        positionY = position.y
-        robotAngle = position.theta
+        positionX, positionY = robot.get_position_tuple()
+        robotAngle = robot.position.theta
 
         xTarget, yTarget = (targetPosition[0], targetPosition[1])
 
@@ -75,7 +72,7 @@ class MotionUtils:
         return leftMotorSpeed, rightMotorSpeed
     
     @staticmethod
-    def spin(clockwise, spinPower):
+    def spin(clockwise: bool, spinPower: float):
         if clockwise:
             return spinPower, -spinPower
         
@@ -123,10 +120,10 @@ class MotionUtils:
     def findClosestObstacle(
         robotId: int,
         fieldData: FieldData,
-        oponnentFieldData: FieldData,
+        opponentFieldData: FieldData,
         targetPosition: tuple[float, float]
     ) -> Robot | None:
-        obstacles = MotionUtils.findObstacles(robotId, fieldData, oponnentFieldData, targetPosition)
+        obstacles = MotionUtils.findObstacles(robotId, fieldData, opponentFieldData, targetPosition)
 
         if len(obstacles) == 0:
             return None

@@ -1,5 +1,6 @@
 import math
 from shapely.geometry import Polygon
+import random
 
 from ..domain.rectangle import Rectangle
 
@@ -79,6 +80,17 @@ class GeometryUtils:
             return None
         
         b = y1 - m * x1
+
+        return -m, 1, b
+    
+    @staticmethod
+    def lineEquationByPointAndAngle(point: tuple[float, float], angle: float):
+        """
+        Return the equation of the line passing through a point with a given angle in the form (a, b, c): (ax + by = c).
+        """
+        x, y = point
+        m = math.tan(angle)
+        b = y - m * x
 
         return -m, 1, b
     
@@ -253,3 +265,7 @@ class GeometryUtils:
     ):
         distance = math.sqrt((x - circle_x)**2 + (y - circle_y)**2)
         return distance <= radius
+    
+    @staticmethod
+    def getRandomUniform(minValue: float, maxValue: float):
+        return random.uniform(minValue, maxValue)

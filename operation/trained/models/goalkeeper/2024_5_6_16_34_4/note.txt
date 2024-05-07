@@ -1,6 +1,6 @@
-funcionando corretamente
+consegue defender a metade das vezes, só que o goleiro fica mexendo aleatoriamente e estranhamente
 
-time-steps = 1000000
+time-steps = 5000000
 time-step = 0.025,
 episode-duration = 10
 std_dev = 0.2

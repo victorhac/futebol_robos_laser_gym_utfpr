@@ -182,13 +182,6 @@ class Environment(VSSBaseEnv):
         elif self.frame.ball.x < -self.field.length / 2:
             return True
         return False
-    
-    def _is_goal_received(self):
-        if self.frame.ball.x > self.field.length / 2:
-            return IS_LEFT_TEAM
-        elif self.frame.ball.x < -self.field.length / 2:
-            return not IS_LEFT_TEAM
-        return False
 
     def _calculate_reward_and_done(self):
         reward = self._calculate_reward()
@@ -203,7 +196,7 @@ class Environment(VSSBaseEnv):
         return FieldHelper.getFieldRandomPosition(FIELD_LENGTH - .2, FIELD_WIDTH - .2)
     
     def _get_random_theta(self):
-        return FieldHelper.getRandomTheta()
+        return FieldHelper.getRandomTheta() * (180 / math.pi)
     
     def _get_random_robot(self, id: float, is_yellow_team: bool):
         robot_pos_x, robot_pos_y = self._get_field_random_position()

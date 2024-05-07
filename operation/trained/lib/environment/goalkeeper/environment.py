@@ -1,6 +1,5 @@
 import math
 import time
-import random
 import numpy as np
 
 from gym.spaces import Box
@@ -8,13 +7,12 @@ from gym.spaces import Box
 from rsoccer_gym.Entities import Ball, Frame, Robot
 from rsoccer_gym.vss.vss_gym_base import VSSBaseEnv
 
+from ...motion.motion_utils import MotionUtils
 from ...geometry.geometry_utils import GeometryUtils
 
 from ...helpers.field_helper import FieldHelper
 from ...helpers.rsoccer_helper import RSoccerHelper
 from ...helpers.configuration_helper import ConfigurationHelper
-
-from ...training.training_utils import TrainingUtils
 
 TEAM_BLUE_NUMBER_ROBOTS = ConfigurationHelper.getTeamBlueNumberRobots()
 TEAM_YELLOW_NUMBER_ROBOTS = ConfigurationHelper.getTeamYellowNumberRobots()
@@ -29,6 +27,7 @@ FIELD_GOAL_AREA_LENGTH = ConfigurationHelper.getFieldGoalAreaLength()
 
 TRAINING_TIME_STEP = ConfigurationHelper.getTrainingTimeStep()
 TRAINING_EPISODE_DURATION = ConfigurationHelper.getTrainingEpisodeDuration()
+TRAINING_VELOCITY_CLIP_VALUE = ConfigurationHelper.getTrainingVelocityClipValue()
 
 ROBOT_WIDTH = ConfigurationHelper.getRobotWidth()
 
@@ -41,37 +40,48 @@ class Environment(VSSBaseEnv):
             time_step=TRAINING_TIME_STEP
         )
 
+        maxFieldX = FIELD_LENGTH / 2
+        maxFieldY = FIELD_WIDTH / 2
+
         self.action_space = Box(
-            low=np.array([-FIELD_LENGTH / 2, -FIELD_WIDTH / 2]),
-            high=np.array([FIELD_LENGTH / 2, FIELD_WIDTH / 2]),
+            low=np.array([-maxFieldX, -maxFieldY]),
+            high=np.array([maxFieldX, maxFieldY]),
             dtype=np.float64,
             shape=(2,)
         )
 
         self.observation_space = Box(
             low=np.array([
-                -FIELD_LENGTH / 2,
-                -FIELD_WIDTH / 2,
+                -maxFieldX,
+                -maxFieldY,
                 -math.pi,
-                -FIELD_LENGTH / 2,
-                -FIELD_WIDTH / 2
+
+                -maxFieldX,
+                -maxFieldY,
+                -TRAINING_VELOCITY_CLIP_VALUE,
+                -TRAINING_VELOCITY_CLIP_VALUE
             ]),
             high=np.array([
-                FIELD_LENGTH / 2,
-                FIELD_WIDTH / 2,
+                maxFieldX,
+                maxFieldY,
                 math.pi,
-                FIELD_LENGTH / 2,
-                FIELD_WIDTH / 2
+
+                maxFieldX,
+                maxFieldY,
+                TRAINING_VELOCITY_CLIP_VALUE,
+                TRAINING_VELOCITY_CLIP_VALUE
             ]),
             dtype=np.float64,
-            shape=(5,)
+            shape=(7,)
         )
 
         self.goalReferencePosition = None
         self.error = 0
+        self.opponentError = 0
         self.episodeInitialTime = 0
         self.distanceOpponentRobotToGoal = 0
         self.distanceRobotToGoal = 0
+        self.speedFactor = 0
 
     def _get_state(self):
         observations = []
@@ -91,10 +101,70 @@ class Environment(VSSBaseEnv):
         return np.array(observations)
 
     def _frame_to_observations(self):
-        return self._get_state()
+        fieldData, _ = self._get_field_datas()
+
+        ball = fieldData.ball
+        robot = fieldData.robots[0]
+
+        velocityClip = lambda item: GeometryUtils.clip(
+            item,
+            -TRAINING_VELOCITY_CLIP_VALUE,
+            TRAINING_VELOCITY_CLIP_VALUE
+        )
+
+        observations = [
+            robot.position.x,
+            robot.position.y,
+            robot.position.theta,
+            ball.position.x,
+            ball.position.y,
+            velocityClip(ball.velocity.x),
+            velocityClip(ball.velocity.y)
+        ]
+        
+        return np.array(observations)
 
     def _get_commands(self, actions):
-        return actions
+        rSoccer_robot_actions = []
+        fieldData, opponentFieldData = self._get_field_datas()
+
+        robot = fieldData.robots[0]
+
+        (leftSpeed, rightSpeed, self.error) = MotionUtils.goToPoint(
+            robot,
+            (actions[0], actions[1]),
+            self.error
+        )
+
+        rSoccer_robot_actions.append(
+            RSoccerHelper.getRSoccerRobotAction(
+                0,
+                IS_YELLOW_TEAM,
+                leftSpeed,
+                rightSpeed
+            )
+        )
+
+        opponentRobot = opponentFieldData.robots[0]
+
+        (leftSpeed, rightSpeed, self.opponentError) = MotionUtils.goToPoint(
+            opponentRobot,
+            self.get_goal_reference_position(),
+            self.opponentError
+        )
+
+        getSpeed = lambda item: item * self.speedFactor
+
+        rSoccer_robot_actions.append(
+            RSoccerHelper.getRSoccerRobotAction(
+                0,
+                not IS_YELLOW_TEAM,
+                getSpeed(leftSpeed),
+                getSpeed(rightSpeed)
+            )
+        )
+
+        return rSoccer_robot_actions
     
     def calculate_goal_intersection(self):
         fieldData, _ = self._get_field_datas()
@@ -202,8 +272,6 @@ class Environment(VSSBaseEnv):
         reward = self._calculate_reward()
         done = self._is_done()
         reward = self._calculate_reward()
-
-        print(f"Reward: {reward}")
         
         return reward, done
     
@@ -212,17 +280,6 @@ class Environment(VSSBaseEnv):
     
     def _get_random_theta(self):
         return FieldHelper.getRandomTheta() * (180 / math.pi)
-    
-    def _get_random_robot(self, id: float, is_yellow_team: bool):
-        robot_pos_x, robot_pos_y = self._get_field_random_position()
-        robot_theta = self._get_random_theta()
-
-        return Robot(
-            id=id,
-            x=robot_pos_x,
-            y=robot_pos_y,
-            theta=robot_theta,
-            yellow=is_yellow_team)
     
     def _get_random_ball(self):
         ball_pos_x, ball_pos_y = self._get_field_random_position()
@@ -271,7 +328,7 @@ class Environment(VSSBaseEnv):
             id=0,
             x=robotYellowPosition[0],
             y=robotYellowPosition[1],
-            theta=90,
+            theta=self._get_random_theta(),
             yellow=True)
         
         robot_blue = Robot(
@@ -294,6 +351,7 @@ class Environment(VSSBaseEnv):
         pos_frame.ball = ball
 
         self.episodeInitialTime = time.time()
+        self.speedFactor = GeometryUtils.getRandomUniform(1 / 5, 1)
 
         self.distanceOpponentRobotToGoal = GeometryUtils.distance(
             robotBluePosition,

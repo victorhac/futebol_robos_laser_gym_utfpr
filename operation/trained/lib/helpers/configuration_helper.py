@@ -128,6 +128,16 @@ class ConfigurationHelper:
         return configuration["field"]["goal"]["width"]
     
     @staticmethod
+    def getFieldGoalAreaWidth():
+        configuration = ConfigurationHelper.getConfiguration()
+        return configuration["field"]["goal-area"]["width"]
+    
+    @staticmethod
+    def getFieldGoalAreaLength():
+        configuration = ConfigurationHelper.getConfiguration()
+        return configuration["field"]["goal-area"]["length"]
+    
+    @staticmethod
     def getFieldBallRadius():
         configuration = ConfigurationHelper.getConfiguration()
         return configuration["field"]["ball"]["radius"]
@@ -141,3 +151,8 @@ class ConfigurationHelper:
     def getTrainingEpisodeDuration():
         configuration = ConfigurationHelper.getConfiguration()
         return configuration["training"]["episode-duration"]
+    
+    @staticmethod
+    def getTrainingVelocityClipValue():
+        configuration = ConfigurationHelper.getConfiguration()
+        return configuration["training"]["velocity-clip-value"]
