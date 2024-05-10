@@ -1,10 +1,14 @@
 {
     "robot": {
         "wheel": {
-            "radius": 0.03
+            "radius": 0.0375
+        },
+        "motor": {
+            "max-rpm": 572
         },
         "speed": {
-            "base": 30
+            "base": 30,
+            "dead-zone": 2
         },
         "width": 0.075,
         "length": 0.075
@@ -13,10 +17,10 @@
         "is-yellow-left-team": true,
         "is-yellow-team": true,
         "blue": {
-            "number-robots": 1
+            "number-robots": 2
         },
         "yellow": {
-            "number-robots": 1
+            "number-robots": 2
         }
     },
     "motion": {
@@ -34,7 +38,7 @@
     "FIRASim": {
         "control": {
             "ip": "127.0.0.1",
-            "port": 20027
+            "port": 20011
         },
         "vision": {
             "ip": "224.0.0.1",
@@ -57,7 +61,7 @@
     },
     "training": {
         "time-step": 0.025,
-        "episode-duration": 5,
-        "velocity-clip-value": 1.2
+        "episode-duration": 10,
+        "velocity-clip-value": 1.25
     }
 }

@@ -106,8 +106,8 @@ class Environment(VSSBaseEnv):
         ball = fieldData.ball
         robot = fieldData.robots[0]
 
-        velocityClip = lambda item: GeometryUtils.clip(
-            item,
+        velocityClip = lambda x: np.clip(
+            x,
             -TRAINING_VELOCITY_CLIP_VALUE,
             TRAINING_VELOCITY_CLIP_VALUE
         )
@@ -137,7 +137,7 @@ class Environment(VSSBaseEnv):
         )
 
         rSoccer_robot_actions.append(
-            RSoccerHelper.getRSoccerRobotAction(
+            RSoccerHelper.get_rsoccer_robot_action(
                 0,
                 IS_YELLOW_TEAM,
                 leftSpeed,
@@ -153,10 +153,10 @@ class Environment(VSSBaseEnv):
             self.opponentError
         )
 
-        getSpeed = lambda item: item * self.speedFactor
+        getSpeed = lambda x: x * self.speedFactor
 
         rSoccer_robot_actions.append(
-            RSoccerHelper.getRSoccerRobotAction(
+            RSoccerHelper.get_rsoccer_robot_action(
                 0,
                 not IS_YELLOW_TEAM,
                 getSpeed(leftSpeed),
@@ -204,7 +204,7 @@ class Environment(VSSBaseEnv):
         if goalTargetPosition is None:
             robotMaxY = FIELD_GOAL_WIDTH / 2 - ROBOT_WIDTH / 2
             x = ownGoalPosition[0]
-            y = GeometryUtils.clip(
+            y = np.clip(
                 ball.position.y,
                 -robotMaxY,
                 robotMaxY
@@ -231,7 +231,7 @@ class Environment(VSSBaseEnv):
         reward = -1 if distance > 1 else -distance
 
         if self._is_done():
-            clip = lambda item: GeometryUtils.clip(item, 1, 5)
+            clip = lambda x: np.clip(x, 1, 5)
             factor = 2
 
             def getReward(positive, distanceReward):

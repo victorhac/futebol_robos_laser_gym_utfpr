@@ -36,6 +36,11 @@ class ConfigurationHelper:
         return configuration["robot"]["speed"]["base"]
     
     @staticmethod
+    def getRobotSpeedDeadZone():
+        configuration = ConfigurationHelper.getConfiguration()
+        return configuration["robot"]["speed"]["dead-zone"]
+    
+    @staticmethod
     def getRobotWidth():
         configuration = ConfigurationHelper.getConfiguration()
         return configuration["robot"]["width"]

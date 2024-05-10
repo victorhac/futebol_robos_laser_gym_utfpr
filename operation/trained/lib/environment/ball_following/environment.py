@@ -119,7 +119,7 @@ class Environment(VSSBaseEnv):
 
         (leftSpeed, rightSpeed, self.error) = velocities
 
-        return [RSoccerHelper.getRSoccerRobotAction(0, IS_YELLOW_TEAM, leftSpeed, rightSpeed)]
+        return [RSoccerHelper.get_rsoccer_robot_action(0, IS_YELLOW_TEAM, leftSpeed, rightSpeed)]
     
     def _get_field_datas(self):
         state = self._get_state()

@@ -13,7 +13,7 @@ class TrainingUtils():
         goalPosition: tuple[float, float]
     ):
         v = TrainingUtils.v(ballPast, ballCurrent, goalPosition)
-        return GeometryUtils.clip(v, -1, 1)
+        return np.clip(v, -1, 1)
     
     @staticmethod
     def rDist(

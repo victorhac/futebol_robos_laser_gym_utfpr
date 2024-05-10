@@ -195,26 +195,6 @@ class GeometryUtils:
         return tangent1, tangent2
     
     @staticmethod
-    def clip(value: float, minValue: float = None, maxValue: float = None) -> float:
-        if minValue is None and maxValue is None:
-            return value
-        elif minValue is None:
-            return min(value, maxValue)
-        elif maxValue is None:
-            return max(value, minValue)
-        
-        if value > maxValue:
-            return maxValue
-        elif value < minValue:
-            return minValue
-        else:
-            return value
-        
-    @staticmethod
-    def convertAngleToRadians(angle: float):
-        return angle * (math.pi / 180.0)
-    
-    @staticmethod
     def calculateVectorCoordinates(
         magnitude: float,
         angle: float,

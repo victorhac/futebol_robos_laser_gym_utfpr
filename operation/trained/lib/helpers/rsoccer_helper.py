@@ -5,10 +5,12 @@ from ..geometry.geometry_utils import GeometryUtils
 
 from rsoccer_gym.Entities import Robot as RSoccerRobot, Ball as RSoccerBall
 
+import numpy as np
+
 class RSoccerHelper:
     @staticmethod
     def getCorrectedAngle(angle: float):
-        angleRadians = GeometryUtils.convertAngleToRadians(angle)
+        angleRadians = np.deg2rad(angle)
         return GeometryUtils.normalizeInPI(angleRadians)
 
     @staticmethod
@@ -37,7 +39,7 @@ class RSoccerHelper:
         return ball
     
     @staticmethod
-    def getRSoccerRobotAction(
+    def get_rsoccer_robot_action(
         id: int,
         isYellowTeam: bool,
         leftMotorSpeed: float,

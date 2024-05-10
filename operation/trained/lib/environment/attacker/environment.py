@@ -67,6 +67,10 @@ class Environment(VSSBaseEnv):
 
             max_field_x,
             max_field_y,
+            math.pi,
+
+            max_field_x,
+            max_field_y,
             TRAINING_VELOCITY_CLIP_VALUE,
             TRAINING_VELOCITY_CLIP_VALUE
         ]
@@ -76,7 +80,41 @@ class Environment(VSSBaseEnv):
             high=np.array(observation_space_max_values),
             dtype=np.float64,
             shape=(len(observation_space_max_values),)
-        ) 
+        )
+    
+    def _frame_to_observations(self):
+        observations = []
+
+        frame = self.frame
+
+        def append_robot_observations(robot):
+            observations.extend([
+                robot.x,
+                robot.y,
+                RSoccerHelper.getCorrectedAngle(robot.theta)
+            ])
+        
+        for i in range(self.n_robots_yellow):
+            append_robot_observations(frame.robots_yellow[i])
+
+        for i in range(self.n_robots_blue):
+            append_robot_observations(frame.robots_blue[i])
+
+        ball = self.frame.ball
+
+        speed_clip = lambda x: np.clip(
+            x,
+            -TRAINING_VELOCITY_CLIP_VALUE,
+            TRAINING_VELOCITY_CLIP_VALUE)
+
+        observations.extend([
+            ball.x,
+            ball.x,
+            speed_clip(ball.v_x),
+            speed_clip(ball.v_y)
+        ])
+        
+        return np.array(observations)
 
     def _get_state(self):
         observations = []
@@ -94,9 +132,6 @@ class Environment(VSSBaseEnv):
             observations.append(robot)
         
         return np.array(observations)
-
-    def _frame_to_observations(self):
-        return self._get_state()
 
     def _get_commands(self, actions):
         round_if_inside_dead_zone = lambda x: 0 if abs(x) < ROBOT_SPEED_DEAD_ZONE else x
@@ -168,7 +203,8 @@ class Environment(VSSBaseEnv):
         return -1 if distance > 1 else -distance
     
     def _get_goal_reward(self):
-        reward = (8 * (time.time() - self.episode_initial_time)) / TRAINING_EPISODE_DURATION + 2
+        remaining_time = TRAINING_EPISODE_DURATION - (time.time() - self.episode_initial_time)
+        reward = (8 * remaining_time) / TRAINING_EPISODE_DURATION + 2
         return -reward if self._is_goal_received() else reward
     
     def _calculate_reward(self):

@@ -55,8 +55,8 @@ def getObservation(fieldData: FieldData):
     robot = fieldData.robots[0]
     ball = fieldData.ball
 
-    velocityClip = lambda item: GeometryUtils.clip(
-        item,
+    velocityClip = lambda x: np.clip(
+        x,
         -TRAINING_VELOCITY_CLIP_VALUE,
         TRAINING_VELOCITY_CLIP_VALUE
     )
