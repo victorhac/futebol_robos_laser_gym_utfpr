@@ -42,8 +42,8 @@ class Environment(VSSBaseEnv):
 
     def _get_action_space(self):
         return Box(
-            low=np.array([-1, -1]),
-            high=np.array([1, 1]),
+            low=np.array([-1.0, -1.0], dtype=np.float64),
+            high=np.array([1.0, 1.0], dtype=np.float64),
             dtype=np.float64,
             shape=(2,)
         )
@@ -76,8 +76,8 @@ class Environment(VSSBaseEnv):
         ]
         
         return Box(
-            low=np.array([-i for i in observation_space_max_values]),
-            high=np.array(observation_space_max_values),
+            low=np.array([-i for i in observation_space_max_values], dtype=np.float64),
+            high=np.array(observation_space_max_values, dtype=np.float64),
             dtype=np.float64,
             shape=(len(observation_space_max_values),)
         )
@@ -253,8 +253,6 @@ class Environment(VSSBaseEnv):
         reward = self._calculate_reward()
         done = self._is_done()
         reward = self._calculate_reward()
-
-        print(f"Reward: {reward}")
         
         return reward, done
     
