@@ -153,7 +153,7 @@ class Environment(VSSBaseEnv):
             opponent_goal_position
         )
 
-        return -1 if distance > 1 else -distance
+        return -distance
 
     def _get_heading_towards_ball_reward(self):
         field_data, _ = self._get_field_datas()
@@ -165,7 +165,7 @@ class Environment(VSSBaseEnv):
             ball.get_position_tuple()
         )
 
-        return -1 if distance > 1 else -distance
+        return -distance
     
     def _get_goal_reward(self):
         reward = (8 * (time.time() - self.episode_initial_time)) / TRAINING_EPISODE_DURATION + 2

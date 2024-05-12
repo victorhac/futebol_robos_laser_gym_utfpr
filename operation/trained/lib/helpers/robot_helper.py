@@ -1,6 +1,5 @@
 from ..domain.rectangle import Rectangle
 from ..domain.robot import Robot
-from rsoccer_gym.Entities import Robot as rSoccerRobot
 
 class RobotHelper:
     @staticmethod

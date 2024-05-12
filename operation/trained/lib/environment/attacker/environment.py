@@ -39,11 +39,15 @@ class Environment(VSSBaseEnv):
         self.action_space = self._get_action_space()
         self.observation_space = self._get_observation_space()
         self.episode_initial_time = 0
+        self.error = 0
 
     def _get_action_space(self):
+        max_field_x = self._get_field_length() / 2
+        max_field_y = self._get_field_width() / 2
+
         return Box(
-            low=np.array([-1.0, -1.0], dtype=np.float64),
-            high=np.array([1.0, 1.0], dtype=np.float64),
+            low=np.array([-max_field_x, -max_field_y], dtype=np.float64),
+            high=np.array([max_field_x, max_field_y], dtype=np.float64),
             dtype=np.float64,
             shape=(2,)
         )
@@ -134,18 +138,22 @@ class Environment(VSSBaseEnv):
         return np.array(observations)
 
     def _get_commands(self, actions):
-        round_if_inside_dead_zone = lambda x: 0 if abs(x) < ROBOT_SPEED_DEAD_ZONE else x
-        get_motor_speed = lambda x: round_if_inside_dead_zone(x * ROBOT_SPEED_BASE)
+        fieldData, _ = self._get_field_datas()
 
-        left_motor_speed = get_motor_speed(actions[0])
-        right_motor_speed = get_motor_speed(actions[1])
+        robot = fieldData.robots[0]
+
+        targetPosition = (actions[0], actions[1])
+
+        velocities = MotionUtils.goToPoint(robot, targetPosition, self.error)
+
+        (leftSpeed, rightSpeed, self.error) = velocities
 
         return [
             RSoccerHelper.get_rsoccer_robot_action(
                 0,
                 IS_YELLOW_TEAM,
-                left_motor_speed,
-                right_motor_speed
+                leftSpeed,
+                rightSpeed
             )
         ]
     
@@ -188,7 +196,7 @@ class Environment(VSSBaseEnv):
             opponent_goal_position
         )
 
-        return -1 if distance > 1 else -distance
+        return -distance
 
     def _get_heading_towards_ball_reward(self):
         field_data, _ = self._get_field_datas()
@@ -200,7 +208,7 @@ class Environment(VSSBaseEnv):
             ball.get_position_tuple()
         )
 
-        return -1 if distance > 1 else -distance
+        return -distance
     
     def _get_goal_reward(self):
         remaining_time = TRAINING_EPISODE_DURATION - (time.time() - self.episode_initial_time)
