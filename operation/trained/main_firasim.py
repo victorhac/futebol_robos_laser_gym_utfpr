@@ -72,7 +72,7 @@ def main():
         if tangentPoint is not None:
             currentTargetPosition = tangentPoint
 
-        velocities = MotionUtils.goToPoint(robot, currentTargetPosition, error)
+        velocities = MotionUtils.go_to_point(robot, currentTargetPosition, error)
 
         (leftSpeed, rightSpeed, error) = velocities
 

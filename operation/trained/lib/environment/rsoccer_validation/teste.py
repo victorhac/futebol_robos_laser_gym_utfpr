@@ -8,27 +8,58 @@ import numpy as np
 from rsoccer_gym.Entities import Frame, Robot, Ball
 from rsoccer_gym.vss.vss_gym_base import VSSBaseEnv
 from rsoccer_gym.Utils import KDTree
-from gym.spaces import Box
 
 class Environment(VSSBaseEnv):
-    def __init__(self):
-        super().__init__(
-            field_type=0,
-            n_robots_blue=1,
-            n_robots_yellow=1,
-            time_step=0.025)
+    """This environment controls a single robot in a VSS soccer League 3v3 match 
 
-        self.action_space = Box(
-            low=-1,
-            high=1,
-            shape=(2,),
-            dtype=np.float32)
-        
-        self.observation_space = Box(
-            low=-self.NORM_BOUNDS,
-            high=self.NORM_BOUNDS,
-            shape=(40,),
-            dtype=np.float32)
+
+        Description:
+        Observation:
+            Type: Box(40)
+            Normalized Bounds to [-1.25, 1.25]
+            Num             Observation normalized  
+            0               Ball X
+            1               Ball Y
+            2               Ball Vx
+            3               Ball Vy
+            4 + (7 * i)     id i Blue Robot X
+            5 + (7 * i)     id i Blue Robot Y
+            6 + (7 * i)     id i Blue Robot sin(theta)
+            7 + (7 * i)     id i Blue Robot cos(theta)
+            8 + (7 * i)     id i Blue Robot Vx
+            9  + (7 * i)    id i Blue Robot Vy
+            10 + (7 * i)    id i Blue Robot v_theta
+            25 + (5 * i)    id i Yellow Robot X
+            26 + (5 * i)    id i Yellow Robot Y
+            27 + (5 * i)    id i Yellow Robot Vx
+            28 + (5 * i)    id i Yellow Robot Vy
+            29 + (5 * i)    id i Yellow Robot v_theta
+        Actions:
+            Type: Box(2, )
+            Num     Action
+            0       id 0 Blue Left Wheel Speed  (%)
+            1       id 0 Blue Right Wheel Speed (%)
+        Reward:
+            Sum of Rewards:
+                Goal
+                Ball Potential Gradient
+                Move to Ball
+                Energy Penalty
+        Starting State:
+            Randomized Robots and Ball initial Position
+        Episode Termination:
+            5 minutes match time
+    """
+
+    def __init__(self, use_fira=False):
+        super().__init__(field_type=0, n_robots_blue=1, n_robots_yellow=1,
+                         time_step=0.025, use_fira=use_fira)
+
+        self.action_space = gym.spaces.Box(low=-1, high=1,
+                                           shape=(2, ), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=-self.NORM_BOUNDS,
+                                                high=self.NORM_BOUNDS,
+                                                shape=(40, ), dtype=np.float32)
 
         # Initialize Class Atributes
         self.previous_ball_potential = None
@@ -41,6 +72,8 @@ class Environment(VSSBaseEnv):
             self.ou_actions.append(
                 OrnsteinUhlenbeckAction(self.action_space, dt=self.time_step)
             )
+
+        print('Environment initialized')
 
     def reset(self):
         self.actions = None
@@ -56,31 +89,32 @@ class Environment(VSSBaseEnv):
         return observation, reward, done, self.reward_shaping_total
     
     def _frame_to_observations(self):
-        observation = []
+        # observation = []
 
-        observation.append(self.norm_pos(self.frame.ball.x))
-        observation.append(self.norm_pos(self.frame.ball.y))
-        observation.append(self.norm_v(self.frame.ball.v_x))
-        observation.append(self.norm_v(self.frame.ball.v_y))
+        # observation.append(self.norm_pos(self.frame.ball.x))
+        # observation.append(self.norm_pos(self.frame.ball.y))
+        # observation.append(self.norm_v(self.frame.ball.v_x))
+        # observation.append(self.norm_v(self.frame.ball.v_y))
 
-        for i in range(self.n_robots_blue):
-            theta = np.deg2rad(self.frame.robots_blue[i].theta)
-            observation.append(self.norm_pos(self.frame.robots_blue[i].x))
-            observation.append(self.norm_pos(self.frame.robots_blue[i].y))
-            observation.append(np.sin(theta))
-            observation.append(np.cos(theta))
-            observation.append(self.norm_v(self.frame.robots_blue[i].v_x))
-            observation.append(self.norm_v(self.frame.robots_blue[i].v_y))
-            observation.append(self.norm_w(self.frame.robots_blue[i].v_theta))
+        # for i in range(self.n_robots_blue):
+        #     theta = np.deg2rad(self.frame.robots_blue[i].theta)
+        #     observation.append(self.norm_pos(self.frame.robots_blue[i].x))
+        #     observation.append(self.norm_pos(self.frame.robots_blue[i].y))
+        #     observation.append(np.sin(theta))
+        #     observation.append(np.cos(theta))
+        #     observation.append(self.norm_v(self.frame.robots_blue[i].v_x))
+        #     observation.append(self.norm_v(self.frame.robots_blue[i].v_y))
+        #     observation.append(self.norm_w(self.frame.robots_blue[i].v_theta))
 
-        for i in range(self.n_robots_yellow):
-            observation.append(self.norm_pos(self.frame.robots_yellow[i].x))
-            observation.append(self.norm_pos(self.frame.robots_yellow[i].y))
-            observation.append(self.norm_v(self.frame.robots_yellow[i].v_x))
-            observation.append(self.norm_v(self.frame.robots_yellow[i].v_y))
-            observation.append(self.norm_w(self.frame.robots_yellow[i].v_theta))
+        # for i in range(self.n_robots_yellow):
+        #     observation.append(self.norm_pos(self.frame.robots_yellow[i].x))
+        #     observation.append(self.norm_pos(self.frame.robots_yellow[i].y))
+        #     observation.append(self.norm_v(self.frame.robots_yellow[i].v_x))
+        #     observation.append(self.norm_v(self.frame.robots_yellow[i].v_y))
+        #     observation.append(self.norm_w(self.frame.robots_yellow[i].v_theta))
 
-        return np.array(observation, dtype=np.float32)
+        # return np.array(observation, dtype=np.float32)
+        return self._get_state()
     
     def _get_state(self):
         observations = []

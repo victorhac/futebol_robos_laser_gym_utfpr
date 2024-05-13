@@ -130,7 +130,7 @@ class Environment(VSSBaseEnv):
 
         robot = fieldData.robots[0]
 
-        (leftSpeed, rightSpeed, self.error) = MotionUtils.goToPoint(
+        (leftSpeed, rightSpeed, self.error) = MotionUtils.go_to_point(
             robot,
             (actions[0], actions[1]),
             self.error
@@ -147,7 +147,7 @@ class Environment(VSSBaseEnv):
 
         opponentRobot = opponentFieldData.robots[0]
 
-        (leftSpeed, rightSpeed, self.opponentError) = MotionUtils.goToPoint(
+        (leftSpeed, rightSpeed, self.opponentError) = MotionUtils.go_to_point(
             opponentRobot,
             self.get_goal_reference_position(),
             self.opponentError

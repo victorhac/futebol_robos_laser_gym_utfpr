@@ -90,11 +90,11 @@ while True:
     obs = getObservation(fieldData)
 
     action, state = model.predict(obs)
-    leftSpeed, rightSpeed, error = MotionUtils.goToPoint(robot, action, error)
+    leftSpeed, rightSpeed, error = MotionUtils.go_to_point(robot, action, error)
     teamControl.transmit_robot(0, leftSpeed, rightSpeed)
 
     opponentTargetPosition = (ball.position.x, ball.position.y)
-    leftSpeed, rightSpeed, opponentError = MotionUtils.goToPoint(opponentRobot, opponentTargetPosition, opponentError)
+    leftSpeed, rightSpeed, opponentError = MotionUtils.go_to_point(opponentRobot, opponentTargetPosition, opponentError)
     opponentTeamControl.transmit_robot(0, leftSpeed, rightSpeed)
 
     updateVisions(vision, opponentVision)

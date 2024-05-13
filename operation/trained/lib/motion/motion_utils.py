@@ -18,7 +18,7 @@ MOTION_COLLISION_AVOIDANCE_MIN_DISTANCE = ConfigurationHelper.getMotionCollision
 
 class MotionUtils:
     @staticmethod
-    def goToPoint(
+    def go_to_point(
         robot: Robot, 
         targetPosition: tuple[float, float],
         lastError: float = 0

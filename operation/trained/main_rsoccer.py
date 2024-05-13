@@ -1,7 +1,7 @@
 from lib.helpers.configuration_helper import ConfigurationHelper
 from lib.helpers.rsoccer_helper import RSoccerHelper
 from lib.motion.motion_utils import MotionUtils
-from lib.environment.rsoccer_validation.environment import Environment
+from lib.environment.rsoccer_validation.teste import Environment
 import time
 
 IS_YELLOW_TEAM = ConfigurationHelper.getTeamIsYellowTeam()
@@ -17,20 +17,19 @@ for i in range(1):
 
     done = False
     error = 0
-    leftSpeed, rightSpeed = 0, 0
 
-    fator = 1 * ROBOT_SPEED_BASE * 10
+    left_motor_speed, right_motor_speed, error = (0, 0, 0)
+
+    fator = 5
 
     while not done:
-        action = [leftSpeed / fator, rightSpeed / fator]
-
-        next_state, reward, done, _ = env.step(action)
+        next_state, reward, done, _ = env.step((left_motor_speed / ROBOT_SPEED_BASE / fator, right_motor_speed / ROBOT_SPEED_BASE / fator))
 
         fieldData, opponentFieldData = RSoccerHelper.getFieldDatas(next_state, IS_YELLOW_TEAM)
 
-        robot = fieldData.robots[0]
-        ball = fieldData.ball
-
-        (leftSpeed, rightSpeed, error) = MotionUtils.goToPoint(robot, ball.get_position_tuple(), error)
+        left_motor_speed, right_motor_speed, error = MotionUtils.go_to_point(
+            fieldData.robots[0],
+            fieldData.ball.get_position_tuple(),
+            error)
 
         env.render()

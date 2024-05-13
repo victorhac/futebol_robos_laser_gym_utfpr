@@ -144,7 +144,7 @@ class Environment(VSSBaseEnv):
 
         targetPosition = (actions[0], actions[1])
 
-        velocities = MotionUtils.goToPoint(robot, targetPosition, self.error)
+        velocities = MotionUtils.go_to_point(robot, targetPosition, self.error)
 
         (leftSpeed, rightSpeed, self.error) = velocities
 
