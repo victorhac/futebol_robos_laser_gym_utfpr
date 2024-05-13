@@ -19,8 +19,8 @@ class Environment(VSSBaseEnv):
     def __init__(self):
         super().__init__(
             field_type=0,
-            n_robots_blue=1,
-            n_robots_yellow=1,
+            n_robots_blue=3,
+            n_robots_yellow=3,
             time_step=0.025)
 
         self.action_space = Box(
