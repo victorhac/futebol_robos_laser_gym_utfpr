@@ -1,5 +1,5 @@
 from lib.helpers.configuration_helper import ConfigurationHelper
-from lib.environment.attacker.environment import Environment
+from lib.environment.attacker_v2.environment import Environment
 import time
 
 from lib.helpers.rsoccer_helper import RSoccerHelper
@@ -22,6 +22,8 @@ for i in range(10):
 
     while done is False:
         next_state, reward, done, _ = env.step((left_motor_speed / ROBOT_SPEED_BASE, right_motor_speed / ROBOT_SPEED_BASE))
+
+        print("Reward: ", reward)
 
         fieldData, opponentFieldData = RSoccerHelper.getFieldDatas(env._get_state(), IS_YELLOW_TEAM)
 

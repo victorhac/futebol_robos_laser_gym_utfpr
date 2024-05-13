@@ -1,5 +1,6 @@
 import math
 import random
+import time
 from rsoccer_gym.Utils.Utils import OrnsteinUhlenbeckAction
 from typing import Dict
 
@@ -9,6 +10,10 @@ from rsoccer_gym.Entities import Frame, Robot, Ball
 from rsoccer_gym.vss.vss_gym_base import VSSBaseEnv
 from rsoccer_gym.Utils import KDTree
 from gym.spaces import Box
+
+from lib.helpers.configuration_helper import ConfigurationHelper
+
+TRAINING_EPISODE_DURATION = ConfigurationHelper.getTrainingEpisodeDuration()
 
 class Environment(VSSBaseEnv):
     def __init__(self):
@@ -36,6 +41,8 @@ class Environment(VSSBaseEnv):
         self.reward_shaping_total = None
         self.v_wheel_deadzone = 0.05
 
+        self.episode_initial_time = 0
+
         self.ou_actions = []
         for i in range(self.n_robots_blue + self.n_robots_yellow):
             self.ou_actions.append(
@@ -50,10 +57,6 @@ class Environment(VSSBaseEnv):
             ou.reset()
 
         return super().reset()
-
-    def step(self, action):
-        observation, reward, done, _ = super().step(action)
-        return observation, reward, done, self.reward_shaping_total
     
     def _frame_to_observations(self):
         observation = []
@@ -134,25 +137,18 @@ class Environment(VSSBaseEnv):
                                          'ball_grad': 0, 'energy': 0,
                                          'goals_blue': 0, 'goals_yellow': 0}
 
-        # Check if goal ocurred
         if self.frame.ball.x > (self.field.length / 2):
             self.reward_shaping_total['goal_score'] += 1
             self.reward_shaping_total['goals_blue'] += 1
             reward = 10
-            goal = True
         elif self.frame.ball.x < -(self.field.length / 2):
             self.reward_shaping_total['goal_score'] -= 1
             self.reward_shaping_total['goals_yellow'] += 1
             reward = -10
-            goal = True
         else:
-
             if self.last_frame is not None:
-                # Calculate ball potential
                 grad_ball_potential = self.__ball_grad()
-                # Calculate Move ball
                 move_reward = self.__move_reward()
-                # Calculate Energy penalty
                 energy_penalty = self.__energy_penalty()
 
                 reward = w_move * move_reward + \
@@ -164,10 +160,22 @@ class Environment(VSSBaseEnv):
                     * grad_ball_potential
                 self.reward_shaping_total['energy'] += w_energy \
                     * energy_penalty
-                
-        print('Reward:', reward)
 
-        return reward, goal
+        return reward, self._is_done()
+    
+    def _has_goal_scored(self):
+        if self.frame.ball.x > self.field.length / 2:
+            return True
+        elif self.frame.ball.x < -self.field.length / 2:
+            return True
+        return False
+
+    def _is_done(self):
+        if self._has_goal_scored():
+            return True
+        if time.time() - self.episode_initial_time > TRAINING_EPISODE_DURATION:
+            return True
+        return False
 
     def _get_initial_positions_frame(self):
         '''Returns the position of each robot and ball for the initial frame'''
@@ -206,6 +214,8 @@ class Environment(VSSBaseEnv):
 
             places.insert(pos)
             pos_frame.robots_yellow[i] = Robot(x=pos[0], y=pos[1], theta=theta())
+
+        self.episode_initial_time = time.time()
 
         return pos_frame
 
