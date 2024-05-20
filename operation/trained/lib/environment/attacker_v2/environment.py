@@ -3,17 +3,11 @@ import random
 import time
 from rsoccer_gym.Utils.Utils import OrnsteinUhlenbeckAction
 from typing import Dict
-
-import gym
 import numpy as np
 from rsoccer_gym.Entities import Frame, Robot, Ball
 from rsoccer_gym.vss.vss_gym_base import VSSBaseEnv
 from rsoccer_gym.Utils import KDTree
 from gym.spaces import Box
-
-from lib.helpers.configuration_helper import ConfigurationHelper
-
-TRAINING_EPISODE_DURATION = ConfigurationHelper.getTrainingEpisodeDuration()
 
 class Environment(VSSBaseEnv):
     def __init__(self):
@@ -172,8 +166,6 @@ class Environment(VSSBaseEnv):
 
     def _is_done(self):
         if self._has_goal_scored():
-            return True
-        if time.time() - self.episode_initial_time > TRAINING_EPISODE_DURATION:
             return True
         return False
 
