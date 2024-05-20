@@ -61,7 +61,7 @@
     },
     "training": {
         "time-step": 0.025,
-        "episode-duration": 20,
+        "episode-duration": 10,
         "velocity-clip-value": 1.25
     }
 }

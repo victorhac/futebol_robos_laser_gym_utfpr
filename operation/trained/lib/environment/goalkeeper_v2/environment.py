@@ -1,12 +1,16 @@
 import math
 import random
+import time
 import numpy as np
 from rsoccer_gym.Entities import Frame, Robot
 from rsoccer_gym.vss.vss_gym_base import VSSBaseEnv
 from gym.spaces import Box
 from rsoccer_gym.Utils.Utils import OrnsteinUhlenbeckAction
 
+from ...helpers.configuration_helper import ConfigurationHelper
 from ...helpers.model_helper import ModelHelper
+
+TRAINING_EPISODE_DURATION = ConfigurationHelper.getTrainingEpisodeDuration()
 
 class Environment(VSSBaseEnv):
     def __init__(self):
@@ -33,6 +37,7 @@ class Environment(VSSBaseEnv):
         self.ball_inside_area = False
         self.attacker = ModelHelper.get_attacker_model()
         self.v_wheel_deadzone = 0.05
+        self.episode_initial_time = 0
         self.ou_actions = []
         for i in range(self.n_robots_blue + self.n_robots_yellow):
             self.ou_actions.append(
@@ -284,7 +289,7 @@ class Environment(VSSBaseEnv):
                          w_defense * ball_defense_reward + \
                          w_blva * ball_leave_area_reward
 
-        done = goal_score != 0 or done
+        done = goal_score != 0 or done or (time.time() - self.episode_initial_time > TRAINING_EPISODE_DURATION)
 
         return reward, done
 
@@ -315,5 +320,7 @@ class Environment(VSSBaseEnv):
         pos_frame.robots_yellow[0] = Robot(x=x(), y=y(), theta=math.pi)
         pos_frame.robots_yellow[1] = Robot(x=x(), y=y(), theta=math.pi)
         pos_frame.robots_yellow[2] = Robot(x=x(), y=y(), theta=math.pi)
+
+        self.episode_initial_time = time.time()
 
         return pos_frame
