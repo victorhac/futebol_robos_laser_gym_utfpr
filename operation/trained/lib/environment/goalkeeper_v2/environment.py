@@ -28,7 +28,7 @@ class Environment(VSSBaseEnv):
         self.observation_space = Box(
             low=-1,
             high=1,
-            shape=(7,),
+            shape=(11,),
             dtype=np.float32)
 
         self.energy_penalty = 0
