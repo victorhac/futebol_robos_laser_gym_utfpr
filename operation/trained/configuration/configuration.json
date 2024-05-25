@@ -14,8 +14,8 @@
         "length": 0.075
     },
     "team": {
-        "is-yellow-left-team": true,
-        "is-yellow-team": true,
+        "is-yellow-left-team": false,
+        "is-yellow-team": false,
         "blue": {
             "number-robots": 1
         },

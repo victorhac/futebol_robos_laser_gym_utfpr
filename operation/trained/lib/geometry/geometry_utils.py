@@ -49,6 +49,16 @@ class GeometryUtils:
         return GeometryUtils.distance(position1, position2) < tolerance
     
     @staticmethod
+    def circunferences_intersect(
+        center1: tuple[float, float],
+        radius1: float,
+        center2: tuple[float, float],
+        radius2: float
+    ):
+        distance = GeometryUtils.distance(center1, center2)
+        return distance <= radius1 + radius2 and distance >= abs(radius1 - radius2)
+    
+    @staticmethod
     def findIntersection(line1: tuple[float, float, float], line2: tuple[float, float, float]):
         """
         Extract coefficients (a, b, c) from line equations (ax + by = c)
@@ -84,10 +94,85 @@ class GeometryUtils:
         return -m, 1, b
     
     @staticmethod
-    def lineEquationByPointAndAngle(point: tuple[float, float], angle: float):
-        """
-        Return the equation of the line passing through a point with a given angle in the form (a, b, c): (ax + by = c).
-        """
+    def point_to_line_distance(
+        point: tuple[float, float],
+        line_equation: tuple[float, float, float]
+    ):
+        px, py = point
+        a, b, c = line_equation
+        return abs(a * px + b * py - c) / math.sqrt(a ** 2 + b ** 2)
+
+    @staticmethod
+    def is_between(
+        point: tuple[float, float],
+        endpoint1: tuple[float, float],
+        endpoint2: tuple[float, float]
+    ):
+        px, py = point
+        x1, y1 = endpoint1
+        x2, y2 = endpoint2
+    
+        cross_product = (py - y1) * (x2 - x1) - (px - x1) * (y2 - y1)
+        if abs(cross_product) > 1e-10:
+            return False
+        dot_product = (px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)
+        if dot_product < 0:
+            return False
+        squared_length = (x2 - x1) ** 2 + (y2 - y1) ** 2
+        if dot_product > squared_length:
+            return False
+        return True
+
+    @staticmethod
+    def point_to_point_distance(
+        point1: tuple[float, float],
+        point2: tuple[float, float]
+    ):
+        x1, y1 = point1
+        x2, y2 = point2
+        return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+
+    @staticmethod
+    def distance_point_to_line_segment(
+        point: tuple[float, float],
+        endpoint1: tuple[float, float],
+        endpoint2: tuple[float, float]
+    ):
+        x1, y1 = endpoint1
+        x2, y2 = endpoint2
+        
+        a = y2 - y1
+        b = x1 - x2
+        c = a * x1 + b * y1
+
+        line_equation = (a, b, c)
+
+        perp_distance = GeometryUtils.point_to_line_distance(point, line_equation)
+
+        if GeometryUtils.is_between(point, endpoint1, endpoint2):
+            return perp_distance
+        else:
+            dist_to_end1 = GeometryUtils.point_to_point_distance(point, endpoint1)
+            dist_to_end2 = GeometryUtils.point_to_point_distance(point, endpoint2)
+            return min(dist_to_end1, dist_to_end2)
+        
+    @staticmethod
+    def find_y(
+        line_equation: tuple[float, float, float],
+        x: float
+    ):
+        a, b, c = line_equation
+
+        if b == 0:
+            None
+
+        return (c - a * x) / b
+    
+    @staticmethod
+    def lineEquationByPointAndAngle(
+        point: tuple[float, float],
+        angle: float
+    ):
         x, y = point
         m = math.tan(angle)
         b = y - m * x
@@ -96,9 +181,6 @@ class GeometryUtils:
     
     @staticmethod
     def getMidpoint(point1: tuple[float, float], point2: tuple[float, float]):
-        """
-        Return the midpoint of two points.
-        """
         x1, y1 = point1
         x2, y2 = point2
 
@@ -106,26 +188,12 @@ class GeometryUtils:
     
     @staticmethod
     def getRotatedRectangleVertices(rectangle: Rectangle):
-        """
-        Calculate the vertices of a rotated rectangle.
-
-        Args:
-        - center: Center coordinates of the rectangle (x, y).
-        - width: Width of the rectangle.
-        - height: Height of the rectangle.
-        - angle: Rotation angle in radians.
-
-        Returns:
-        - List of (x, y) coordinates representing the vertices of the rotated rectangle.
-        """
         half_width = rectangle.width / 2
         half_height = rectangle.height / 2
 
-        # Calculate the coordinates of the vertices in the local (unrotated) coordinate system
         vertices_local = [(-half_width, -half_height), (half_width, -half_height),
                         (half_width, half_height), (-half_width, half_height)]
 
-        # Rotate each vertex around the center by the specified angle
         vertices_rotated = []
         for vertex in vertices_local:
             x_local, y_local = vertex
