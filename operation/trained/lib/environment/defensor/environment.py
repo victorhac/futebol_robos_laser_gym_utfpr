@@ -2,15 +2,14 @@ import math
 import random
 import time
 import numpy as np
-from rsoccer_gym.vss.vss_gym_base import VSSBaseEnv
 from gym.spaces import Box
+from rsoccer_gym.vss.vss_gym_base import VSSBaseEnv
+from rsoccer_gym.vss.vss_gym_base import VSSBaseEnv
 from rsoccer_gym.Utils.Utils import OrnsteinUhlenbeckAction
 from rsoccer_gym.Entities import Frame, Robot, Ball
-from rsoccer_gym.vss.vss_gym_base import VSSBaseEnv
 from rsoccer_gym.Utils import KDTree
 
 from ...helpers.field_helper import FieldHelper
-
 from ...helpers.configuration_helper import ConfigurationHelper
 from ...helpers.model_helper import ModelHelper
 

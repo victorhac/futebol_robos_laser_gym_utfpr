@@ -61,10 +61,6 @@ def main():
     updateVisions(vision, opponentVision)
     
     while True:
-        if max(robot.velocity.x, robot.velocity.y) >  maxSpeed:
-            maxSpeed = max(robot.velocity.x, robot.velocity.y)
-            print(maxSpeed)
-
         targetPosition = FIRASimHelper.normalizePosition(ball.position.x, ball.position.y, IS_LEFT_TEAM)
 
         tangentPoint = MotionUtils.findTangentPointObstacle(0, fieldData, opponentFieldData, targetPosition)

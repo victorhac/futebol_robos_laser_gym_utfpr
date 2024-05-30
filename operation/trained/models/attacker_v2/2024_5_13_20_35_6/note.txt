@@ -1,1 +1,0 @@
-funcionando relativamente bem e foi treinado do zero em 20000000 timesteps

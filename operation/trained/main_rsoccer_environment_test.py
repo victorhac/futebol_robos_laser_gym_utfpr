@@ -26,7 +26,7 @@ try:
 
                 print("Reward: ", reward)
 
-                field_data, _ = RSoccerHelper.getFieldDatas(env.get_state(), IS_YELLOW_TEAM)
+                field_data, _ = RSoccerHelper.get_field_datas(env.get_state(), IS_YELLOW_TEAM)
                 robot = field_data.robots[0]
                 ball = field_data.ball
 

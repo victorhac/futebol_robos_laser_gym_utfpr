@@ -1,213 +1,93 @@
 import math
+import random
 import time
 import numpy as np
-from typing import Dict
 from gym.spaces import Box
-
 from rsoccer_gym.Utils.Utils import OrnsteinUhlenbeckAction
 from rsoccer_gym.Entities import Frame, Robot, Ball
-from rsoccer_gym.vss.vss_gym_base import VSSBaseEnv
 from rsoccer_gym.Utils import KDTree
 
-from lib.geometry.geometry_utils import GeometryUtils
+from lib.environment.base_environment import VSSBaseEnv
+from lib.helpers.rsoccer_helper import RSoccerHelper
 
 from ...helpers.field_helper import FieldHelper
-from ...helpers.rsoccer_helper import RSoccerHelper
 from ...helpers.configuration_helper import ConfigurationHelper
+from ...helpers.model_helper import ModelHelper
 
-TEAM_BLUE_NUMBER_ROBOTS = ConfigurationHelper.getTeamBlueNumberRobots()
-TEAM_YELLOW_NUMBER_ROBOTS = ConfigurationHelper.getTeamYellowNumberRobots()
-IS_YELLOW_TEAM = ConfigurationHelper.getTeamIsYellowTeam()
-IS_LEFT_TEAM = ConfigurationHelper.isLeftTeam()
-
-TRAINING_TIME_STEP = ConfigurationHelper.getTrainingTimeStep()
 TRAINING_EPISODE_DURATION = ConfigurationHelper.getTrainingEpisodeDuration()
+IS_LEFT_TEAM = ConfigurationHelper.isLeftTeam()
+V_WHEEL_DEADZONE = 0.05
 
 class Environment(VSSBaseEnv):
     def __init__(self):
         super().__init__(
             field_type=0,
-            n_robots_blue=TEAM_BLUE_NUMBER_ROBOTS,
-            n_robots_yellow=TEAM_YELLOW_NUMBER_ROBOTS,
-            time_step=TRAINING_TIME_STEP)
+            n_robots_blue=3,
+            n_robots_yellow=3,
+            time_step=0.025)
 
         self.action_space = Box(
             low=-1,
             high=1,
             shape=(2,),
-            dtype=np.float64)
-        
+            dtype=np.float32)
+
         self.observation_space = Box(
-            low=-self.NORM_BOUNDS,
-            high=self.NORM_BOUNDS,
+            low=-1,
+            high=1,
             shape=(40,),
-            dtype=np.float64)
+            dtype=np.float32)
 
+        self.has_robot_touched_ball = False
         self.previous_ball_potential = None
-        self.v_wheel_deadzone = 0.05
 
-        self.ou_actions = []
-        for i in range(self.n_robots_yellow + self.n_robots_blue):
-            self.ou_actions.append(
-                OrnsteinUhlenbeckAction(
-                    self.action_space,
-                    dt=self.time_step))
-            
-    def _get_ou_action(self, robot_id, is_yellow_team):
-        index = robot_id if is_yellow_team else self.n_robots_blue + robot_id
-        return self.ou_actions[index].sample()
+        self.attacker = ModelHelper.get_attacker_model()
+        self.defensor = ModelHelper.get_defensor_model()
+        self.goalkeeper = ModelHelper.get_goalkeeper_v2_model()
 
-    def reset(self):
-        self.previous_ball_potential = None
-        for ou in self.ou_actions:
-            ou.reset()
+        self.episode_initial_time = 0
 
-        return super().reset()
+        self.__set_ou_actions()
 
-    def _frame_to_observations(self):
-        # observation = []
-
-        # observation.append(self.norm_pos(self.frame.ball.x))
-        # observation.append(self.norm_pos(self.frame.ball.y))
-        # observation.append(self.norm_v(self.frame.ball.v_x))
-        # observation.append(self.norm_v(self.frame.ball.v_y))
-
-        # for i in range(self.n_robots_blue):
-        #     theta = np.deg2rad(self.frame.robots_blue[i].theta)
-        #     observation.append(self.norm_pos(self.frame.robots_blue[i].x))
-        #     observation.append(self.norm_pos(self.frame.robots_blue[i].y))
-        #     observation.append(np.sin(theta))
-        #     observation.append(np.cos(theta))
-        #     observation.append(self.norm_v(self.frame.robots_blue[i].v_x))
-        #     observation.append(self.norm_v(self.frame.robots_blue[i].v_y))
-        #     observation.append(self.norm_w(self.frame.robots_blue[i].v_theta))
-
-        # for i in range(self.n_robots_yellow):
-        #     observation.append(self.norm_pos(self.frame.robots_yellow[i].x))
-        #     observation.append(self.norm_pos(self.frame.robots_yellow[i].y))
-        #     observation.append(self.norm_v(self.frame.robots_yellow[i].v_x))
-        #     observation.append(self.norm_v(self.frame.robots_yellow[i].v_y))
-        #     observation.append(self.norm_w(self.frame.robots_yellow[i].v_theta))
-
-        # return np.array(observation, dtype=np.float32)
-        return self._get_state()
+    def __set_ou_actions(self):
+        self.ou_actions = [
+            OrnsteinUhlenbeckAction(self.action_space, dt=self.time_step) \
+            for _ in range(self.n_robots_blue + self.n_robots_yellow)
+        ]
     
-    def _get_own_goal_position(self):
-        return FieldHelper.getOwnGoalPosition(self._get_field_length(), IS_LEFT_TEAM)
+    def __is_ball_inside_goal_area(self):
+        ball = self.get_ball()
+        return self.__is_inside_own_goal_area((ball.x, ball.y))
     
-    def _get_opponent_goal_position(self):
-        return FieldHelper.getOpponentGoalPosition(self._get_field_length(), IS_LEFT_TEAM)
+    def __is_ball_inside_opponent_area(self):
+        ball = self.get_ball()
+        return self.__is_inside_opponent_area((ball.x, ball.y))
     
-    def _get_distance_to_own_goal(self, robot_or_ball):
-        own_goal_position = self._get_own_goal_position()
-        robot_or_ball_position = robot_or_ball.get_position_tuple()
-        return GeometryUtils.distance(own_goal_position, robot_or_ball_position)
+    def __is_inside_opponent_area(self, position: tuple[float, float]):
+        return FieldHelper.is_inside_opponent_area(position, IS_LEFT_TEAM)
     
-    def _get_distance_to_opponent_goal(self, robot_or_ball):
-        opponent_goal_position = self._get_opponent_goal_position()
-        robot_or_ball_position = robot_or_ball.get_position_tuple()
-        return GeometryUtils.distance(opponent_goal_position, robot_or_ball_position)
-      
-    def __ball_gradient(self):
-        field_data, _ = self._get_field_datas()
-        ball = field_data.ball
+    def __is_robot_touching_ball(self):
+        robot = self.frame.robots_blue[0]
+        ball = self.get_ball()
 
-        convert_m_to_cm = lambda item: item * 100
+        robot_position = (robot.x, robot.y)
+        ball_position = (ball.x, ball.y)
 
-        field_length_cm = convert_m_to_cm(self._get_field_length())
-
-        distance_1 = convert_m_to_cm(self._get_distance_to_opponent_goal(ball))
-        distance_2 = convert_m_to_cm(self._get_distance_to_own_goal(ball))
-
-        ball_potential = ((-distance_1 + distance_2) / field_length_cm - 1) / 2
-
-        gradient_ball_potential = 0
-
-        if self.previous_ball_potential is not None:
-            diff = ball_potential - self.previous_ball_potential
-            gradient_ball_potential = np.clip(
-                diff * 3 / self.time_step,
-                -5.0,
-                5.0)
-
-        self.previous_ball_potential = ball_potential
-
-        return gradient_ball_potential
-
-    def __move_reward(self):
-        field_data, _ = self._get_field_datas()
-        ball = field_data.ball
-        robot = field_data.robots[0]
-
-        ball_vector = np.array([ball.position.x, ball.position.y])
-        robot_vector = np.array([robot.position.x, robot.position.y])
-
-        robot_speed_vector = np.array([robot.velocity.x, robot.velocity.y])
-
-        robot_ball_vector = ball_vector - robot_vector
-        robot_ball_vector = robot_ball_vector / np.linalg.norm(robot_ball_vector)
-
-        move_reward = np.dot(robot_ball_vector, robot_speed_vector) / 0.4
-
-        return np.clip(move_reward, -5.0, 5.0)
-
-    def __energy_penalty(self):
-        en_penalty_1 = abs(self.sent_commands[0].v_wheel0)
-        en_penalty_2 = abs(self.sent_commands[0].v_wheel1)
-
-        return - (en_penalty_1 + en_penalty_2)
+        return FieldHelper.is_touching(
+            robot_position,
+            self.get_robot_radius(),
+            ball_position,
+            self.get_ball_radius(),
+            .001)
     
-    def _calculate_reward(self):
-        w_move = 0.2
-        w_ball_grad = 0.8
-        w_energy = 2e-4
-
-        if self._has_goal_scored():
-            return -10 if self._is_goal_received() else 10
-        else:
-            if self.last_frame is not None:
-                grad_ball_potential = self.__ball_gradient()
-                move_reward = self.__move_reward()
-                energy_penalty = self.__energy_penalty()
-
-                return w_move * move_reward + \
-                    w_ball_grad * grad_ball_potential + \
-                    w_energy * energy_penalty
-            else:
-                return 0
-
-    def _get_commands(self, actions):
-        commands = []
-
-        v_wheel0, v_wheel1 = self._actions_to_v_wheels_speeds(actions)
-        commands.append(
-            Robot(yellow=IS_YELLOW_TEAM,
-                id=0,
-                v_wheel0=v_wheel0,
-                v_wheel1=v_wheel1))
-        
-        for i in range(1 if IS_YELLOW_TEAM else 0, self.n_robots_yellow):
-            robot_actions = self._get_ou_action(i, True)
-            v_wheel0, v_wheel1 = self._actions_to_v_wheels_speeds(robot_actions)
-            commands.append(
-                Robot(yellow=True,
-                    id=i,
-                    v_wheel0=v_wheel0,
-                    v_wheel1=v_wheel1)
-            )
-        
-        for i in range(0 if IS_YELLOW_TEAM else 1, self.n_robots_blue):
-            robot_actions = self._get_ou_action(i, False)
-            v_wheel0, v_wheel1 = self._actions_to_v_wheels_speeds(robot_actions)
-            commands.append(
-                Robot(yellow=False,
-                    id=i,
-                    v_wheel0=v_wheel0,
-                    v_wheel1=v_wheel1)
-                )
-
-        return commands
-
+    def __is_inside_own_goal_area(self, position: tuple[float, float]):
+        return FieldHelper.is_inside_own_goal_area(
+            position,
+            self.get_field_length(),
+            self.get_penalty_length(),
+            self.get_penalty_width(),
+            IS_LEFT_TEAM)
+    
     def _has_goal_scored(self):
         if self.frame.ball.x > self.field.length / 2:
             return True
@@ -215,133 +95,408 @@ class Environment(VSSBaseEnv):
             return True
         return False
     
-    def _is_goal_received(self):
-        if self.frame.ball.x > self.field.length / 2:
-            return not IS_LEFT_TEAM
-        elif self.frame.ball.x < -self.field.length / 2:
-            return IS_LEFT_TEAM
-        return None
-    
     def _is_done(self):
         if self._has_goal_scored():
             return True
-        if time.time() - self.episode_initial_time > TRAINING_EPISODE_DURATION:
+        elif time.time() - self.episode_initial_time > TRAINING_EPISODE_DURATION:
             return True
         return False
+    
+    def __create_robot(
+        self,
+        id: int,
+        is_yellow_robot: bool,
+        v_wheel_0: float,
+        v_wheel_1: float
+    ):
+        return Robot(
+            yellow=is_yellow_robot,
+            id=id,
+            v_wheel0=v_wheel_0,
+            v_wheel1=v_wheel_1)
+    
+    def __create_robot_with_ou_action(
+        self,
+        id: int,
+        is_yellow_robot: bool,
+        ou_action_id: int
+    ):
+        actions = self.ou_actions[ou_action_id].sample()
+        v_wheel0, v_wheel1 = self._actions_to_v_wheels(actions)
 
-    def _calculate_reward_and_done(self):
-        reward = self._calculate_reward()
-        done = self._is_done()
-        reward = self._calculate_reward()
+        return self.__create_robot(id, is_yellow_robot, v_wheel0, v_wheel1)
+    
+    def reset(self):
+        self.actions = None
+        self.previous_ball_potential = None
+        self.has_robot_touched_ball = False
 
-        print(f"Reward: {reward}")
+        for ou in self.ou_actions:
+            ou.reset()
+
+        return super().reset()
+
+    def _attacker_observations(self, reflection=False):
+        observation = []
+        ball = self.frame.ball
+
+        def correct(x):
+            return -x if reflection else x
+
+        observation.extend([
+            self.norm_pos(correct(ball.x)),
+            self.norm_pos(ball.y),
+            self.norm_v(correct(ball.v_x)),
+            self.norm_v(ball.v_y)
+        ])
+
+        if reflection:
+            main_team = self.frame.robots_yellow
+            secondary_team = self.frame.robots_blue
+        else:
+            main_team = self.frame.robots_blue
+            secondary_team = self.frame.robots_yellow
         
-        return reward, done
-    
-    def _get_field_length(self):
-        return self.field.length
-    
-    def _get_field_width(self):
-        return self.field.width
-    
-    def _get_field_random_position(self):
-        margin = 0.1
-        return FieldHelper.getFieldRandomPosition(
-            self._get_field_length() - margin,
-            self._get_field_width() - margin)
-    
-    def _get_random_theta(self):
-        return FieldHelper.getRandomTheta() * (180 / math.pi)
-    
-    def _get_state(self):
-        observations = []
+        for _, robot in main_team.items():
+            observation.extend([
+                self.norm_pos(correct(robot.x)),
+                self.norm_pos(robot.y),
+                np.sin(np.deg2rad(robot.theta)),
+                correct(np.cos(np.deg2rad(robot.theta))),
+                self.norm_v(correct(robot.v_x)),
+                self.norm_v(robot.v_y),
+                self.norm_w(correct(robot.v_theta))
+            ])
 
-        observations.append(self.frame.ball)
+        for _, robot in secondary_team.items():
+            observation.extend([
+                self.norm_pos(correct(robot.x)),
+                self.norm_pos(robot.y),
+                self.norm_v(correct(robot.v_x)),
+                self.norm_v(robot.v_y),
+                self.norm_w(correct(robot.v_theta))
+            ])
+
+        return np.array(observation)
+    
+    def _defensor_observations(self, reflection=False):
+        observation = []
+        ball = self.frame.ball
+
+        def correct(x):
+            return -x if reflection else x
+
+        observation.extend([
+            self.norm_pos(correct(ball.x)),
+            self.norm_pos(ball.y),
+            self.norm_v(correct(ball.v_x)),
+            self.norm_v(ball.v_y)
+        ])
+
+        if reflection:
+            robot = self.frame.robots_yellow[1]
+        else:
+            robot = self.frame.robots_blue[1]
+
+        observation.extend([
+            self.norm_pos(correct(robot.x)),
+            self.norm_pos(robot.y),
+            np.sin(np.deg2rad(robot.theta)),
+            correct(np.cos(np.deg2rad(robot.theta))),
+            self.norm_v(correct(robot.v_x)),
+            self.norm_v(robot.v_y),
+            self.norm_w(correct(robot.v_theta))
+        ])
+
+        if reflection:
+            main_team = self.frame.robots_yellow
+            secondary_team = self.frame.robots_blue
+        else:
+            main_team = self.frame.robots_blue
+            secondary_team = self.frame.robots_yellow
+        
+        for i, robot in main_team.items():
+            if i == 1:
+                continue
+
+            observation.extend([
+                self.norm_pos(correct(robot.x)),
+                self.norm_pos(robot.y),
+                np.sin(np.deg2rad(robot.theta)),
+                correct(np.cos(np.deg2rad(robot.theta))),
+                self.norm_v(correct(robot.v_x)),
+                self.norm_v(robot.v_y),
+                self.norm_w(correct(robot.v_theta))
+            ])
+
+        for i, robot in secondary_team.items():
+            observation.extend([
+                self.norm_pos(correct(robot.x)),
+                self.norm_pos(robot.y),
+                self.norm_v(correct(robot.v_x)),
+                self.norm_v(robot.v_y),
+                self.norm_w(correct(robot.v_theta))
+            ])
+
+        return np.array(observation)
+    
+    def _goalkeeper_observations(self, reflection=False):
+        observation = []
+        ball = self.frame.ball
+
+        def correct(x):
+            return -x if reflection else x
+
+        observation.extend([
+            self.norm_pos(correct(ball.x)),
+            self.norm_pos(ball.y),
+            self.norm_v(correct(ball.v_x)),
+            self.norm_v(ball.v_y)
+        ])
+        
+        if reflection:
+            robot = self.frame.robots_yellow[2]
+        else:
+            robot = self.frame.robots_blue[2]
+
+        observation.extend([
+            self.norm_pos(correct(robot.x)),
+            self.norm_pos(robot.y),
+            np.sin(np.deg2rad(robot.theta)),
+            correct(np.cos(np.deg2rad(robot.theta))),
+            self.norm_v(correct(robot.v_x)),
+            self.norm_v(robot.v_y),
+            self.norm_w(correct(robot.v_theta))
+        ])
+
+        return np.array(observation)
+    
+    def _frame_to_observations(self):
+        observation = []
+
+        ball = self.get_ball()
+
+        observation.extend([
+            self.norm_x(ball.x),
+            self.norm_y(ball.y),
+            self.norm_v(ball.v_x),
+            self.norm_v(ball.v_y)
+        ])
 
         for i in range(self.n_robots_blue):
             robot = self.frame.robots_blue[i]
-            robot.yellow = False
-            observations.append(robot)
+            robot_theta_radians = np.deg2rad(robot.theta)
+
+            observation.extend([
+                self.norm_x(robot.x),
+                self.norm_y(robot.y),
+                robot_theta_radians / np.pi,
+                self.norm_v(robot.v_x),
+                self.norm_v(robot.v_y)
+            ])
 
         for i in range(self.n_robots_yellow):
             robot = self.frame.robots_yellow[i]
-            robot.yellow = True
-            observations.append(robot)
-        
-        return np.array(observations)
+
+            observation.extend([
+                self.norm_x(robot.x),
+                self.norm_y(robot.y),
+                robot_theta_radians / np.pi,
+                self.norm_v(robot.v_x),
+                self.norm_v(robot.v_y)
+            ])
+
+        return np.array(observation, dtype=np.float32)
     
-    def _get_field_datas(self):
-        state = self._get_state()
-        return RSoccerHelper.getFieldDatas(state, IS_YELLOW_TEAM)
-    
-    def _get_random_robot(
+    def _get_robot_command(
         self,
-        id: float,
-        is_yellow_team: bool
+        robot_id: int,
+        is_yellow: bool,
+        observation: np.ndarray,
+        model
     ):
-        robot_pos_x, robot_pos_y = self._get_field_random_position()
-        robot_theta = self._get_random_theta()
+        action, _ = model.predict(observation)
+        v_wheel0, v_wheel1 = self._actions_to_v_wheels(action)
 
-        return Robot(
-            id=id,
-            x=robot_pos_x,
-            y=robot_pos_y,
-            theta=robot_theta,
-            yellow=is_yellow_team)
+        return self.__create_robot(robot_id, is_yellow, v_wheel0, v_wheel1)
+        
+    def _get_commands(self, actions):
+        commands = []
+
+        v_wheel_0, v_wheel_1 = self._actions_to_v_wheels(actions)
+
+        robot = self.__create_robot(0, False, 0, 0)
+        commands.append(robot)
+
+        for i in range(1, self.n_robots_blue):
+            robot = self.__create_robot(i, False, 0, 0)
+            commands.append(robot)
+
+        robot = self.__create_robot(0, True, 1, 1)
+        commands.append(robot)
+
+        for i in range(1, self.n_robots_yellow):
+            robot = self.__create_robot(i, True, 0, 0)
+            commands.append(robot)
+
+        return commands
+
+    def _actions_to_v_wheels(self, actions):
+        left_wheel_speed = actions[0] * self.max_v
+        right_wheel_speed = actions[1] * self.max_v
+
+        left_wheel_speed, right_wheel_speed = np.clip(
+            (left_wheel_speed, right_wheel_speed),
+            -self.max_v,
+            self.max_v)
+
+        if -V_WHEEL_DEADZONE < left_wheel_speed < V_WHEEL_DEADZONE:
+            left_wheel_speed = 0
+
+        if -V_WHEEL_DEADZONE < right_wheel_speed < V_WHEEL_DEADZONE:
+            right_wheel_speed = 0
+
+        left_wheel_speed /= self.field.rbt_wheel_radius
+        right_wheel_speed /= self.field.rbt_wheel_radius
+
+        return left_wheel_speed, right_wheel_speed
     
-    def _get_random_ball(self):
-        ball_pos_x, ball_pos_y = self._get_field_random_position()
+    def __ball_gradient_reward(
+        self,
+        previous_ball_potential: float | None
+    ):
+        field_length = self.get_field_length()
+        goal_depth = self.get_goal_depth()
+        ball = self.get_ball()
 
-        return Ball(x=ball_pos_x, y=ball_pos_y)
+        convert_m_to_cm = lambda x: x * 100
+
+        length_cm = convert_m_to_cm(field_length)
+        half_lenght = (field_length / 2) + goal_depth
+
+        dx_d = convert_m_to_cm((half_lenght + ball.x))
+        dx_a = convert_m_to_cm((half_lenght - ball.x))
+        dy = convert_m_to_cm(ball.y)
+
+        dist_1 = math.sqrt(dx_a ** 2 + 2 * dy ** 2)
+        dist_2 = math.sqrt(dx_d ** 2 + 2 * dy ** 2)
+
+        ball_potential = ((-dist_1 + dist_2) / length_cm - 1) / 2
+
+        if previous_ball_potential is not None:
+            diff = ball_potential - previous_ball_potential
+            reward = np.clip(
+                diff * 3 / self.time_step,
+                -5.0,
+                5.0)
+        else:
+            reward = 0
+        
+        return reward, ball_potential
+        
+    def __move_reward(self):
+        ball = self.get_ball()
+        robot = self.frame.robots_blue[0]
+
+        ball_position = np.array([ball.x, ball.y])
+        robot_position = np.array([robot.x, robot.y])
+        
+        robot_velocities = np.array([robot.v_x, robot.v_y])
+        robot_ball_vector = ball_position - robot_position
+        robot_ball_vector = robot_ball_vector / np.linalg.norm(robot_ball_vector)
+
+        move_reward = np.dot(robot_ball_vector, robot_velocities)
+
+        return np.clip(move_reward / 0.4, -5.0, 5.0)
+    
+    def __energy_penalty(self):
+        en_penalty_1 = abs(self.sent_commands[0].v_wheel0)
+        en_penalty_2 = abs(self.sent_commands[0].v_wheel1)
+        return - (en_penalty_1 + en_penalty_2)
+    
+    def __has_robot_defended(self):
+        return self.has_robot_touched_ball and self.__is_ball_inside_opponent_area()
+    
+    def _calculate_reward_and_done(self):
+        reward = 0
+        w_move = 0.2
+        w_ball_grad = 0.8
+        w_energy = 2e-4
+
+        robot = self.frame.robots_blue[0]
+
+        if self.__is_robot_touching_ball():
+            self.has_robot_touched_ball = True
+
+        if self.__has_robot_defended():
+            reward = 10
+        elif self.__is_ball_inside_goal_area():
+            reward = -10
+        elif self.__is_inside_opponent_area((robot.x, robot.y)):
+            reward = -5
+        else:
+            grad_ball_potential, ball_gradient = self.__ball_gradient_reward(self.previous_ball_potential)
+            self.previous_ball_potential = ball_gradient
+
+            move_reward = self.__move_reward()
+            energy_penalty = self.__energy_penalty()
+
+            reward = w_move * move_reward + \
+                w_ball_grad * grad_ball_potential + \
+                w_energy * energy_penalty
+
+        return reward, self._is_done()
+    
+    def __get_random_position_inside_field(self):
+        return FieldHelper.get_random_position_inside_field(
+            self.get_field_length(),
+            self.get_field_width())
+    
+    def __get_random_position_inside_own_area(self):
+        return FieldHelper.get_random_position_inside_own_area(
+            self.get_field_length(),
+            self.get_field_width(),
+            IS_LEFT_TEAM)
+    
+    def __get_random_position_inside_opponent_area(self):
+        return FieldHelper.get_random_position_inside_opponent_area(
+            self.get_field_length(),
+            self.get_field_width(),
+            IS_LEFT_TEAM)
 
     def _get_initial_positions_frame(self):
+        def theta(): return random.uniform(0, 360)
+
         frame: Frame = Frame()
+        ball_position = self.__get_random_position_inside_field()
+        frame.ball = Ball(x=ball_position[0], y=ball_position[1])
 
-        ball = self._get_random_ball()
-        frame.ball = ball
-
-        min_distance = 0.1
+        min_dist = 0.1
 
         places = KDTree()
-        places.insert((ball.x, ball.y))
 
-        def get_robot_without_intersection(id, is_yellow):
-            robot = self._get_random_robot(id, is_yellow)
-            position = (robot.x, robot.y)
-
-            while places.get_nearest(position)[1] < min_distance:
-                position = self._get_field_random_position()
-
-            robot.x, robot.y = position
-            places.insert(position)
-
-            return robot
+        places.insert(ball_position)
         
         for i in range(self.n_robots_blue):
-            robot = get_robot_without_intersection(i, False)
-            frame.robots_blue[i] = robot
+            pos = self.__get_random_position_inside_own_area()
+
+            while places.get_nearest(pos)[1] < min_dist:
+                pos = self.__get_random_position_inside_own_area()
+
+            places.insert(pos)
+            frame.robots_blue[i] = Robot(x=pos[0], y=pos[1], theta=-170)
+
+        frame.robots_blue[0] = Robot(x=-0.5, y=0.5, theta=170)
 
         for i in range(self.n_robots_yellow):
-            robot = get_robot_without_intersection(i, True)
-            frame.robots_yellow[i] = robot
+            pos = self.__get_random_position_inside_opponent_area()
+
+            while places.get_nearest(pos)[1] < min_dist:
+                pos = self.__get_random_position_inside_opponent_area()
+
+            places.insert(pos)
+            frame.robots_yellow[i] = Robot(x=pos[0], y=pos[1], theta=-170)
 
         self.episode_initial_time = time.time()
 
         return frame
-    
-    def _action_to_v_wheel_speed(self, action):
-        v_wheel_speed = action * self.max_v
-        v_wheel_speed = np.clip(v_wheel_speed, -self.max_v, self.max_v)
-
-        if abs(v_wheel_speed) < self.v_wheel_deadzone:
-            v_wheel_speed = 0
-
-        v_wheel_speed /= self.field.rbt_wheel_radius
-
-        return v_wheel_speed
-
-    def _actions_to_v_wheels_speeds(self, actions):
-        return (
-            self._action_to_v_wheel_speed(actions[0]),
-            self._action_to_v_wheel_speed(actions[1])
-        )

@@ -68,8 +68,7 @@ class ProtoVision(Receiver):
 
             self._field_data_from_dict(self.field_data, vision_data_dict)
 
-
-    def _entity_from_dict(self, entity_data: (Robot | Ball), data_dict, isLeftTeam: bool):
+    def _entity_from_dict(self, entity_data: (Robot | Ball), data_dict, isLeftTeam: bool, foes=False):
         sum_to_angle = 0 if not isLeftTeam else np.pi
 
         entity_data.position.x, entity_data.position.y = \
@@ -79,9 +78,14 @@ class ProtoVision(Receiver):
                 isLeftTeam)
 
         # The ball dict does not contain 'orientation' so it will always be 0
-        entity_data.position.theta = \
-            FIRASimHelper.normalizeAngle(
-                self._assert_angle(data_dict.get('orientation', 0) + sum_to_angle))
+        if not foes:
+            entity_data.position.theta = \
+                FIRASimHelper.normalizeAngle(
+                    self._assert_angle(data_dict.get('orientation', 0) + sum_to_angle))
+        else:
+            entity_data.position.theta = \
+                FIRASimHelper.normalizeAngle(
+                    self._assert_angle(data_dict.get('orientation', 0)))
 
         entity_data.velocity.x, entity_data.velocity.y = \
             FIRASimHelper.normalizeSpeed(
@@ -112,7 +116,7 @@ class ProtoVision(Receiver):
             self._entity_from_dict(field_data.robots[i], team_list_of_dicts[i], rotate_field)
 
         for i in range(len(foes_list_of_dicts)):
-            self._entity_from_dict(field_data.foes[i], foes_list_of_dicts[i], rotate_field)
+            self._entity_from_dict(field_data.foes[i], foes_list_of_dicts[i], rotate_field, True)
 
     def _assert_angle(self, angle):
         angle = angle % (2 * np.pi)

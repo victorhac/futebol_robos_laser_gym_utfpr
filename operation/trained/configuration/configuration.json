@@ -1,10 +1,10 @@
 {
     "robot": {
         "wheel": {
-            "radius": 0.0375
+            "radius": 0.026
         },
         "motor": {
-            "max-rpm": 572
+            "max-rpm": 440
         },
         "speed": {
             "base": 30,
@@ -14,8 +14,8 @@
         "length": 0.075
     },
     "team": {
-        "is-yellow-left-team": false,
-        "is-yellow-team": false,
+        "is-yellow-left-team": true,
+        "is-yellow-team": true,
         "blue": {
             "number-robots": 1
         },
@@ -38,11 +38,11 @@
     "FIRASim": {
         "control": {
             "ip": "127.0.0.1",
-            "port": 20011
+            "port": 20012
         },
         "vision": {
             "ip": "224.0.0.1",
-            "port": 10002
+            "port": 10003
         }
     },
     "field": {

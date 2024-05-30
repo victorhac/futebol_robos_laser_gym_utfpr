@@ -150,3 +150,15 @@ class FieldHelper:
             return random.uniform(-max_x + margin, 0), y
         else:
             return random.uniform(0, max_x - margin), y
+        
+    @staticmethod
+    def get_random_position_inside_opponent_area(
+        field_length: float,
+        field_width: float,
+        is_left_team: bool,
+    ):
+        return FieldHelper.get_random_position_inside_own_area(
+            field_length,
+            field_width,
+            not is_left_team
+        )

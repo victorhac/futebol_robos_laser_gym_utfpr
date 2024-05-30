@@ -25,7 +25,7 @@ for i in range(1):
     while not done:
         next_state, reward, done, _ = env.step((left_motor_speed / ROBOT_SPEED_BASE / fator, right_motor_speed / ROBOT_SPEED_BASE / fator))
 
-        fieldData, opponentFieldData = RSoccerHelper.getFieldDatas(next_state, IS_YELLOW_TEAM)
+        fieldData, opponentFieldData = RSoccerHelper.get_field_datas(next_state, IS_YELLOW_TEAM)
 
         left_motor_speed, right_motor_speed, error = MotionUtils.go_to_point(
             fieldData.robots[0],
