@@ -8,14 +8,13 @@ from rsoccer_gym.Entities import Frame, Robot
 from rsoccer_gym.Render import COLORS, Ball, VSSRenderField, VSSRobot
 from rsoccer_gym.Simulators.rsim import RSimVSS
 
-class VSSBaseEnv(gym.Env):
+class BaseEnvironment(gym.Env):
     metadata = {
         "render.modes": ["human", "rgb_array"],
         "render_modes": ["human", "rgb_array"],
         "render_fps": 60,
         "render.fps": 60,
     }
-    NORM_BOUNDS = 1.2
 
     def __init__(
         self,
@@ -199,16 +198,16 @@ class VSSBaseEnv(gym.Env):
         raise NotImplementedError
 
     def norm_v(self, v):
-        return np.clip(v / self.max_v, -self.NORM_BOUNDS, self.NORM_BOUNDS)
+        return np.clip(v / self.max_v, -1, 1)
 
     def norm_w(self, w):
-        return np.clip(w / self.max_w, -self.NORM_BOUNDS, self.NORM_BOUNDS)
+        return np.clip(w / self.max_w, -1, 1)
     
     def norm_x(self, x):
-        return np.clip(x / self.get_max_x(), -self.NORM_BOUNDS, self.NORM_BOUNDS)
+        return np.clip(x / self.get_max_x(), -1, 1)
     
     def norm_y(self, y):
-        return np.clip(y / self.get_max_y(), -self.NORM_BOUNDS, self.NORM_BOUNDS)
+        return np.clip(y / self.get_max_y(), -1, 1)
     
     def get_max_x(self):
         return self.get_field_length() / 2 + self.get_goal_depth()
@@ -239,3 +238,6 @@ class VSSBaseEnv(gym.Env):
     
     def get_robot_radius(self):
         return self.field.rbt_radius
+    
+    def get_frame(self):
+        return self.frame

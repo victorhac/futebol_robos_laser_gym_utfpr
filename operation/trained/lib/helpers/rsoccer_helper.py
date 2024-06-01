@@ -5,6 +5,7 @@ from ..domain.ball import Ball
 from ..geometry.geometry_utils import GeometryUtils
 
 from rsoccer_gym.Entities import Robot as RSoccerRobot, Ball as RSoccerBall
+from rsoccer_gym.Entities.Frame import Frame
 
 import numpy as np
 import math
@@ -105,6 +106,26 @@ class RSoccerHelper:
             opponentFieldData.foes = blueTeam
 
         return fieldData, opponentFieldData
+    
+    @staticmethod
+    def get_field_data(frame: Frame, is_yellow_team: bool):
+        field_data = FieldData()
+
+        ball = RSoccerHelper.to_ball(frame.ball)
+
+        blue_team = [RSoccerHelper.to_robot(frame.robots_blue[i]) for i in frame.robots_blue]
+        yellow_team = [RSoccerHelper.to_robot(frame.robots_yellow[i]) for i in frame.robots_yellow]
+
+        field_data.ball = ball
+
+        if is_yellow_team:
+            field_data.robots = yellow_team
+            field_data.foes = blue_team
+        else:
+            field_data.robots = blue_team
+            field_data.foes = yellow_team
+
+        return field_data
 
     @staticmethod
     def norm_pos(pos):

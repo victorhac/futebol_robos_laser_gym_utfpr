@@ -14,8 +14,8 @@
         "length": 0.075
     },
     "team": {
-        "is-yellow-left-team": true,
-        "is-yellow-team": true,
+        "is-yellow-left-team": false,
+        "is-yellow-team": false,
         "blue": {
             "number-robots": 1
         },
@@ -38,11 +38,11 @@
     "FIRASim": {
         "control": {
             "ip": "127.0.0.1",
-            "port": 20012
+            "port": 20011
         },
         "vision": {
             "ip": "224.0.0.1",
-            "port": 10003
+            "port": 10002
         }
     },
     "field": {

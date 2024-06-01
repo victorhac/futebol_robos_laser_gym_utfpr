@@ -56,17 +56,11 @@ def main():
     robot = fieldData.robots[0]
     ball = fieldData.ball
     error = 0
-    maxSpeed = 0
 
     updateVisions(vision, opponentVision)
     
     while True:
         targetPosition = FIRASimHelper.normalizePosition(ball.position.x, ball.position.y, IS_LEFT_TEAM)
-
-        tangentPoint = MotionUtils.findTangentPointObstacle(0, fieldData, opponentFieldData, targetPosition)
-
-        if tangentPoint is not None:
-            currentTargetPosition = tangentPoint
 
         velocities = MotionUtils.go_to_point(robot, currentTargetPosition, error)
 
