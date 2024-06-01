@@ -26,7 +26,8 @@ class Environment(BaseEnvironment):
             field_type=0,
             n_robots_blue=1,
             n_robots_yellow=1,
-            time_step=0.025)
+            time_step=0.025,
+            render_mode="human")
         
         self.max_motor_speed = 30
 
@@ -39,7 +40,7 @@ class Environment(BaseEnvironment):
         self.observation_space = Box(
             low=-1,
             high=1,
-            shape=(9,),
+            shape=(14,),
             dtype=np.float32)
 
         self.previous_ball_potential = None

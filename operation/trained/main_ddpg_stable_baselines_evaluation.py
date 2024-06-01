@@ -1,19 +1,20 @@
-from lib.environment.rsoccer_validation.environment import Environment
+from stable_baselines3 import PPO
+from lib.environment.attacker.environment import Environment
 from lib.helpers.model_helper import ModelHelper
 
-model = ModelHelper.get_defensor_model()
+model = PPO.load("models/attacker/PPO/2024_6_1_0_39_1/PPO_model")
 
 env = Environment()
 
 try:
     for i in range(100):
-        obs = env.reset()
+        next_state, _ = env.reset()
         reward = 0
         done = False
 
         while done is False:
-            action, state = model.predict(obs)
-            obs, reward, done, info = env.step(action)
+            action, state = model.predict(next_state)
+            next_state, reward, done, _, _ = env.step(action)
             env.render()
 finally:
     env.reset()
