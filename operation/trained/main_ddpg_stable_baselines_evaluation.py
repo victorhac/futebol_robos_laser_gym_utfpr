@@ -12,7 +12,7 @@ try:
         reward = 0
         done = False
 
-        while done is False:
+        while not done:
             action, state = model.predict(next_state)
             next_state, reward, done, _, _ = env.step(action)
             env.render()

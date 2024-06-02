@@ -1,16 +1,17 @@
+import time
+import numpy as np
+from stable_baselines3 import PPO
 from lib.comm.vision import ProtoVision
 from lib.comm.control import ProtoControl
 
 from lib.helpers.configuration_helper import ConfigurationHelper
-from lib.helpers.model_helper import ModelHelper
 from lib.helpers.rsoccer_helper import RSoccerHelper
 from lib.motion.motion_utils import MotionUtils
 
 from lib.domain.field_data import FieldData
 
-from lib.geometry.geometry_utils import GeometryUtils
-
-import numpy as np
+from lib.comm.replacer import ReplacerComm
+from lib.domain.robot import Robot
 
 FIRASIM_CONTROL_IP = ConfigurationHelper.getFIRASimControlIp()
 FIRASIM_CONTROL_PORT = ConfigurationHelper.getFIRASimControlPort()
@@ -20,9 +21,7 @@ FIRASIM_VISION_PORT = ConfigurationHelper.getFIRASimVisionPort()
 IS_YELLOW_TEAM = ConfigurationHelper.getTeamIsYellowTeam()
 IS_LEFT_TEAM = ConfigurationHelper.isLeftTeam()
 
-attacker_model = ModelHelper.get_attacker_model()
-defensor_model = ModelHelper.get_defensor_model()
-goalkeeper_model = ModelHelper.get_goalkeeper_v2_model()
+attacker_model = PPO.load("models/attacker/PPO/2024_6_1_0_39_1/PPO_model")
 
 def getProtoVision(isYellowTeam: bool):
     fieldData = FieldData()
@@ -59,7 +58,6 @@ updateVisions(vision, opponentVision)
 
 def act(
     robot_id: int,
-    role_id: int,
     is_own_team: bool = True
 ):
     if is_own_team:
@@ -71,31 +69,50 @@ def act(
         is_left_team = not IS_LEFT_TEAM
         team_control = opponentTeamControl
 
-    if role_id == 0:
-        observations = RSoccerHelper.get_goalkeeper_observations(team_field_data, is_left_team, robot_id)
-        model = goalkeeper_model
-    elif role_id == 1:
-        observations = RSoccerHelper.get_defensor_observations(team_field_data, is_left_team, robot_id)
-        model = defensor_model
-    else:
-        observations = RSoccerHelper.get_attacker_observations(team_field_data, is_left_team, robot_id)
-        model = attacker_model
+    observations = RSoccerHelper.get_attacker_observation(team_field_data, is_left_team, robot_id)
 
-    action, _ = model.predict(observations)
-    left_speed, right_speed = RSoccerHelper.actions_to_v_wheels(action)
-    team_control.transmit_robot(robot_id, -1, 1)
+    action, _ = attacker_model.predict(observations)
+    left_speed, right_speed = RSoccerHelper.actions_to_v_wheels(action, is_own_team)
+    if is_left_team:
+        team_control.transmit_robot(robot_id, right_speed, left_speed)
+    else:
+        team_control.transmit_robot(robot_id, left_speed, right_speed)
+
+def go_to_point(
+    robot_id: int,
+    target_position: tuple[float, float],
+    last_error: float,
+    is_own_team: bool = True
+):
+    if is_own_team:
+        team_field_data = field_data
+        team_control = teamControl
+    else:
+        team_field_data = opponent_field_data
+        team_control = opponentTeamControl
+
+    robot = team_field_data.robots[robot_id]
+
+    left_speed, right_speed, error = MotionUtils.go_to_point(
+        robot,
+        target_position,
+        last_error
+    )
+
+    team_control.transmit_robot(robot_id, left_speed, right_speed)
+
+    return error
+
+error = 0
+
+tempo = time.time()
+
+teste = 0
 
 while True:
-    act(0, 2)
-    # act(1, 1)
-    # act(2, 0)
-
     robot = field_data.robots[0]
+    ball = field_data.ball
 
-    print(f"Robot position: {robot.velocity.x}, {robot.velocity.y} {robot.position.theta}")
-
-    # act(0, 2, False)
-    # act(1, 1, False)
-    # act(2, 0, False)
+    act(0)
 
     updateVisions(vision, opponentVision)

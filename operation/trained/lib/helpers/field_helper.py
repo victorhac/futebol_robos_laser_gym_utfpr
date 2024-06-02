@@ -6,7 +6,7 @@ from ..geometry.geometry_utils import GeometryUtils
 class FieldHelper:
     @staticmethod
     def isLeftTeam(isYellowTeam: bool, isYellowLeftTeam: bool):
-        return (isYellowLeftTeam and isYellowTeam) or (not isYellowLeftTeam and not isYellowTeam)
+        return isYellowLeftTeam == isYellowTeam
     
     @staticmethod
     def isInsideField(
