@@ -1,6 +1,5 @@
 from stable_baselines3 import PPO
 from lib.environment.attacker.environment import Environment
-from lib.helpers.model_helper import ModelHelper
 
 model = PPO.load("models/attacker/PPO/2024_6_1_0_39_1/PPO_model")
 

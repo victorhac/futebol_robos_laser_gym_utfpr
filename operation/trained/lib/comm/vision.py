@@ -98,7 +98,7 @@ class ProtoVision(Receiver):
 
 
     def _field_data_from_dict(self, field_data: FieldData, raw_data_dict):
-        isLeftTeam = ConfigurationHelper.isLeftTeam()
+        isLeftTeam = ConfigurationHelper.get_firasim_is_left_team()
 
         rotate_field = isLeftTeam
         

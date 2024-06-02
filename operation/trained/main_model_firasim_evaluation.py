@@ -1,5 +1,4 @@
 import time
-import numpy as np
 from stable_baselines3 import PPO
 from lib.comm.vision import ProtoVision
 from lib.comm.control import ProtoControl
@@ -10,16 +9,13 @@ from lib.motion.motion_utils import MotionUtils
 
 from lib.domain.field_data import FieldData
 
-from lib.comm.replacer import ReplacerComm
-from lib.domain.robot import Robot
+FIRASIM_CONTROL_IP = ConfigurationHelper.get_firasim_control_ip()
+FIRASIM_CONTROL_PORT = ConfigurationHelper.get_firasim_control_port()
+FIRASIM_VISION_IP = ConfigurationHelper.get_firasim_vision_ip()
+FIRASIM_VISION_PORT = ConfigurationHelper.get_firasim_vision_port()
 
-FIRASIM_CONTROL_IP = ConfigurationHelper.getFIRASimControlIp()
-FIRASIM_CONTROL_PORT = ConfigurationHelper.getFIRASimControlPort()
-FIRASIM_VISION_IP = ConfigurationHelper.getFIRASimVisionIp()
-FIRASIM_VISION_PORT = ConfigurationHelper.getFIRASimVisionPort()
-
-IS_YELLOW_TEAM = ConfigurationHelper.getTeamIsYellowTeam()
-IS_LEFT_TEAM = ConfigurationHelper.isLeftTeam()
+IS_YELLOW_TEAM = ConfigurationHelper.get_firasim_team_is_yellow_team()
+IS_LEFT_TEAM = ConfigurationHelper.get_firasim_is_left_team()
 
 attacker_model = PPO.load("models/attacker/PPO/2024_6_1_0_39_1/PPO_model")
 
@@ -74,7 +70,7 @@ def act(
     action, _ = attacker_model.predict(observations)
     left_speed, right_speed = RSoccerHelper.actions_to_v_wheels(action, is_own_team)
 
-    team_control.transmit_robot(robot_id, right_speed, left_speed)
+    team_control.transmit_robot(robot_id, left_speed, right_speed)
 
 def go_to_point(
     robot_id: int,
@@ -101,16 +97,7 @@ def go_to_point(
 
     return error
 
-error = 0
-
-tempo = time.time()
-
-teste = 0
-
 while True:
-    robot = field_data.robots[0]
-    ball = field_data.ball
-
     act(0)
 
     updateVisions(vision, opponentVision)

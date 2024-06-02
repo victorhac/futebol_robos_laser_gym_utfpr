@@ -13,8 +13,8 @@ from ...helpers.field_helper import FieldHelper
 from ...helpers.configuration_helper import ConfigurationHelper
 from ...helpers.model_helper import ModelHelper
 
-TRAINING_EPISODE_DURATION = ConfigurationHelper.getTrainingEpisodeDuration()
-IS_LEFT_TEAM = ConfigurationHelper.isLeftTeam()
+TRAINING_EPISODE_DURATION = ConfigurationHelper.get_rsoccer_training_episode_duration()
+IS_LEFT_TEAM = ConfigurationHelper.get_rsoccer_is_left_team()
 V_WHEEL_DEADZONE = 0.05
 
 class Environment(VSSBaseEnv):

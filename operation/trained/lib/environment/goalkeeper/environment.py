@@ -13,9 +13,9 @@ from operation.trained.lib.helpers.field_helper import FieldHelper
 from ...helpers.configuration_helper import ConfigurationHelper
 from ...helpers.model_helper import ModelHelper
 
-TRAINING_EPISODE_DURATION = ConfigurationHelper.getTrainingEpisodeDuration()
-ROBOT_WIDTH = ConfigurationHelper.getRobotWidth()
-IS_LEFT_TEAM = ConfigurationHelper.isLeftTeam()
+TRAINING_EPISODE_DURATION = ConfigurationHelper.get_rsoccer_training_episode_duration()
+ROBOT_WIDTH = ConfigurationHelper.get_rsoccer_robot_width()
+IS_LEFT_TEAM = ConfigurationHelper.get_rsoccer_is_left_team()
 
 class Environment(VSSBaseEnv):
     def __init__(self):

@@ -8,13 +8,13 @@ from ..helpers.robot_helper import RobotHelper
 
 import math
 
-ROBOT_LENGTH = ConfigurationHelper.getRobotLength()
-ROBOT_WIDTH = ConfigurationHelper.getRobotWidth()
+ROBOT_LENGTH = ConfigurationHelper.get_firasim_robot_length()
+ROBOT_WIDTH = ConfigurationHelper.get_firasim_robot_width()
 
-FIELD_WIDTH = ConfigurationHelper.getFieldWidth()
-FIELD_LENGTH = ConfigurationHelper.getFieldLength()
+FIELD_WIDTH = ConfigurationHelper.get_field_width()
+FIELD_LENGTH = ConfigurationHelper.get_field_length()
 
-MOTION_COLLISION_AVOIDANCE_MIN_DISTANCE = ConfigurationHelper.getMotionCollisionAvoidanceMinDistance()
+MOTION_COLLISION_AVOIDANCE_MIN_DISTANCE = ConfigurationHelper.get_motion_collision_avoidance_min_distance()
 
 class MotionUtils:
     @staticmethod

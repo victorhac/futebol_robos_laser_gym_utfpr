@@ -8,22 +8,22 @@ from lib.helpers.firasim_helper import FIRASimHelper
 
 from lib.domain.field_data import FieldData
 
-IS_YELLOW_TEAM = ConfigurationHelper.getTeamIsYellowTeam()
+IS_YELLOW_TEAM = ConfigurationHelper.get_firasim_team_is_yellow_team()
 
-IS_LEFT_TEAM = ConfigurationHelper.isLeftTeam()
+IS_LEFT_TEAM = ConfigurationHelper.get_firasim_is_left_team()
 
-ROBOT_LENGTH = ConfigurationHelper.getRobotLength()
-ROBOT_WIDTH = ConfigurationHelper.getRobotWidth()
+ROBOT_LENGTH = ConfigurationHelper.get_firasim_robot_length()
+ROBOT_WIDTH = ConfigurationHelper.get_firasim_robot_width()
 
-FIELD_WIDTH = ConfigurationHelper.getFieldWidth()
-FIELD_LENGTH = ConfigurationHelper.getFieldLength()
+FIELD_WIDTH = ConfigurationHelper.get_field_width()
+FIELD_LENGTH = ConfigurationHelper.get_field_length()
 
-MOTION_COLLISION_AVOIDANCE_MIN_DISTANCE = ConfigurationHelper.getMotionCollisionAvoidanceMinDistance()
+MOTION_COLLISION_AVOIDANCE_MIN_DISTANCE = ConfigurationHelper.get_motion_collision_avoidance_min_distance()
 
-FIRASIM_CONTROL_IP = ConfigurationHelper.getFIRASimControlIp()
-FIRASIM_CONTROL_PORT = ConfigurationHelper.getFIRASimControlPort()
-FIRASIM_VISION_IP = ConfigurationHelper.getFIRASimVisionIp()
-FIRASIM_VISION_PORT = ConfigurationHelper.getFIRASimVisionPort()
+FIRASIM_CONTROL_IP = ConfigurationHelper.get_firasim_control_ip()
+FIRASIM_CONTROL_PORT = ConfigurationHelper.get_firasim_control_port()
+FIRASIM_VISION_IP = ConfigurationHelper.get_firasim_vision_ip()
+FIRASIM_VISION_PORT = ConfigurationHelper.get_firasim_vision_port()
 
 def getProtoVision(isYellowTeam: bool):
     fieldData = FieldData()

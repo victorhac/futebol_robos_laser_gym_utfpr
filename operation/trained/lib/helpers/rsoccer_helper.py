@@ -10,14 +10,13 @@ from rsoccer_gym.Entities.Frame import Frame
 import numpy as np
 
 class RSoccerHelper:
-    GOAL_DEPTH = 0.1
-    FIELD_WIDTH = ConfigurationHelper.getFieldWidth()
-    FIELD_LENGTH = ConfigurationHelper.getFieldLength()
-    PENALTY_LENGTH = 0.15
-    ROBOT_WHEEL_RADIUS = 0.026
-    ROBOT_MAX_RPM = 440
-    V_WHEEL_DEADZONE = 0.05 
+    GOAL_DEPTH = ConfigurationHelper.get_field_goal_depth()
+    FIELD_WIDTH = ConfigurationHelper.get_field_width()
+    FIELD_LENGTH = ConfigurationHelper.get_field_length()
 
+    ROBOT_WHEEL_RADIUS = ConfigurationHelper.get_rsoccer_robot_wheel_radius()
+    ROBOT_MAX_RPM = ConfigurationHelper.get_rsoccer_robot_motor_max_rpm()
+    V_WHEEL_DEADZONE = ConfigurationHelper.get_rsoccer_robot_speed_dead_zone_meters_seconds()
     MAX_V = (ROBOT_MAX_RPM / 60) * 2 * np.pi * ROBOT_WHEEL_RADIUS
 
     @staticmethod
@@ -219,8 +218,9 @@ class RSoccerHelper:
         max_v = RSoccerHelper.MAX_V
         rbt_wheel_radius = RSoccerHelper.ROBOT_WHEEL_RADIUS
 
-        left_wheel_speed = actions[0] * max_v
-        right_wheel_speed = actions[1] * max_v
+        # the actions were switched because rsoccer uses a different convention
+        left_wheel_speed = actions[1] * max_v
+        right_wheel_speed = actions[0] * max_v
 
         left_wheel_speed, right_wheel_speed = np.clip(
             (left_wheel_speed, right_wheel_speed),
@@ -237,10 +237,10 @@ class RSoccerHelper:
 
         v_wheel_deadzone = RSoccerHelper.V_WHEEL_DEADZONE
 
-        if -v_wheel_deadzone < left_wheel_speed < v_wheel_deadzone:
+        if abs(left_wheel_speed) < v_wheel_deadzone:
             left_wheel_speed = 0
 
-        if -v_wheel_deadzone < right_wheel_speed < v_wheel_deadzone:
+        if abs(right_wheel_speed) < v_wheel_deadzone:
             right_wheel_speed = 0
 
         left_wheel_speed /= rbt_wheel_radius

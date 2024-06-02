@@ -15,21 +15,32 @@ from ...environment.base_environment import BaseEnvironment
 from ...helpers.field_helper import FieldHelper
 from ...helpers.configuration_helper import ConfigurationHelper
 
-TRAINING_EPISODE_DURATION = ConfigurationHelper.getTrainingEpisodeDuration()
-IS_LEFT_TEAM = ConfigurationHelper.isLeftTeam()
-IS_YELLOW_TEAM = ConfigurationHelper.getTeamIsYellowTeam()
-V_WHEEL_DEADZONE = 0.05
+TRAINING_EPISODE_DURATION = ConfigurationHelper.get_rsoccer_training_episode_duration()
+
+IS_LEFT_TEAM = ConfigurationHelper.get_rsoccer_is_left_team()
+IS_YELLOW_TEAM = ConfigurationHelper.get_rsoccer_team_is_yellow_team()
+NUMBER_ROBOTS_BLUE = ConfigurationHelper.get_rsoccer_team_blue_number_robots()
+NUMBER_ROBOTS_YELLOW = ConfigurationHelper.get_rsoccer_team_yellow_number_robots()
+
+V_WHEEL_DEADZONE = ConfigurationHelper.get_rsoccer_robot_speed_dead_zone_meters_seconds()
+
+RENDER_MODE = ConfigurationHelper.get_rsoccer_render_mode()
+
+TIME_STEP = ConfigurationHelper.get_rsoccer_training_time_step_seconds()
+
+# addapt this for your robot
+MAX_MOTOR_SPEED = ConfigurationHelper.get_firasim_robot_speed_max_radians_seconds()
 
 class Environment(BaseEnvironment):
     def __init__(self):
         super().__init__(
             field_type=0,
-            n_robots_blue=1,
-            n_robots_yellow=1,
-            time_step=0.025,
-            render_mode="human")
+            n_robots_blue=NUMBER_ROBOTS_BLUE,
+            n_robots_yellow=NUMBER_ROBOTS_YELLOW,
+            time_step=TIME_STEP,
+            render_mode=RENDER_MODE)
         
-        self.max_motor_speed = 30
+        self.max_motor_speed = MAX_MOTOR_SPEED
 
         self.action_space = Box(
             low=-1,
@@ -46,6 +57,11 @@ class Environment(BaseEnvironment):
         self.previous_ball_potential = None
         self.episode_initial_time = 0
 
+        self.training_episode_duration = TRAINING_EPISODE_DURATION
+        self.is_yellow_team = IS_YELLOW_TEAM
+        self.is_left_team = IS_LEFT_TEAM
+        self.v_wheel_deadzone = V_WHEEL_DEADZONE
+
         self._set_ou_actions()
 
     def _set_ou_actions(self):
@@ -57,7 +73,7 @@ class Environment(BaseEnvironment):
     def _is_done(self):
         if self._any_team_scored_goal():
             return True
-        elif time.time() - self.episode_initial_time > TRAINING_EPISODE_DURATION:
+        elif time.time() - self.episode_initial_time > self.training_episode_duration:
             return True
         return False
     
@@ -88,7 +104,9 @@ class Environment(BaseEnvironment):
         is_yellow_robot: bool
     ):
         actions = self._get_ou_actions(is_yellow_robot, robot_id)
-        v_wheel0, v_wheel1 = self._actions_to_v_wheels(actions, IS_YELLOW_TEAM == is_yellow_robot)
+        v_wheel0, v_wheel1 = self._actions_to_v_wheels(
+            actions,
+            self.is_yellow_team == is_yellow_robot)
 
         return self._create_robot(
             robot_id,
@@ -110,7 +128,7 @@ class Environment(BaseEnvironment):
 
         frame = self.frame
 
-        if IS_YELLOW_TEAM:
+        if self.is_yellow_team:
             own_team_robots, opponent_team_robots = frame.robots_yellow, frame.robots_blue
             length_own_team_robots, length_opponent_team_robots = \
                 self.n_robots_yellow, self.n_robots_blue
@@ -150,7 +168,7 @@ class Environment(BaseEnvironment):
 
         v_wheel0, v_wheel1 = self._actions_to_v_wheels(actions, True)
 
-        robot = self._create_robot(0, IS_YELLOW_TEAM, v_wheel0, v_wheel1)
+        robot = self._create_robot(0, self.is_yellow_team, v_wheel0, v_wheel1)
         
         commands.append(robot)
 
@@ -162,11 +180,11 @@ class Environment(BaseEnvironment):
                 self.n_robots_blue, self.n_robots_yellow
 
         for i in range(1, length_own_team_robots):
-            robot = self._create_robot_with_ou_action(i, IS_YELLOW_TEAM)
+            robot = self._create_robot_with_ou_action(i, self.is_yellow_team)
             commands.append(robot)
 
         for i in range(length_opponent_team_robots):
-            robot = self._create_robot(i, not IS_YELLOW_TEAM, 0, 0)
+            robot = self._create_robot(i, not self.is_yellow_team, 0, 0)
             commands.append(robot)
 
         return commands
@@ -192,10 +210,10 @@ class Environment(BaseEnvironment):
         left_wheel_speed *= factor
         right_wheel_speed *= factor
 
-        if -V_WHEEL_DEADZONE < left_wheel_speed < V_WHEEL_DEADZONE:
+        if self.v_wheel_deadzone > abs(left_wheel_speed):
             left_wheel_speed = 0
 
-        if -V_WHEEL_DEADZONE < right_wheel_speed < V_WHEEL_DEADZONE:
+        if self.v_wheel_deadzone > abs(right_wheel_speed):
             right_wheel_speed = 0
 
         left_wheel_speed /= self.field.rbt_wheel_radius
@@ -263,7 +281,7 @@ class Environment(BaseEnvironment):
     def _has_received_goal(self):        
         ball = self.get_ball()
 
-        if IS_LEFT_TEAM:
+        if self.is_left_team:
             return ball.x < -self.get_field_length() / 2
         else:
             return ball.x > self.get_field_length() / 2
@@ -275,7 +293,7 @@ class Environment(BaseEnvironment):
         return not self._has_received_goal()
     
     def _get_agent(self):
-        if not IS_YELLOW_TEAM:
+        if not self.is_yellow_team:
             return self.frame.robots_blue[0]
         else:
             return self.frame.robots_yellow[0]

@@ -1,41 +1,48 @@
 {
-    "robot": {
-        "wheel": {
-            "radius": 0.026
-        },
-        "motor": {
-            "max-rpm": 440
-        },
-        "speed": {
-            "base": 30,
-            "dead-zone": 2
-        },
-        "width": 0.075,
-        "length": 0.075
-    },
-    "team": {
-        "is-yellow-left-team": true,
-        "is-yellow-team": true,
-        "blue": {
-            "number-robots": 1
-        },
-        "yellow": {
-            "number-robots": 1
-        }
-    },
     "motion": {
         "pid": {
             "constants": {
-                "Kp": 20,
-                "Ki": 0,
-                "Kd": 2.5
+                "kp": 20,
+                "ki": 0,
+                "kd": 2.5
             }
         },
         "collision-avoidance": {
             "min-distance": 0.2
         }
     },
-    "FIRASim": {
+    "rsoccer": {
+        "robot": {
+            "wheel": {
+                "radius": 0.026
+            },
+            "motor": {
+                "max-rpm": 440
+            },
+            "speed": {
+                "max-radians-seconds": 46.08,
+                "dead-zone-meters-seconds": 0.05
+            },
+            "width": 0.075,
+            "length": 0.075
+        },
+        "team": {
+            "is-yellow-left-team": false,
+            "is-yellow-team": false,
+            "blue": {
+                "number-robots": 1
+            },
+            "yellow": {
+                "number-robots": 1
+            }
+        },
+        "training": {
+            "time-step": 0.025,
+            "episode-duration": 10
+        },
+        "render-mode": "human"
+    },
+    "firasim": {
         "control": {
             "ip": "127.0.0.1",
             "port": 20011
@@ -43,25 +50,41 @@
         "vision": {
             "ip": "224.0.0.1",
             "port": 10002
+        },
+        "robot": {
+            "wheel": {
+                "radius": 0.0325
+            },
+            "speed": {
+                "max-radians-seconds": 30
+            },
+            "width": 0.075,
+            "length": 0.075
+        },
+        "team": {
+            "is-yellow-left-team": true,
+            "is-yellow-team": false,
+            "blue": {
+                "number-robots": 1
+            },
+            "yellow": {
+                "number-robots": 1
+            }
         }
     },
     "field": {
         "length": 1.5,
         "width": 1.3,
         "goal": {
-            "width": 0.4
+            "width": 0.4,
+            "depth": 0.1
         },
-        "goal-area": {
-            "length": 0.2,
-            "width": 0.6
+        "penalty": {
+            "length": 0.7,
+            "depth": 0.15
         },
         "ball": {
             "radius": 0.0215
         }
-    },
-    "training": {
-        "time-step": 0.025,
-        "episode-duration": 10,
-        "velocity-clip-value": 1.25
     }
 }

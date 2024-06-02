@@ -4,10 +4,10 @@ from lib.environment.attacker.environment import Environment
 from lib.helpers.rsoccer_helper import RSoccerHelper
 from lib.motion.motion_utils import MotionUtils
 
-IS_YELLOW_TEAM = ConfigurationHelper.getTeamIsYellowTeam()
-FIELD_LENGTH = ConfigurationHelper.getFieldLength()
-IS_LEFT_TEAM = ConfigurationHelper.isLeftTeam()
-ROBOT_SPEED_BASE = ConfigurationHelper.getRobotSpeedBase()
+IS_YELLOW_TEAM = ConfigurationHelper.get_rsoccer_team_is_yellow_team()
+FIELD_LENGTH = ConfigurationHelper.get_field_length()
+IS_LEFT_TEAM = ConfigurationHelper.get_rsoccer_is_left_team()
+ROBOT_SPEED_BASE = ConfigurationHelper.get_rsoccer_robot_speed_max_radians_seconds()
 
 env = Environment()
 
