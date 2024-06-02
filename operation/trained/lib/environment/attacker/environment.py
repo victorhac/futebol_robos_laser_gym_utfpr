@@ -10,7 +10,6 @@ from rsoccer_gym.Entities import Frame, Robot, Ball
 from rsoccer_gym.Utils import KDTree
 
 from lib.helpers.rsoccer_helper import RSoccerHelper
-from lib.motion.motion_utils import MotionUtils
 
 from ...environment.base_environment import BaseEnvironment
 from ...helpers.field_helper import FieldHelper
@@ -52,7 +51,7 @@ class Environment(BaseEnvironment):
         self.observation_space = Box(
             low=-1,
             high=1,
-            shape=(14,),
+            shape=(34,),
             dtype=np.float32)
 
         self.previous_ball_potential = None
