@@ -224,9 +224,9 @@ class ConfigurationHelper:
         return configuration["field"]["penalty"]["length"]
     
     @staticmethod
-    def get_field_penalty_depth():
+    def get_field_penalty_width():
         configuration = ConfigurationHelper._get_configuration()
-        return configuration["field"]["penalty"]["depth"]
+        return configuration["field"]["penalty"]["width"]
     
     @staticmethod
     def get_field_ball_radius():

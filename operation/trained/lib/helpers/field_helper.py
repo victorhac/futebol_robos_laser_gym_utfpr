@@ -124,11 +124,11 @@ class FieldHelper:
     @staticmethod
     def get_random_position_inside_field(
         field_length: float,
-        field_width: float
+        field_width: float,
+        margin = 0.15
     ):
         max_x = field_length / 2
         max_y = field_width / 2
-        margin = 0.15
 
         return \
             random.uniform(-max_x + margin, max_x - margin), \
@@ -139,10 +139,10 @@ class FieldHelper:
         field_length: float,
         field_width: float,
         is_left_team: bool,
+        margin = 0.15
     ):
         max_x = field_length / 2
         max_y = field_width / 2
-        margin = 0.15
 
         y = random.uniform(-max_y + margin, max_y - margin)
 
@@ -162,3 +162,25 @@ class FieldHelper:
             field_width,
             not is_left_team
         )
+    
+    @staticmethod
+    def get_random_position_inside_own_penalty_area(
+        field_length: float,
+        penalty_length: float,
+        penalty_width: float,
+        is_left_team: bool,
+        robot_radius: float
+    ):
+        secure_robot_radius = robot_radius + 0.05
+
+        penalty_x = random.uniform(secure_robot_radius, penalty_length)
+
+        max_x = field_length / 2
+        max_y = penalty_width / 2
+
+        y = random.uniform(-max_y + secure_robot_radius, max_y - secure_robot_radius)
+
+        if is_left_team:
+            return -max_x + penalty_x, y
+        else:
+            return max_x - penalty_x, y

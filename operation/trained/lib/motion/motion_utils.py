@@ -21,7 +21,8 @@ class MotionUtils:
     def go_to_point(
         robot: Robot, 
         targetPosition: tuple[float, float],
-        lastError: float = 0
+        lastError: float = 0,
+        baseSpeed: float = 30
     ):
         positionX, positionY = robot.get_position_tuple()
         robotAngle = robot.position.theta
@@ -39,12 +40,10 @@ class MotionUtils:
         else:
             reversed = False
 
-        kP = ConfigurationHelper.getMotionPIDConstanstsKp()
-        kD = ConfigurationHelper.getMotionPIDConstanstsKd()
+        kP = ConfigurationHelper.get_motion_pid_constants_kp()
+        kD = ConfigurationHelper.get_motion_pid_constants_kd()
 
         motorSpeed = (kP * error) + (kD * (error - lastError))
-
-        baseSpeed = ConfigurationHelper.getRobotSpeedBase()
 
         motorSpeed = RobotHelper.truncateMotorSpeed(motorSpeed, baseSpeed)
 
