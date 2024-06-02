@@ -73,10 +73,8 @@ def act(
 
     action, _ = attacker_model.predict(observations)
     left_speed, right_speed = RSoccerHelper.actions_to_v_wheels(action, is_own_team)
-    if is_left_team:
-        team_control.transmit_robot(robot_id, right_speed, left_speed)
-    else:
-        team_control.transmit_robot(robot_id, left_speed, right_speed)
+
+    team_control.transmit_robot(robot_id, right_speed, left_speed)
 
 def go_to_point(
     robot_id: int,

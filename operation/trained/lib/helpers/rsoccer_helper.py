@@ -150,19 +150,6 @@ class RSoccerHelper:
         robot_id: int
     ):
         return RSoccerHelper.get_default_observation(field_data, is_left_team, robot_id)
-    
-    @staticmethod
-    def correct_angle_to_side(
-        theta: float,
-        is_left_team: bool
-    ):
-        if is_left_team:
-            if theta < 0:
-                theta += np.pi
-            elif theta > 0:
-                theta -= np.pi
-
-        return theta
 
     @staticmethod
     def get_robot_observation(
@@ -172,20 +159,17 @@ class RSoccerHelper:
         def norm_x(x): return RSoccerHelper.norm_x(x)
         def norm_y(y): return RSoccerHelper.norm_y(y)
         def norm_v(v): return RSoccerHelper.norm_v(v)
-        def correct_to_side(x): return x if is_left_team else -x
-        def correct_angle_to_side(theta):
-            return RSoccerHelper.correct_angle_to_side(theta, not is_left_team)
 
         position = robot.position
         velocity = robot.velocity
         theta = position.theta
 
         return [
-            norm_x(correct_to_side(position.x)),
-            norm_y(correct_to_side(position.y)),
-            correct_angle_to_side(theta) / np.pi,
-            norm_v(correct_to_side(velocity.x)),
-            norm_v(correct_to_side(velocity.y))
+            norm_x(position.x),
+            norm_y(position.y),
+            theta / np.pi,
+            norm_v(velocity.x),
+            norm_v(velocity.y)
         ]
     
     @staticmethod
@@ -198,16 +182,15 @@ class RSoccerHelper:
         def norm_x(x): return RSoccerHelper.norm_x(x)
         def norm_y(y): return RSoccerHelper.norm_y(y)
         def norm_v(v): return RSoccerHelper.norm_v(v)
-        def correct_to_side(x): return x if is_left_team else -x
 
         position = ball.position
         velocity = ball.velocity
 
         return [
-            norm_x(correct_to_side(position.x)),
-            norm_y(correct_to_side(position.y)),
-            norm_v(correct_to_side(velocity.x)),
-            norm_v(correct_to_side(velocity.y))
+            norm_x(position.x),
+            norm_y(position.y),
+            norm_v(velocity.x),
+            norm_v(velocity.y)
         ]
     
     @staticmethod

@@ -110,7 +110,7 @@ class ProtoVision(Receiver):
             foes_list_of_dicts = raw_data_dict.get('robotsYellow')
 
         if 'ball' in raw_data_dict:
-            self._entity_from_dict(field_data.ball, raw_data_dict['ball'], True)
+            self._entity_from_dict(field_data.ball, raw_data_dict['ball'], rotate_field)
 
         for i in range(len(team_list_of_dicts)):
             self._entity_from_dict(field_data.robots[i], team_list_of_dicts[i], rotate_field)
