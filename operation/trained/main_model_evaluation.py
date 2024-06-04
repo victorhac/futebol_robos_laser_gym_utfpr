@@ -1,7 +1,7 @@
 from stable_baselines3 import PPO
 from lib.environment.attacker.environment import Environment
 
-model = PPO.load("models/attacker/PPO/2024_6_3_16_46_10/PPO_model_90000000_steps")
+model = PPO.load("models/attacker/PPO/2024_6_4_17_29_21/PPO_model")
 
 env = Environment()
 
