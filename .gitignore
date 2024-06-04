@@ -10,3 +10,5 @@ __pycache__/
 # Ambiente virtual do Python (opcional, se você estiver usando um)
 venv/
 env/
+
+.amlignore*
