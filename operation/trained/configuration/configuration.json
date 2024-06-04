@@ -30,17 +30,17 @@
             "is-yellow-left-team": false,
             "is-yellow-team": false,
             "blue": {
-                "number-robots": 3
+                "number-robots": 1
             },
             "yellow": {
-                "number-robots": 3
+                "number-robots": 1
             }
         },
         "training": {
             "time-step": 0.025,
             "episode-duration": 20
         },
-        "render-mode": "rgb_array"
+        "render-mode": "human"
     },
     "firasim": {
         "control": {

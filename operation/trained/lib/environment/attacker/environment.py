@@ -17,8 +17,6 @@ from ...helpers.configuration_helper import ConfigurationHelper
 
 TRAINING_EPISODE_DURATION = ConfigurationHelper.get_rsoccer_training_episode_duration()
 
-IS_LEFT_TEAM = ConfigurationHelper.get_rsoccer_is_left_team()
-IS_YELLOW_TEAM = ConfigurationHelper.get_rsoccer_team_is_yellow_team()
 NUMBER_ROBOTS_BLUE = ConfigurationHelper.get_rsoccer_team_blue_number_robots()
 NUMBER_ROBOTS_YELLOW = ConfigurationHelper.get_rsoccer_team_yellow_number_robots()
 
@@ -56,11 +54,8 @@ class Environment(BaseEnvironment):
 
         self.previous_ball_potential = None
         self.episode_initial_time = 0
-        self.last_error = [0,0]
 
         self.training_episode_duration = TRAINING_EPISODE_DURATION
-        self.is_yellow_team = IS_YELLOW_TEAM
-        self.is_left_team = IS_LEFT_TEAM
         self.v_wheel_deadzone = V_WHEEL_DEADZONE
 
         self._set_ou_actions()
@@ -107,7 +102,7 @@ class Environment(BaseEnvironment):
         actions = self._get_ou_actions(is_yellow_robot, robot_id)
         v_wheel0, v_wheel1 = self._actions_to_v_wheels(
             actions,
-            self.is_yellow_team == is_yellow_robot)
+            False == is_yellow_robot)
 
         return self._create_robot(
             robot_id,
@@ -129,17 +124,8 @@ class Environment(BaseEnvironment):
 
         frame = self.frame
 
-        if self.is_yellow_team:
-            own_team_robots, opponent_team_robots = frame.robots_yellow, frame.robots_blue
-            length_own_team_robots, length_opponent_team_robots = \
-                self.n_robots_yellow, self.n_robots_blue
-        else:
-            own_team_robots, opponent_team_robots = frame.robots_blue, frame.robots_yellow
-            length_own_team_robots, length_opponent_team_robots = \
-                self.n_robots_blue, self.n_robots_yellow
-
-        for i in range(length_own_team_robots):
-            robot = own_team_robots[i]
+        for i in range(self.n_robots_blue):
+            robot = frame.robots_blue[i]
             theta = -RSoccerHelper.get_corrected_angle(robot.theta)
 
             observation.extend([
@@ -150,8 +136,8 @@ class Environment(BaseEnvironment):
                 self.norm_v(-robot.v_y)
             ])
 
-        for i in range(length_opponent_team_robots):
-            robot = opponent_team_robots[i]
+        for i in range(self.n_robots_yellow):
+            robot = frame.robots_yellow[i]
             theta = -RSoccerHelper.get_corrected_angle(robot.theta)
 
             observation.extend([
@@ -169,23 +155,16 @@ class Environment(BaseEnvironment):
 
         v_wheel0, v_wheel1 = self._actions_to_v_wheels(actions, True)
 
-        robot = self._create_robot(0, self.is_yellow_team, v_wheel0, v_wheel1)
+        robot = self._create_robot(0, False, v_wheel0, v_wheel1)
         
         commands.append(robot)
-
-        if self.is_yellow_team:
-            length_own_team_robots, length_opponent_team_robots = \
-                self.n_robots_yellow, self.n_robots_blue
-        else:
-            length_own_team_robots, length_opponent_team_robots = \
-                self.n_robots_blue, self.n_robots_yellow
             
-        for i in range(1, length_own_team_robots):
-            robot = self._create_robot_with_ou_action(i, self.is_yellow_team)
+        for i in range(1, self.n_robots_blue):
+            robot = self._create_robot_with_ou_action(i, False)
             commands.append(robot)
 
-        for i in range(length_opponent_team_robots):
-            robot = self._create_robot_with_ou_action(i, not self.is_yellow_team)
+        for i in range(self.n_robots_yellow):
+            robot = self._create_robot_with_ou_action(i, True)
             commands.append(robot)
 
         return commands
@@ -281,11 +260,7 @@ class Environment(BaseEnvironment):
     
     def _has_received_goal(self):        
         ball = self.get_ball()
-
-        if self.is_left_team:
-            return ball.x < -self.get_field_length() / 2
-        else:
-            return ball.x > self.get_field_length() / 2
+        return ball.x < -self.get_field_length() / 2
 
     def _has_scored_goal(self):
         if not self._any_team_scored_goal():
@@ -294,10 +269,7 @@ class Environment(BaseEnvironment):
         return not self._has_received_goal()
     
     def _get_agent(self):
-        if not self.is_yellow_team:
-            return self.frame.robots_blue[0]
-        else:
-            return self.frame.robots_yellow[0]
+        return self.frame.robots_blue[0]
     
     def _calculate_reward_and_done(self):
         reward = 0
@@ -335,7 +307,7 @@ class Environment(BaseEnvironment):
             self.get_field_length(),
             self.get_penalty_length(),
             self.get_penalty_width(),
-            self.is_left_team,
+            True,
             self.get_robot_radius())
     
     def _get_random_position_inside_opponent_penalty_area(self):
@@ -343,34 +315,25 @@ class Environment(BaseEnvironment):
             self.get_field_length(),
             self.get_penalty_length(),
             self.get_penalty_width(),
-            not self.is_left_team,
+            False,
             self.get_robot_radius())
     
     def _get_random_position_inside_own_area(self):
         return FieldHelper.get_random_position_inside_own_area(
             self.get_field_length(),
             self.get_field_width(),
-            self.is_left_team)
+            True)
     
     def _get_random_position_inside_opponent_area(self):
         return FieldHelper.get_random_position_inside_own_area(
             self.get_field_length(),
             self.get_field_width(),
-            not self.is_left_team)
+            False)
 
     def _get_initial_positions_frame(self):
         def theta(): return random.uniform(0, 360)
 
         frame: Frame = Frame()
-
-        if self.is_yellow_team:
-            own_team_robots, opponent_team_robots = frame.robots_yellow, frame.robots_blue
-            length_own_team_robots, length_opponent_team_robots = \
-                self.n_robots_yellow, self.n_robots_blue
-        else:
-            own_team_robots, opponent_team_robots = frame.robots_blue, frame.robots_yellow
-            length_own_team_robots, length_opponent_team_robots = \
-                self.n_robots_blue, self.n_robots_yellow
 
         ball_position = self._get_random_position_inside_field()
 
@@ -398,9 +361,9 @@ class Environment(BaseEnvironment):
             self._get_random_position_inside_own_area
         ]
 
-        for i in range(length_own_team_robots):
+        for i in range(self.n_robots_blue):
             pos = get_position(position_fns[i])
-            own_team_robots[i] = Robot(x=pos[0], y=pos[1], theta=theta())
+            frame.robots_blue[i] = Robot(x=pos[0], y=pos[1], theta=theta())
 
         position_fns = [
             self._get_random_position_inside_opponent_penalty_area,
@@ -408,9 +371,9 @@ class Environment(BaseEnvironment):
             self._get_random_position_inside_opponent_area
         ]
 
-        for i in range(length_opponent_team_robots):
+        for i in range(self.n_robots_yellow):
             pos = get_position(position_fns[i])
-            opponent_team_robots[i] = Robot(x=pos[0], y=pos[1], theta=theta())
+            frame.robots_yellow[i] = Robot(x=pos[0], y=pos[1], theta=theta())
 
         self.episode_initial_time = time.time()
 

@@ -1,5 +1,5 @@
 from lib.helpers.configuration_helper import ConfigurationHelper
-from lib.environment.attacker.environment import Environment
+from lib.environment.goalkeeper.environment import Environment
 
 from lib.helpers.rsoccer_helper import RSoccerHelper
 from lib.motion.motion_utils import MotionUtils
@@ -16,20 +16,15 @@ try:
         obs = env.reset()
         reward = 0
         done = False
-        left_motor, right_motor, error = 0,0,0
 
         try:
             while done is False:
-                next_state, reward, done, _, _ = env.step((left_motor / ROBOT_SPEED_BASE, right_motor / ROBOT_SPEED_BASE))
-                print(f"Reward: {reward}")
-                field_data = RSoccerHelper.get_field_data(env.get_frame(), IS_YELLOW_TEAM)
-                ball_position = (field_data.ball.position.x, field_data.ball.position.y)
-                left_motor, right_motor, error = MotionUtils.go_to_point(field_data.robots[0], ball_position, error)
+                next_state, reward, done, _, _ = env.step((0, 0))
                 env.render()
         except KeyboardInterrupt:
             env.reset()
 
-        input("Press Enter to continue...")
+        #input("Press Enter to continue...")
         env.reset()
         
 except KeyboardInterrupt:
