@@ -9,11 +9,11 @@ from rsoccer_gym.Utils.Utils import OrnsteinUhlenbeckAction
 from rsoccer_gym.Entities import Frame, Robot, Ball
 from rsoccer_gym.Utils import KDTree
 
-from lib.helpers.rsoccer_helper import RSoccerHelper
-
-from ...environment.base_environment import BaseEnvironment
+from ...helpers.rsoccer_helper import RSoccerHelper
 from ...helpers.field_helper import FieldHelper
 from ...helpers.configuration_helper import ConfigurationHelper
+
+from ...environment.base_environment import BaseEnvironment
 
 TRAINING_EPISODE_DURATION = ConfigurationHelper.get_rsoccer_training_episode_duration()
 
@@ -102,7 +102,7 @@ class Environment(BaseEnvironment):
         actions = self._get_ou_actions(is_yellow_robot, robot_id)
         v_wheel0, v_wheel1 = self._actions_to_v_wheels(
             actions,
-            False == is_yellow_robot)
+            not is_yellow_robot)
 
         return self._create_robot(
             robot_id,
@@ -183,7 +183,8 @@ class Environment(BaseEnvironment):
             self.max_v)
         
         if is_own_team:
-            factor = self.max_motor_speed / (self.max_v / self.field.rbt_wheel_radius)
+            rsoccer_max_motor_speed = (self.max_v / self.field.rbt_wheel_radius)
+            factor = self.max_motor_speed / rsoccer_max_motor_speed
         else:
             factor = 1
 
@@ -201,7 +202,7 @@ class Environment(BaseEnvironment):
 
         return left_wheel_speed, right_wheel_speed
     
-    def __ball_gradient_reward(
+    def _ball_gradient_reward(
         self,
         previous_ball_potential: float | None
     ):
@@ -265,7 +266,6 @@ class Environment(BaseEnvironment):
     def _has_scored_goal(self):
         if not self._any_team_scored_goal():
             return None
-
         return not self._has_received_goal()
     
     def _get_agent(self):
@@ -284,7 +284,7 @@ class Environment(BaseEnvironment):
                 reward = -10
         else:
             grad_ball_potential, ball_gradient = \
-                self.__ball_gradient_reward(self.previous_ball_potential)
+                self._ball_gradient_reward(self.previous_ball_potential)
             
             self.previous_ball_potential = ball_gradient
 
@@ -339,21 +339,21 @@ class Environment(BaseEnvironment):
 
         frame.ball = Ball(x=ball_position[0], y=ball_position[1])
 
-        min_dist = 0.15
+        min_distance = 0.15
 
         places = KDTree()
 
         places.insert(ball_position)
             
         def get_position(get_position_fn):
-            pos = get_position_fn()
+            position = get_position_fn()
 
-            while places.get_nearest(pos)[1] < min_dist:
-                pos = get_position_fn()
+            while places.get_nearest(position)[1] < min_distance:
+                position = get_position_fn()
 
-            places.insert(pos)
+            places.insert(position)
 
-            return pos
+            return position
         
         position_fns = [
             self._get_random_position_inside_field,
@@ -362,8 +362,8 @@ class Environment(BaseEnvironment):
         ]
 
         for i in range(self.n_robots_blue):
-            pos = get_position(position_fns[i])
-            frame.robots_blue[i] = Robot(x=pos[0], y=pos[1], theta=theta())
+            position = get_position(position_fns[i])
+            frame.robots_blue[i] = Robot(x=position[0], y=position[1], theta=theta())
 
         position_fns = [
             self._get_random_position_inside_opponent_penalty_area,
@@ -372,8 +372,8 @@ class Environment(BaseEnvironment):
         ]
 
         for i in range(self.n_robots_yellow):
-            pos = get_position(position_fns[i])
-            frame.robots_yellow[i] = Robot(x=pos[0], y=pos[1], theta=theta())
+            position = get_position(position_fns[i])
+            frame.robots_yellow[i] = Robot(x=position[0], y=position[1], theta=theta())
 
         self.episode_initial_time = time.time()
 

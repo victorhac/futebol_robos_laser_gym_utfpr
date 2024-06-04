@@ -30,10 +30,10 @@
             "is-yellow-left-team": false,
             "is-yellow-team": false,
             "blue": {
-                "number-robots": 1
+                "number-robots": 3
             },
             "yellow": {
-                "number-robots": 1
+                "number-robots": 3
             }
         },
         "training": {
