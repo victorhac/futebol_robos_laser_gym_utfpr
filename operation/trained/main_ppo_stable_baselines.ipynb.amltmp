@@ -1,0 +1,332 @@
+{
+  "cells": [
+    {
+      "cell_type": "code",
+      "source": [
+        "from stable_baselines3 import PPO\n",
+        "from stable_baselines3.common.vec_env import SubprocVecEnv\n",
+        "from stable_baselines3.common.callbacks import CheckpointCallback\n",
+        "\n",
+        "from lib.environment.attacker.environment import Environment\n",
+        "\n",
+        "import os\n",
+        "from datetime import datetime"
+      ],
+      "outputs": [],
+      "execution_count": 1,
+      "metadata": {
+        "gather": {
+          "logged": 1717534899401
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "task_training_name = \"attacker\"\n",
+        "algorithm_name = \"PPO\""
+      ],
+      "outputs": [],
+      "execution_count": 2,
+      "metadata": {
+        "gather": {
+          "logged": 1717534899518
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def create_env():\n",
+        "    def _init():\n",
+        "        return Environment()\n",
+        "    return _init"
+      ],
+      "outputs": [],
+      "execution_count": 3,
+      "metadata": {
+        "gather": {
+          "logged": 1717534899634
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def create_folder_if_not_exists(folder_path):\n",
+        "    if not os.path.exists(folder_path):\n",
+        "        os.makedirs(folder_path)"
+      ],
+      "outputs": [],
+      "execution_count": 4,
+      "metadata": {
+        "gather": {
+          "logged": 1717534899754
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def get_task_models_path():\n",
+        "    current_datetime = datetime.now()\n",
+        "\n",
+        "    year = current_datetime.year\n",
+        "    month = current_datetime.month\n",
+        "    day = current_datetime.day\n",
+        "    hour = current_datetime.hour\n",
+        "    minute = current_datetime.minute\n",
+        "    second = current_datetime.second\n",
+        "\n",
+        "    datetime_name = f\"{year}_{month}_{day}_{hour}_{minute}_{second}\"\n",
+        "\n",
+        "    return f\"models/{task_training_name}/{algorithm_name}/{datetime_name}\""
+      ],
+      "outputs": [],
+      "execution_count": 5,
+      "metadata": {
+        "gather": {
+          "logged": 1717534899877
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "save_path = get_task_models_path()\n",
+        "\n",
+        "create_folder_if_not_exists(save_path)"
+      ],
+      "outputs": [],
+      "execution_count": 6,
+      "metadata": {
+        "gather": {
+          "logged": 1717534899992
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "num_threads = 50\n",
+        "model_filename_prefix = f\"{algorithm_name}_model\""
+      ],
+      "outputs": [],
+      "execution_count": 7,
+      "metadata": {
+        "gather": {
+          "logged": 1717534900105
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "env = SubprocVecEnv([create_env() for i in range(num_threads)])\n",
+        "\n",
+        "n_actions = env.action_space.shape[-1]\n",
+        "n_actions"
+      ],
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "execution_count": 8,
+          "data": {
+            "text/plain": "2"
+          },
+          "metadata": {}
+        }
+      ],
+      "execution_count": 8,
+      "metadata": {
+        "gather": {
+          "logged": 1717534905612
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "gae_lambda = 0.95\n",
+        "gamma = 0.99\n",
+        "learning_rate = 0.0004\n",
+        "clip_range = 0.2\n",
+        "policy = \"MlpPolicy\"\n",
+        "batch_size = 128"
+      ],
+      "outputs": [],
+      "execution_count": 9,
+      "metadata": {
+        "gather": {
+          "logged": 1717534905801
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "load_model = True\n",
+        "loaded_model_path = \"models/attacker/PPO/2024_6_4_17_29_21/PPO_model.zip\""
+      ],
+      "outputs": [],
+      "execution_count": 10,
+      "metadata": {
+        "gather": {
+          "logged": 1717534905891
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "model = PPO(\n",
+        "    policy=policy,\n",
+        "    env=env,\n",
+        "    gamma=gamma,\n",
+        "    gae_lambda=gae_lambda,\n",
+        "    clip_range=clip_range,\n",
+        "    batch_size=batch_size)\n",
+        "\n",
+        "if load_model:\n",
+        "    model.set_parameters(loaded_model_path)"
+      ],
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": "/anaconda/envs/azureml_py310_sdkv2/lib/python3.10/site-packages/torch/cuda/__init__.py:619: UserWarning: Can't initialize NVML\n  warnings.warn(\"Can't initialize NVML\")\n"
+        }
+      ],
+      "execution_count": 11,
+      "metadata": {
+        "gather": {
+          "logged": 1717534917558
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "total_timesteps = 200_000_000"
+      ],
+      "outputs": [],
+      "execution_count": 12,
+      "metadata": {
+        "gather": {
+          "logged": 1717534917764
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "saved_model_number = 20\n",
+        "save_freq = total_timesteps // (saved_model_number * num_threads)\n",
+        "log_interval = total_timesteps // 10"
+      ],
+      "outputs": [],
+      "execution_count": 13,
+      "metadata": {
+        "gather": {
+          "logged": 1717534917884
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "checkpoint_callback = CheckpointCallback(\n",
+        "    save_freq=save_freq,\n",
+        "    save_path=save_path,\n",
+        "    name_prefix=model_filename_prefix)"
+      ],
+      "outputs": [],
+      "execution_count": 14,
+      "metadata": {
+        "gather": {
+          "logged": 1717534918001
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "model.learn(\n",
+        "    total_timesteps=total_timesteps,\n",
+        "    log_interval=log_interval,\n",
+        "    callback=checkpoint_callback,\n",
+        "    progress_bar=True)"
+      ],
+      "outputs": [
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": "\u001b[35m   2%\u001b[0m \u001b[38;2;249;38;114m╸\u001b[0m\u001b[38;5;237m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m3,583,950/200,000,000 \u001b[0m [ \u001b[33m0:44:18\u001b[0m < \u001b[36m11:54:14\u001b[0m , \u001b[31m4,583 it/s\u001b[0m ]\n",
+            "text/html": "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"color: #800080; text-decoration-color: #800080\">   2%</span> <span style=\"color: #f92672; text-decoration-color: #f92672\">╸</span><span style=\"color: #3a3a3a; text-decoration-color: #3a3a3a\">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span> <span style=\"color: #008000; text-decoration-color: #008000\">3,583,950/200,000,000 </span> [ <span style=\"color: #808000; text-decoration-color: #808000\">0:44:18</span> &lt; <span style=\"color: #008080; text-decoration-color: #008080\">11:54:14</span> , <span style=\"color: #800000; text-decoration-color: #800000\">4,583 it/s</span> ]\n</pre>\n"
+          },
+          "metadata": {}
+        }
+      ],
+      "execution_count": null,
+      "metadata": {
+        "gather": {
+          "logged": 1717534765478
+        },
+        "jupyter": {
+          "outputs_hidden": false
+        },
+        "editable": true,
+        "run_control": {
+          "frozen": false
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "model.save(f\"{save_path}/{model_filename_prefix}\")"
+      ],
+      "outputs": [],
+      "execution_count": null,
+      "metadata": {
+        "gather": {
+          "logged": 1717537605835
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "name": "python310-sdkv2",
+      "language": "python",
+      "display_name": "Python 3.10 - SDK v2"
+    },
+    "language_info": {
+      "name": "python",
+      "version": "3.10.11",
+      "mimetype": "text/x-python",
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "pygments_lexer": "ipython3",
+      "nbconvert_exporter": "python",
+      "file_extension": ".py"
+    },
+    "kernel_info": {
+      "name": "python310-sdkv2"
+    },
+    "nteract": {
+      "version": "nteract-front-end@1.0.0"
+    },
+    "microsoft": {
+      "host": {
+        "AzureML": {
+          "notebookHasBeenCompleted": true
+        }
+      }
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 2
+}

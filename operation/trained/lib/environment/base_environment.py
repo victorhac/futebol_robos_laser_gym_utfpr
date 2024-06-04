@@ -152,7 +152,7 @@ class BaseEnvironment(gym.Env):
 
             if self.render_mode == "human":
                 pygame.display.init()
-                pygame.display.set_caption("VSS Environment")
+                pygame.display.set_caption("VSSS Environment")
                 self.window_surface = pygame.display.set_mode(self.window_size)
             elif self.render_mode == "rgb_array":
                 self.window_surface = pygame.Surface(self.window_size)

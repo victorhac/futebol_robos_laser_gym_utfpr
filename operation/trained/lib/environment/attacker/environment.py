@@ -69,8 +69,6 @@ class Environment(BaseEnvironment):
     def _is_done(self):
         if self._any_team_scored_goal():
             return True
-        elif time.time() - self.episode_initial_time > self.training_episode_duration:
-            return True
         return False
     
     def _create_robot(
