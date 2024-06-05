@@ -1,0 +1,7 @@
+Atacante sem defensor móvel.
+Espaço de ação: 2
+Espaço de observação: 14
+Observações:
+- x, y, v_x, v_y da bola
+- x, y, theta, v_x, v_y do Atacante
+- x, y, theta, v_x, v_y do Defensor

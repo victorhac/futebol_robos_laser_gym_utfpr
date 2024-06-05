@@ -129,11 +129,6 @@ class ConfigurationHelper:
         return configuration["training"]["episode-duration"]
     
     @staticmethod
-    def get_rsoccer_render_mode():
-        configuration = ConfigurationHelper._get_rsoccer_configuration()
-        return configuration["render-mode"]
-    
-    @staticmethod
     def get_firasim_control_ip():
         configuration = ConfigurationHelper._get_firasim_configuration()
         return configuration["control"]["ip"]

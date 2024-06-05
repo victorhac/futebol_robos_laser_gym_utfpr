@@ -22,21 +22,19 @@ NUMBER_ROBOTS_YELLOW = ConfigurationHelper.get_rsoccer_team_yellow_number_robots
 
 V_WHEEL_DEADZONE = ConfigurationHelper.get_rsoccer_robot_speed_dead_zone_meters_seconds()
 
-RENDER_MODE = ConfigurationHelper.get_rsoccer_render_mode()
-
 TIME_STEP = ConfigurationHelper.get_rsoccer_training_time_step_seconds()
 
 # addapt this for your robot
 MAX_MOTOR_SPEED = ConfigurationHelper.get_firasim_robot_speed_max_radians_seconds()
 
 class Environment(BaseEnvironment):
-    def __init__(self):
+    def __init__(self, render_mode="rgb_array"):
         super().__init__(
             field_type=0,
             n_robots_blue=NUMBER_ROBOTS_BLUE,
             n_robots_yellow=NUMBER_ROBOTS_YELLOW,
             time_step=TIME_STEP,
-            render_mode=RENDER_MODE)
+            render_mode=render_mode)
         
         self.max_motor_speed = MAX_MOTOR_SPEED
 

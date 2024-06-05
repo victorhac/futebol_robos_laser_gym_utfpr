@@ -1,17 +1,21 @@
 from stable_baselines3 import PPO
 from lib.environment.attacker.environment import Environment
+import time
 
-model = PPO.load("models/attacker/PPO/2024_6_4_17_29_21/PPO_model")
+model = PPO.load("models/attacker/PPO/2024_6_4_22_43_33/PPO_model_90000000_steps")
 
-env = Environment()
+env = Environment("human")
+
+episode_duration = 20
 
 try:
     for i in range(100):
         next_state, _ = env.reset()
         reward = 0
         done = False
+        episode_initial_time = time.time()
 
-        while not done:
+        while not done and time.time() - episode_initial_time < episode_duration:
             action, state = model.predict(next_state)
             next_state, reward, done, _, _ = env.step(action)
             env.render()
