@@ -40,7 +40,7 @@
             "time-step": 0.025,
             "episode-duration": 20
         },
-        "render-mode": "human"
+        "render-mode": "rgb_array"
     },
     "firasim": {
         "control": {
