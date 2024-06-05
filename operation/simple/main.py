@@ -67,6 +67,72 @@ def placeRobot(
 
     teamControl.transmit_robot(id, 0, 0)
 
+def isRobotBehindBall(
+    id: int,
+    fieldData: FieldData,
+    vision: ProtoVision,
+    teamControl: ProtoControl
+):
+    robot = fieldData.robots[id]
+    ball = fieldData.ball
+
+    vision.update()
+
+    print(ball.position.x, robot.position.x)
+
+    if (IS_LEFT_TEAM):
+        if (ball.position.x > robot.position.x):
+            return True
+        return False
+    else:
+        if (ball.position.x < -robot.position.x):
+            return True
+        return False
+
+
+def goBehindBall(
+    id: int,
+    fieldData: FieldData,
+    vision: ProtoVision,
+    teamControl: ProtoControl
+):
+    robot = fieldData.robots[id]
+    ball = fieldData.ball
+
+    position = robot.position
+
+    error = 0
+    counter = 0
+    maxCounter = 100
+
+    vision.update()
+    if (IS_LEFT_TEAM):
+        targetPosition = (ball.position.x - GOAL_LINE_DISTANCE_TO_CENTER / 2, ball.position.y)
+    else:
+        targetPosition = (ball.position.x + GOAL_LINE_DISTANCE_TO_CENTER / 2, ball.position.y)
+    
+    while not Geometry.isClose(
+            (position.x, position.y),
+            FIRASimHelper.normalizePosition(
+                targetPosition[0],
+                targetPosition[1],
+                IS_LEFT_TEAM),
+            0.05) \
+        and counter < maxCounter:
+
+        vision.update()
+        
+        if (IS_LEFT_TEAM):
+            targetPosition = (ball.position.x - GOAL_LINE_DISTANCE_TO_CENTER / 2, ball.position.y)
+        else:
+            targetPosition = (ball.position.x + GOAL_LINE_DISTANCE_TO_CENTER / 2, ball.position.y)
+
+        (leftSpeed, rightSpeed, error) = Motion.goToPoint(robot, targetPosition, IS_LEFT_TEAM, error)
+
+        teamControl.transmit_robot(id, leftSpeed, rightSpeed)
+
+        counter += 1
+
 def followBall(
     id: int,
     fieldData: FieldData,
@@ -128,6 +194,28 @@ def spinIfCloseToBall(
 
     teamControl.transmit_robot(id, 0, 0)
 
+def testToChangeAttackAndDefense(
+    vision: ProtoVision,
+    teamControl: ProtoControl,
+    fieldData: FieldData
+):
+    vision.update()
+
+    global DEFENSE_ROBOT_ID
+    global ATACKER_ROBOT_ID
+
+    defenseRobot = fieldData.robots[DEFENSE_ROBOT_ID]
+    atackerRobot = fieldData.robots[ATACKER_ROBOT_ID]
+
+    distance = atackerRobot.position.x - defenseRobot.position.x
+
+    if distance < 0: #If the defender is in front of the atacker, then change functions.
+        OLD_ATTACKER = ATACKER_ROBOT_ID
+        ATACKER_ROBOT_ID = DEFENSE_ROBOT_ID
+        DEFENSE_ROBOT_ID = OLD_ATTACKER
+
+
+
 def defensePlayerThread(
     fieldData: FieldData,
     vision: ProtoVision,
@@ -154,12 +242,15 @@ def defensePlayerThread(
     while True:
         vision.update()
 
-        ballPosition = (ball.position.x, ball.position.y)
-        
+        if IS_LEFT_TEAM:
+            positionToDefendGoalY = ( (xCoordinateDefensor + 0.75) * (ball.position.y) / (ball.position.x + 0.75) )
+        else:
+            positionToDefendGoalY = ( (0.75 - xCoordinateDefensor) * ball.position.y / (0.75 - ball.position.x) )
+
         placeRobot(
             DEFENSE_ROBOT_ID, 
             fieldData, 
-            (xCoordinateDefensor, ballPosition[1]),
+            (xCoordinateDefensor, positionToDefendGoalY),
             vision,
             teamControl
         )
@@ -227,13 +318,27 @@ def atackerPlayerThread(
     atackerRobot = fieldData.robots[ATACKER_ROBOT_ID]
 
     while True:
-        followBall(ATACKER_ROBOT_ID, fieldData, vision, teamControl)
         
+        # If behind ball, follow ball
+        # Else, go behind ball  
+        if (isRobotBehindBall(ATACKER_ROBOT_ID, fieldData, vision, teamControl)):
+            followBall(ATACKER_ROBOT_ID, fieldData, vision, teamControl)
+        else:
+            goBehindBall(ATACKER_ROBOT_ID, fieldData, vision, teamControl)
+            print("Going behind ball")
+
         spinIfCloseToBall(
             ATACKER_ROBOT_ID,
             atackerRobot,
             vision,
             teamControl)
+
+        testToChangeAttackAndDefense(
+            vision,
+            teamControl,
+            fieldData
+        )        
+
 
 def main():
     fieldData = FieldData()
