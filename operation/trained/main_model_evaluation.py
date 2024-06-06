@@ -2,7 +2,7 @@ from stable_baselines3 import PPO
 from lib.environment.attacker.environment import Environment
 import time
 
-model = PPO.load("models/attacker/PPO/2024_6_4_22_43_33/PPO_model_90000000_steps")
+model = PPO.load("models/attacker/PPO/2024_6_6_11_37_25/PPO_model_10000000_steps")
 
 env = Environment("human")
 
