@@ -67,6 +67,8 @@ class Environment(BaseEnvironment):
     def _is_done(self):
         if self._any_team_scored_goal():
             return True
+        elif self.episode_initial_time - time.time() > TRAINING_EPISODE_DURATION:
+            return True
         return False
     
     def _create_robot(
@@ -156,11 +158,11 @@ class Environment(BaseEnvironment):
         commands.append(robot)
             
         for i in range(1, self.n_robots_blue):
-            robot = self._create_robot(i, False, 0, 0)
+            robot = self._create_robot_with_ou_action(i, False)
             commands.append(robot)
 
         for i in range(self.n_robots_yellow):
-            robot = self._create_robot(i, True, 0, 0)
+            robot = self._create_robot_with_ou_action(i, True)
             commands.append(robot)
 
         return commands
