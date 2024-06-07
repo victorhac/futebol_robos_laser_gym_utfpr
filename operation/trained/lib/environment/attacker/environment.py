@@ -67,7 +67,7 @@ class Environment(BaseEnvironment):
     def _is_done(self):
         if self._any_team_scored_goal():
             return True
-        elif self.episode_initial_time - time.time() > TRAINING_EPISODE_DURATION:
+        elif time.time() - self.episode_initial_time > TRAINING_EPISODE_DURATION:
             return True
         return False
     

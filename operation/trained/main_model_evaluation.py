@@ -15,7 +15,7 @@ try:
         done = False
         episode_initial_time = time.time()
 
-        while not done and time.time() - episode_initial_time < episode_duration:
+        while not done:
             action, state = model.predict(next_state)
             next_state, reward, done, _, _ = env.step(action)
             env.render()
