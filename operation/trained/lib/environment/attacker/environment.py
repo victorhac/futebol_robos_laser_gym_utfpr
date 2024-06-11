@@ -333,7 +333,7 @@ class Environment(BaseEnvironment):
 
         frame: Frame = Frame()
 
-        ball_position = self._get_random_position_inside_field()
+        ball_position = self._get_random_position_inside_opponent_area()
 
         frame.ball = Ball(x=ball_position[0], y=ball_position[1])
 
@@ -342,6 +342,8 @@ class Environment(BaseEnvironment):
         places = KDTree()
 
         places.insert(ball_position)
+
+        frame.robots_blue[0] = Robot(x=ball_position[0] - 0.1, y=ball_position[1], theta=theta())
             
         def get_position(get_position_fn):
             position = get_position_fn()
@@ -354,13 +356,12 @@ class Environment(BaseEnvironment):
             return position
         
         position_fns = [
-            self._get_random_position_inside_field,
             self._get_random_position_inside_own_penalty_area,
             self._get_random_position_inside_own_area
         ]
 
-        for i in range(self.n_robots_blue):
-            position = get_position(position_fns[i])
+        for i in range(1, self.n_robots_blue):
+            position = get_position(position_fns[i - 1])
             frame.robots_blue[i] = Robot(x=position[0], y=position[1], theta=theta())
 
         position_fns = [
