@@ -4,7 +4,7 @@ import json
 import logging
 
 def main():
-    vision = ProtoVision(team_color_yellow=False)
+    vision = ProtoVision( vision_ip="224.5.23.2", vision_port=10006, team_color_yellow=True)
 
     try:
         counter = 0
