@@ -9,6 +9,10 @@ from rsoccer_gym.Utils.Utils import OrnsteinUhlenbeckAction
 from rsoccer_gym.Entities import Frame, Robot, Ball
 from rsoccer_gym.Utils import KDTree
 
+from lib.domain.robot_curriculum_behavior import RobotCurriculumBehavior
+from lib.enums.position_enum import PositionEnum
+from lib.enums.robot_curriculum_behavior_enum import RobotCurriculumBehaviorEnum
+
 from ...helpers.rsoccer_helper import RSoccerHelper
 from ...helpers.field_helper import FieldHelper
 from ...helpers.configuration_helper import ConfigurationHelper
@@ -55,6 +59,51 @@ class Environment(BaseEnvironment):
 
         self.training_episode_duration = TRAINING_EPISODE_DURATION
         self.v_wheel_deadzone = V_WHEEL_DEADZONE
+
+        self.blue_robot_behaviors = []
+        self.yellow_robot_behaviors = []
+
+        def blue_append_behavior(
+            robot_curriculum_behavior_enum: RobotCurriculumBehaviorEnum,
+            id: int,
+            position_enum: PositionEnum
+        ):
+            self\
+                .blue_robot_behaviors\
+                .append(
+                    RobotCurriculumBehavior(
+                        robot_curriculum_behavior_enum,
+                        id,
+                        False,
+                        position_enum
+                    ))
+            
+        def yellow_append_behavior(
+            robot_curriculum_behavior_enum: RobotCurriculumBehaviorEnum,
+            id: int,
+            position_enum: PositionEnum
+        ):
+            self\
+                .yellow_robot_behaviors\
+                .append(
+                    RobotCurriculumBehavior(
+                        robot_curriculum_behavior_enum,
+                        id,
+                        True,
+                        position_enum
+                    ))
+
+        for i in range(self.n_robots_blue):
+            if i == 1:
+                blue_append_behavior(RobotCurriculumBehaviorEnum.STOPPED, i, PositionEnum.GOAL_AREA)
+            else:
+                blue_append_behavior(RobotCurriculumBehaviorEnum.STOPPED, i, PositionEnum.OWN_AREA)
+
+        for i in range(self.n_robots_yellow):
+            if i == 0:
+                yellow_append_behavior(RobotCurriculumBehaviorEnum.STOPPED, i, PositionEnum.GOAL_AREA)
+            else:
+                yellow_append_behavior(RobotCurriculumBehaviorEnum.STOPPED, i, PositionEnum.OWN_AREA)
 
         self._set_ou_actions()
 
@@ -158,11 +207,11 @@ class Environment(BaseEnvironment):
         commands.append(robot)
             
         for i in range(1, self.n_robots_blue):
-            robot = self._create_robot_with_ou_action(i, False)
+            robot = self._create_robot(i, False, 0, 0)
             commands.append(robot)
 
         for i in range(self.n_robots_yellow):
-            robot = self._create_robot_with_ou_action(i, True)
+            robot = self._create_robot(i, True, 0, 0)
             commands.append(robot)
 
         return commands
