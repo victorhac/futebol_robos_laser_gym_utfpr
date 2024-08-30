@@ -23,7 +23,6 @@ mreq = struct.pack("4sl", socket.inet_aton(MCAST_GRP), socket.INADDR_ANY)
 sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
 def receber_mensagem(data):
-    # Suponha que 'data' seja uma mensagem serializada
     
     packet = wrapper.SSL_WrapperPacket()
     packet.ParseFromString(data)
@@ -32,19 +31,14 @@ def receber_mensagem(data):
     
     if(packet.HasField('detection')):
         detection = packet.detection
-        print(f"tenho detection: {detection}\n ")
-        
-    else:
-        detection = packet.detection
-        print(f"Não tenho detection: {detection}\n ")
+        return detection
+def dataLoop():
 
-    
-
-# Loop para receber mensagens
-while True:
-    data, addr = sock.recvfrom(8192)  # Aumentar o tamanho do buffer, se necessário
-    print(f"Data received from {addr}: {data}")  # Verifique os dados brutos recebidos
-    
-    receber_mensagem(data)  
-
+    while True:
+        data, addr = sock.recvfrom(8192)  # Aumentar o tamanho do buffer, se necessário
+        print(f"Data received from {addr}: {data}")  # Verifique os dados brutos recebidos
+        # x:-1125 +1125
+        # y: -750 +750
+        dataFinal = receber_mensagem(data);  
+        return dataFinal    
     
