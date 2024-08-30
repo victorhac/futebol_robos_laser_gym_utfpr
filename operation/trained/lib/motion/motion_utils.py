@@ -47,12 +47,12 @@ class MotionUtils:
 
         motorSpeed = RobotHelper.truncateMotorSpeed(motorSpeed, baseSpeed)
 
-        leftMotorSpeed, rightMotorSpeed = MotionUtils._getSpeeds(motorSpeed, baseSpeed, reversed)
+        leftMotorSpeed, rightMotorSpeed = MotionUtils._get_speeds(motorSpeed, baseSpeed, reversed)
 
         return leftMotorSpeed, rightMotorSpeed, error
     
     @staticmethod
-    def _getSpeeds(motorSpeed: float, baseSpeed: float, reversed: bool):
+    def _get_speeds(motorSpeed: float, baseSpeed: float, reversed: bool):
         if reversed:
             if motorSpeed > 0:
                 leftMotorSpeed = -baseSpeed + motorSpeed
@@ -78,7 +78,7 @@ class MotionUtils:
         return -spinPower, spinPower
     
     @staticmethod
-    def findObstacles(
+    def find_obstacles(
         robotId: int,
         fieldData: FieldData,
         opponentFieldData: FieldData,
@@ -116,13 +116,13 @@ class MotionUtils:
         return obstacles
 
     @staticmethod
-    def findClosestObstacle(
+    def find_closest_obstacle(
         robotId: int,
         fieldData: FieldData,
         opponentFieldData: FieldData,
         targetPosition: tuple[float, float]
     ) -> Robot | None:
-        obstacles = MotionUtils.findObstacles(robotId, fieldData, opponentFieldData, targetPosition)
+        obstacles = MotionUtils.find_obstacles(robotId, fieldData, opponentFieldData, targetPosition)
 
         if len(obstacles) == 0:
             return None
@@ -146,13 +146,13 @@ class MotionUtils:
         return closestObstacle
 
     @staticmethod
-    def findTangentPointObstacle(
+    def find_tangent_point_obstacle(
         robotId: int,
         fieldData: FieldData,
         opponentFieldData: FieldData,
         targetPosition: tuple[float, float]
     ):
-        obstacleRobot = MotionUtils.findClosestObstacle(
+        obstacleRobot = MotionUtils.find_closest_obstacle(
             robotId,
             fieldData,
             opponentFieldData,

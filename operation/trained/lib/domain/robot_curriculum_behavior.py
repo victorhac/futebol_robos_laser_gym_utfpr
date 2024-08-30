@@ -18,7 +18,7 @@ class RobotCurriculumBehavior:
         id: int,
         is_yellow: bool,
         position_enum: PositionEnum,
-        distance_range: list[float],
+        distance_range: tuple[float, float],
         start_distance: float,
         distance_beta: float,
         velocity_beta: float,
@@ -44,7 +44,7 @@ class RobotCurriculumBehavior:
         id: int,
         is_yellow: bool,
         position_enum: PositionEnum,
-        distance_range: list[float],
+        distance_range: tuple[float, float],
         start_distance: float,
         distance_beta: float,
     ):
@@ -59,21 +59,29 @@ class RobotCurriculumBehavior:
         self.distance = start_distance
         self.distance_beta = distance_beta
 
-    def set_initial_model_path(self, model_path: str):
-        self.model_path = model_path
+        self.alpha_range = (0,1)
 
-    def update(self, model_path: str | None = None):
+    def set_model(self, model):
+        self.model = model
+
+    def update(self):
+        def trucate(value: float, range: tuple[float, float]):
+            return RobotCurriculumBehavior._truncate(value, range)
+
         if self.robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.BALL_FOLLOWING:
-            self.velocity_alpha += self.velocity_beta
-            self.distance += self.distance_beta
+            self.velocity_alpha = trucate(self.velocity_alpha + self.velocity_beta, self.alpha_range)
+            self.distance = trucate(self.distance + self.distance_beta, self.distance_range)
         elif self.robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.FROM_MODEL:
-            self.distance += self.distance_beta
-            self.model_path = model_path if model_path is not None else ""
+            self.distance = trucate(self.distance + self.distance_beta, self.distance_range)
 
     def reset(self):
         self.velocity_alpha = 0
         self.distance = self.backup_start_distance
-        self.model_path = ""
+        self.model = None
+
+    @staticmethod
+    def _truncate(value: float, range: tuple[float, float]):
+        return max(range[0], min(value, range[1]))
 
     def _is_distance_in_range(self):
         return self.distance >= self.distance_range[0] and self.distance <= self.distance_range[1]
@@ -89,3 +97,6 @@ class RobotCurriculumBehavior:
             return not self._is_distance_in_range()
         
         return False
+    
+    def has_behavior(self, robot_curriculum_behavior_enum: RobotCurriculumBehaviorEnum):
+        return self.robot_curriculum_behavior_enum == robot_curriculum_behavior_enum

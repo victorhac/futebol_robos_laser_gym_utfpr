@@ -4,6 +4,11 @@ import os
 from collections import deque
 
 from lib.helpers.behavior.behavior_helper import BehaviorHelper
+from operation.trained.lib.enums.robot_curriculum_behavior_enum import RobotCurriculumBehaviorEnum
+
+import tempfile
+
+from stable_baselines3 import PPO
 
 class ScoreCallback(BaseCallback):
     def __init__(
@@ -25,10 +30,6 @@ class ScoreCallback(BaseCallback):
         self.number_robot_blue = number_robot_blue
         self.number_robot_yellow = number_robot_yellow
 
-        self.number = 0
-
-        first_model_path = self._save_model()
-
         self.behaviors = [
             BehaviorHelper.get_task_1_behaviors(number_robot_blue, number_robot_yellow),
             BehaviorHelper.get_task_2_behaviors(number_robot_blue, number_robot_yellow),
@@ -40,11 +41,17 @@ class ScoreCallback(BaseCallback):
 
         self.current_task = current_task
         self.current_behavior = self.behaviors[current_task]
-        self.current_behavior["blue"][current_task].set_initial_model_path(first_model_path)
+
+        self._set_behaviors()
+
+    def _get_model(self):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            model_path = os.path.join(tmpdirname, "temp_model")
+            self.model.save(model_path)
+            return PPO.load(model_path) #TODO: deixar genérico
 
     def _save_model(self):
-        self.number += 1
-        model_path = os.path.join(self.save_path, 'model' + self.number)
+        model_path = os.path.join(self.save_path, f'model_task_{self.current_task + 1}_{self.num_timesteps}')
         self.model.save(model_path)
         return model_path
     
@@ -54,13 +61,53 @@ class ScoreCallback(BaseCallback):
         if self.current_task < 4:
             self.current_behavior = self.behaviors[self.current_task]
 
-    def _on_step(self) -> bool:
-        last_score = self.training_env.get_attr('last_game_score')
+    def _set_behaviors(self):
+        self.training_env.env_method('set_behaviors', self.current_behavior)
+
+    def _update_behaviors(self):
+        blue_behaviors = self.current_behavior["blue"]
+        yellow_behaviors = self.current_behavior["yellow"]
+
+        for i in range(len(blue_behaviors)):
+            blue_behaviors[i].update()
         
-        self.scores.extend(last_score)
+        for i in range(len(yellow_behaviors)):
+            yellow_behaviors[i].update()
+
+        self._set_previous_model_to_opponent()
+
+    def _any_over_behavior(self):
+        blue_behaviors = self.current_behavior["blue"]
+        yellow_behaviors = self.current_behavior["yellow"]
+
+        return any(item.is_over() for item in blue_behaviors) or\
+            any(item.is_over() for item in yellow_behaviors)
+    
+    def _set_previous_model_to_opponent(self):
+        yellow_behaviors = self.current_behavior["yellow"]
+
+        for item in yellow_behaviors:
+            if item.has_behavior(RobotCurriculumBehaviorEnum.FROM_MODEL):
+                model = self._get_model()
+                item.set_model(model)
+
+    def _on_step(self) -> bool:
+        last_scores = self.training_env.get_attr('last_game_score')
+        
+        self.scores.extend(last_scores)
+
+        if self.num_timesteps % self.check_freq == 0:
+            self._save_model()
 
         if len(self.scores) == self.n_games:
             if np.mean(self.scores) >= self.threshold:
-                self._set_next_task(self)
+                self.scores = []
+                self._update_behaviors()
+
+                if self._any_over_behavior():
+                    if self.current_task + 1 < len(self.behaviors):
+                        self._set_next_task(self)
+                    else:
+                        return False
 
         return True

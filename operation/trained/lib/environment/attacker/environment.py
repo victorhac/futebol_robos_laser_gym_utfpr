@@ -60,50 +60,9 @@ class Environment(BaseEnvironment):
         self.training_episode_duration = TRAINING_EPISODE_DURATION
         self.v_wheel_deadzone = V_WHEEL_DEADZONE
 
-        self.blue_robot_behaviors = []
-        self.yellow_robot_behaviors = []
+        self.behaviors: dict[str, list[RobotCurriculumBehavior]] = None
 
-        def blue_append_behavior(
-            robot_curriculum_behavior_enum: RobotCurriculumBehaviorEnum,
-            id: int,
-            position_enum: PositionEnum
-        ):
-            self\
-                .blue_robot_behaviors\
-                .append(
-                    RobotCurriculumBehavior(
-                        robot_curriculum_behavior_enum,
-                        id,
-                        False,
-                        position_enum
-                    ))
-            
-        def yellow_append_behavior(
-            robot_curriculum_behavior_enum: RobotCurriculumBehaviorEnum,
-            id: int,
-            position_enum: PositionEnum
-        ):
-            self\
-                .yellow_robot_behaviors\
-                .append(
-                    RobotCurriculumBehavior(
-                        robot_curriculum_behavior_enum,
-                        id,
-                        True,
-                        position_enum
-                    ))
-
-        for i in range(self.n_robots_blue):
-            if i == 1:
-                blue_append_behavior(RobotCurriculumBehaviorEnum.STOPPED, i, PositionEnum.GOAL_AREA)
-            else:
-                blue_append_behavior(RobotCurriculumBehaviorEnum.STOPPED, i, PositionEnum.OWN_AREA)
-
-        for i in range(self.n_robots_yellow):
-            if i == 0:
-                yellow_append_behavior(RobotCurriculumBehaviorEnum.STOPPED, i, PositionEnum.GOAL_AREA)
-            else:
-                yellow_append_behavior(RobotCurriculumBehaviorEnum.STOPPED, i, PositionEnum.OWN_AREA)
+        self.last_game_score = 0
 
         self._set_ou_actions()
 
@@ -196,6 +155,60 @@ class Environment(BaseEnvironment):
             ])
 
         return np.array(observation, dtype=np.float32)
+    
+    def _frame_to_opponent_observations(self):
+        observation = []
+
+        ball = self.get_ball()
+
+        observation.extend([
+            self.norm_x(-ball.x),
+            self.norm_y(ball.y),
+            self.norm_v(-ball.v_x),
+            self.norm_v(ball.v_y)
+        ])
+
+        def get_norm_theta(robot: Robot):
+            theta = -RSoccerHelper.get_corrected_angle(robot.theta)
+
+            if theta < 0:
+                theta += np.pi
+            elif theta > 0:
+                theta -= np.pi
+
+            return theta / np.pi
+
+        frame = self.frame
+
+        for i in range(self.n_robots_yellow):
+            robot = frame.robots_yellow[i]
+
+            observation.extend([
+                self.norm_x(-robot.x),
+                self.norm_y(robot.y),
+                get_norm_theta(robot),
+                self.norm_v(-robot.v_x),
+                self.norm_v(robot.v_y)
+            ])
+
+        for i in range(self.n_robots_blue):
+            robot = frame.robots_blue[0]
+
+            observation.extend([
+                self.norm_x(-robot.x),
+                self.norm_y(robot.y),
+                get_norm_theta(robot),
+                self.norm_v(-robot.v_x),
+                self.norm_v(robot.v_y)
+            ])
+
+        return np.array(observation, dtype=np.float32)
+    
+    def _go_to_point(self, robot_id: int, is_yellow_team: bool):
+        if is_yellow_team:
+            robot = RSoccerHelper.to_robot(self.frame.robots_yellow[robot_id])
+        else:
+            robot = RSoccerHelper.to_robot(self.frame.robots_blue[robot_id])
         
     def _get_commands(self, actions):
         commands = []
@@ -205,6 +218,14 @@ class Environment(BaseEnvironment):
         robot = self._create_robot(0, False, v_wheel0, v_wheel1)
         
         commands.append(robot)
+
+        blue_behaviors = self.behaviors["blue"]
+        yellow_behaviors = self.behaviors["yellow"]
+
+        for i in range(1, len(blue_behaviors)):
+            behavior = blue_behaviors[i]
+            if i == 1:
+                pass
             
         for i in range(1, self.n_robots_blue):
             robot = self._create_robot(i, False, 0, 0)
@@ -341,6 +362,14 @@ class Environment(BaseEnvironment):
             reward = w_move * move_reward + \
                 w_ball_grad * grad_ball_potential + \
                 w_energy * energy_penalty
+            
+        is_done = self._is_done()
+
+        if is_done:
+            if self._any_team_scored_goal():
+                self.last_game_score = 1 if self._has_scored_goal() else -1
+            else:
+                self.last_game_score = 0
 
         return reward, self._is_done()
     
@@ -376,8 +405,60 @@ class Environment(BaseEnvironment):
             self.get_field_length(),
             self.get_field_width(),
             False)
+    
+    @staticmethod
+    def get_position(places: KDTree, min_distance, get_position_fn):
+        position = get_position_fn()
 
-    def _get_initial_positions_frame(self):
+        while places.get_nearest(position)[1] < min_distance:
+            position = get_position_fn()
+
+        places.insert(position)
+
+        return position
+    
+    def get_position_function_by_position_enum(
+        self,
+        is_yellow_team: bool,
+        position_enum: PositionEnum,
+        ball_position: tuple[float, float]
+    ):
+        if position_enum == PositionEnum.OWN_AREA:
+            if is_yellow_team:
+                return self._get_random_position_inside_opponent_area
+            else:
+                return self._get_random_position_inside_own_area
+        elif position_enum == PositionEnum.GOAL_AREA:
+            if is_yellow_team:
+                return self._get_random_position_inside_opponent_penalty_area
+            else:
+                return self._get_random_position_inside_own_penalty_area
+        elif position_enum == PositionEnum.OWN_AREA_EXCEPT_GOAL_AREA:#mudar
+            if is_yellow_team:
+                return self._get_random_position_inside_opponent_area
+            else:
+                return self._get_random_position_inside_own_area
+        elif position_enum ==  PositionEnum.OPPONENT_AREA:
+            if not is_yellow_team:
+                return self._get_random_position_inside_opponent_area
+            else:
+                return self._get_random_position_inside_own_area
+        elif position_enum ==  PositionEnum.OPPONENT_GOAL_AREA:
+            if not is_yellow_team:
+                return self._get_random_position_inside_opponent_area
+            else:
+                return self._get_random_position_inside_own_area
+        elif position_enum ==  PositionEnum.OPPONENT_AREA_EXCEPT_GOAL_AREA:#mudar
+            if not is_yellow_team:
+                return self._get_random_position_inside_opponent_area
+            else:
+                return self._get_random_position_inside_own_area
+        elif position_enum ==  PositionEnum.RELATIVE_TO_BALL:
+            return lambda _: (0,0)#criar
+        
+        return lambda _: (0,0)#definir melhor
+    
+    def _get_default_initial_positions_frame(self):
         def theta(): return random.uniform(0, 360)
 
         frame: Frame = Frame()
@@ -394,15 +475,8 @@ class Environment(BaseEnvironment):
 
         frame.robots_blue[0] = Robot(x=ball_position[0] - 0.1, y=ball_position[1], theta=theta())
             
-        def get_position(get_position_fn):
-            position = get_position_fn()
-
-            while places.get_nearest(position)[1] < min_distance:
-                position = get_position_fn()
-
-            places.insert(position)
-
-            return position
+        def get_position(position_funcion):
+            return Environment.get_position(places, min_distance, position_funcion)
         
         position_fns = [
             self._get_random_position_inside_own_penalty_area,
@@ -423,6 +497,57 @@ class Environment(BaseEnvironment):
             position = get_position(position_fns[i])
             frame.robots_yellow[i] = Robot(x=position[0], y=position[1], theta=theta())
 
+        return frame
+
+    def _get_initial_positions_frame(self):
         self.episode_initial_time = time.time()
 
+        if self.behaviors is None:
+            return self._get_default_initial_positions_frame()
+        
+        def theta(): return random.uniform(0, 360)
+
+        frame: Frame = Frame()
+
+        ball_position = self._get_random_position_inside_opponent_area()
+
+        frame.ball = Ball(x=ball_position[0], y=ball_position[1])
+
+        min_distance = 0.15
+
+        places = KDTree()
+
+        places.insert(ball_position)
+
+        blue_behaviors = self.behaviors["blue"]
+        yellow_behaviors = self.behaviors["yellow"]
+
+        def get_position(position_funcion):
+            return Environment.get_position(places, min_distance, position_funcion)
+
+        for item in range(len(blue_behaviors)):
+            behavior = blue_behaviors[item]
+
+            position_function = self.get_position_function_by_position_enum(
+                False,
+                behavior.position_enum,
+                ball_position)
+            
+            position = get_position(position_function)
+            frame.robots_blue[item] = Robot(x=position[0], y=position[1], theta=theta())
+
+        for item in range(len(yellow_behaviors)):
+            behavior = yellow_behaviors[item]
+
+            position_function = self.get_position_function_by_position_enum(
+                True,
+                behavior.position_enum,
+                ball_position)
+            
+            position = get_position(position_function)
+            frame.robots_yellow[item] = Robot(x=position[0], y=position[1], theta=theta())
+
         return frame
+    
+    def set_behaviors(self, behaviors: dict[str, list[RobotCurriculumBehavior]]):
+        self.behaviors = behaviors
