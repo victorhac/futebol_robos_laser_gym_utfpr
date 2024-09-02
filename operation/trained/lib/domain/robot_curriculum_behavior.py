@@ -4,27 +4,17 @@ from lib.enums.robot_curriculum_behavior_enum import RobotCurriculumBehaviorEnum
 class RobotCurriculumBehavior:
     def __init__(
         self,
-        id: int,
-        is_yellow: bool,
-        position_enum: PositionEnum
-    ):
-        self.robot_curriculum_behavior_enum = RobotCurriculumBehaviorEnum.STOPPED
-        self.id = id
-        self.is_yellow = is_yellow
-        self.position_enum = position_enum
-
-    def __init__(
-        self,
+        robot_curriculum_behavior_enum: RobotCurriculumBehaviorEnum,
         id: int,
         is_yellow: bool,
         position_enum: PositionEnum,
-        distance_range: tuple[float, float],
-        start_distance: float,
-        distance_beta: float,
-        velocity_beta: float,
-        start_velocity_alpha: float
+        distance_range: tuple[float, float] | None = None,
+        start_distance: float | None = None,
+        distance_beta: float | None = None,
+        velocity_beta: float | None = None,
+        start_velocity_alpha: float | None = None
     ):
-        self.robot_curriculum_behavior_enum = RobotCurriculumBehaviorEnum.BALL_FOLLOWING
+        self.robot_curriculum_behavior_enum = robot_curriculum_behavior_enum
         self.id = id
         self.is_yellow = is_yellow
         self.position_enum = position_enum
@@ -38,28 +28,6 @@ class RobotCurriculumBehavior:
 
         self.velocity_alpha = start_velocity_alpha
         self.velocity_beta = velocity_beta
-
-    def __init__(
-        self,
-        id: int,
-        is_yellow: bool,
-        position_enum: PositionEnum,
-        distance_range: tuple[float, float],
-        start_distance: float,
-        distance_beta: float,
-    ):
-        self.robot_curriculum_behavior_enum = RobotCurriculumBehaviorEnum.FROM_MODEL
-        self.id = id
-        self.is_yellow = is_yellow
-        self.position_enum = position_enum
-
-        self.backup_start_distance = start_distance
-
-        self.distance_range = distance_range
-        self.distance = start_distance
-        self.distance_beta = distance_beta
-
-        self.alpha_range = (0,1)
 
     def set_model(self, model):
         self.model = model
@@ -89,7 +57,7 @@ class RobotCurriculumBehavior:
     def _is_velocity_alpha_in_range(self):
         return self.velocity_alpha >= 0 and self.velocity_alpha <= 1
 
-    def is_over(self):
+    def is_over(self): #rever
         if self.robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.BALL_FOLLOWING:
             return not self._is_distance_in_range() or\
                 not self._is_velocity_alpha_in_range()

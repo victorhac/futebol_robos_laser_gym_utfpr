@@ -1,29 +1,29 @@
 from lib.comm.vision import ProtoVision
 from lib.comm.control import ProtoControl
 
-from lib.helpers.configuration_helper import ConfigurationHelper
+from lib.utils.configuration_utils import ConfigurationUtils
 from lib.motion.motion_utils import MotionUtils
-from lib.helpers.field_helper import FieldHelper
-from lib.helpers.firasim_helper import FIRASimHelper
+from lib.utils.field_utils import FieldUtils
+from lib.utils.firasim_utils import FIRASimUtils
 
 from lib.domain.field_data import FieldData
 
-IS_YELLOW_TEAM = ConfigurationHelper.get_firasim_team_is_yellow_team()
+IS_YELLOW_TEAM = ConfigurationUtils.get_firasim_team_is_yellow_team()
 
-IS_LEFT_TEAM = ConfigurationHelper.get_firasim_is_left_team()
+IS_LEFT_TEAM = ConfigurationUtils.get_firasim_is_left_team()
 
-ROBOT_LENGTH = ConfigurationHelper.get_firasim_robot_length()
-ROBOT_WIDTH = ConfigurationHelper.get_firasim_robot_width()
+ROBOT_LENGTH = ConfigurationUtils.get_firasim_robot_length()
+ROBOT_WIDTH = ConfigurationUtils.get_firasim_robot_width()
 
-FIELD_WIDTH = ConfigurationHelper.get_field_width()
-FIELD_LENGTH = ConfigurationHelper.get_field_length()
+FIELD_WIDTH = ConfigurationUtils.get_field_width()
+FIELD_LENGTH = ConfigurationUtils.get_field_length()
 
-MOTION_COLLISION_AVOIDANCE_MIN_DISTANCE = ConfigurationHelper.get_motion_collision_avoidance_min_distance()
+MOTION_COLLISION_AVOIDANCE_MIN_DISTANCE = ConfigurationUtils.get_motion_collision_avoidance_min_distance()
 
-FIRASIM_CONTROL_IP = ConfigurationHelper.get_firasim_control_ip()
-FIRASIM_CONTROL_PORT = ConfigurationHelper.get_firasim_control_port()
-FIRASIM_VISION_IP = ConfigurationHelper.get_firasim_vision_ip()
-FIRASIM_VISION_PORT = ConfigurationHelper.get_firasim_vision_port()
+FIRASIM_CONTROL_IP = ConfigurationUtils.get_firasim_control_ip()
+FIRASIM_CONTROL_PORT = ConfigurationUtils.get_firasim_control_port()
+FIRASIM_VISION_IP = ConfigurationUtils.get_firasim_vision_ip()
+FIRASIM_VISION_PORT = ConfigurationUtils.get_firasim_vision_port()
 
 def getProtoVision(isYellowTeam: bool):
     fieldData = FieldData()
@@ -50,7 +50,7 @@ def main():
     
     teamControl = getProtoControl()
     
-    targetPosition = FIRASimHelper.normalizePosition(x=0.6, y=0.6, isLeftTeam=IS_LEFT_TEAM)
+    targetPosition = FIRASimUtils.normalizePosition(x=0.6, y=0.6, isLeftTeam=IS_LEFT_TEAM)
 
     currentTargetPosition = targetPosition
     robot = fieldData.robots[0]
@@ -60,7 +60,7 @@ def main():
     updateVisions(vision, opponentVision)
     
     while True:
-        targetPosition = FIRASimHelper.normalizePosition(ball.position.x, ball.position.y, IS_LEFT_TEAM)
+        targetPosition = FIRASimUtils.normalizePosition(ball.position.x, ball.position.y, IS_LEFT_TEAM)
 
         velocities = MotionUtils.go_to_point(robot, currentTargetPosition, error)
 

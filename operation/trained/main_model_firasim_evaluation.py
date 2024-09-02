@@ -3,19 +3,19 @@ from stable_baselines3 import PPO
 from lib.comm.vision import ProtoVision
 from lib.comm.control import ProtoControl
 
-from lib.helpers.configuration_helper import ConfigurationHelper
-from lib.helpers.rsoccer_helper import RSoccerHelper
+from lib.utils.configuration_utils import ConfigurationUtils
+from lib.utils.rsoccer_utils import RSoccerUtils
 from lib.motion.motion_utils import MotionUtils
 
 from lib.domain.field_data import FieldData
 
-FIRASIM_CONTROL_IP = ConfigurationHelper.get_firasim_control_ip()
-FIRASIM_CONTROL_PORT = ConfigurationHelper.get_firasim_control_port()
-FIRASIM_VISION_IP = ConfigurationHelper.get_firasim_vision_ip()
-FIRASIM_VISION_PORT = ConfigurationHelper.get_firasim_vision_port()
+FIRASIM_CONTROL_IP = ConfigurationUtils.get_firasim_control_ip()
+FIRASIM_CONTROL_PORT = ConfigurationUtils.get_firasim_control_port()
+FIRASIM_VISION_IP = ConfigurationUtils.get_firasim_vision_ip()
+FIRASIM_VISION_PORT = ConfigurationUtils.get_firasim_vision_port()
 
-IS_YELLOW_TEAM = ConfigurationHelper.get_firasim_team_is_yellow_team()
-IS_LEFT_TEAM = ConfigurationHelper.get_firasim_is_left_team()
+IS_YELLOW_TEAM = ConfigurationUtils.get_firasim_team_is_yellow_team()
+IS_LEFT_TEAM = ConfigurationUtils.get_firasim_is_left_team()
 
 attacker_model = PPO.load("models/attacker/PPO/2024_6_1_0_39_1/PPO_model")
 
@@ -65,10 +65,10 @@ def act(
         is_left_team = not IS_LEFT_TEAM
         team_control = opponentTeamControl
 
-    observations = RSoccerHelper.get_attacker_observation(team_field_data, is_left_team, robot_id)
+    observations = RSoccerUtils.get_attacker_observation(team_field_data, is_left_team, robot_id)
 
     action, _ = attacker_model.predict(observations)
-    left_speed, right_speed = RSoccerHelper.actions_to_v_wheels(action, is_own_team)
+    left_speed, right_speed = RSoccerUtils.actions_to_v_wheels(action, is_own_team)
 
     team_control.transmit_robot(robot_id, left_speed, right_speed)
 

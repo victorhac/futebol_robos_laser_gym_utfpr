@@ -5,41 +5,40 @@ import numpy as np
 
 from gymnasium.spaces import Box
 
-from rsoccer_gym.Utils.Utils import OrnsteinUhlenbeckAction
 from rsoccer_gym.Entities import Frame, Robot, Ball
 from rsoccer_gym.Utils import KDTree
 
 from lib.domain.robot_curriculum_behavior import RobotCurriculumBehavior
-from lib.enums.position_enum import PositionEnum
 from lib.enums.robot_curriculum_behavior_enum import RobotCurriculumBehaviorEnum
+from lib.motion.motion_utils import MotionUtils
 
-from ...helpers.rsoccer_helper import RSoccerHelper
-from ...helpers.field_helper import FieldHelper
-from ...helpers.configuration_helper import ConfigurationHelper
+from ...utils.rsoccer_utils import RSoccerUtils
+from ...utils.configuration_utils import ConfigurationUtils
 
 from ...environment.base_environment import BaseEnvironment
 
-TRAINING_EPISODE_DURATION = ConfigurationHelper.get_rsoccer_training_episode_duration()
+TRAINING_EPISODE_DURATION = ConfigurationUtils.get_rsoccer_training_episode_duration()
 
-NUMBER_ROBOTS_BLUE = ConfigurationHelper.get_rsoccer_team_blue_number_robots()
-NUMBER_ROBOTS_YELLOW = ConfigurationHelper.get_rsoccer_team_yellow_number_robots()
+NUMBER_ROBOTS_BLUE = ConfigurationUtils.get_rsoccer_team_blue_number_robots()
+NUMBER_ROBOTS_YELLOW = ConfigurationUtils.get_rsoccer_team_yellow_number_robots()
 
-V_WHEEL_DEADZONE = ConfigurationHelper.get_rsoccer_robot_speed_dead_zone_meters_seconds()
+V_WHEEL_DEADZONE = ConfigurationUtils.get_rsoccer_robot_speed_dead_zone_meters_seconds()
 
-TIME_STEP = ConfigurationHelper.get_rsoccer_training_time_step_seconds()
+TIME_STEP = ConfigurationUtils.get_rsoccer_training_time_step_seconds()
 
 # addapt this for your robot
-MAX_MOTOR_SPEED = ConfigurationHelper.get_firasim_robot_speed_max_radians_seconds()
+MAX_MOTOR_SPEED = ConfigurationUtils.get_firasim_robot_speed_max_radians_seconds()
 
 class Environment(BaseEnvironment):
-    def __init__(self, render_mode="rgb_array"):
+    def __init__(self, render_mode="rgb_array", robot_id=1):
         super().__init__(
             field_type=0,
             n_robots_blue=NUMBER_ROBOTS_BLUE,
             n_robots_yellow=NUMBER_ROBOTS_YELLOW,
             time_step=TIME_STEP,
+            robot_id=robot_id,
             render_mode=render_mode)
-        
+
         self.max_motor_speed = MAX_MOTOR_SPEED
 
         self.action_space = Box(
@@ -54,23 +53,15 @@ class Environment(BaseEnvironment):
             shape=(34,),
             dtype=np.float32)
 
-        self.previous_ball_potential = None
-        self.episode_initial_time = 0
-
         self.training_episode_duration = TRAINING_EPISODE_DURATION
         self.v_wheel_deadzone = V_WHEEL_DEADZONE
 
         self.behaviors: dict[str, list[RobotCurriculumBehavior]] = None
 
+        self.previous_ball_potential = None
+        self.episode_initial_time = 0
         self.last_game_score = 0
-
-        self._set_ou_actions()
-
-    def _set_ou_actions(self):
-        self.ou_actions = [
-            OrnsteinUhlenbeckAction(self.action_space, dt=self.time_step) \
-            for _ in range(self.n_robots_blue + self.n_robots_yellow)
-        ]
+        self.error = 0
     
     def _is_done(self):
         if self._any_team_scored_goal():
@@ -78,43 +69,6 @@ class Environment(BaseEnvironment):
         elif time.time() - self.episode_initial_time > TRAINING_EPISODE_DURATION:
             return True
         return False
-    
-    def _create_robot(
-        self,
-        id: int,
-        is_yellow_robot: bool,
-        v_wheel_0: float,
-        v_wheel_1: float
-    ):
-        return Robot(
-            yellow=is_yellow_robot,
-            id=id,
-            v_wheel0=v_wheel_0,
-            v_wheel1=v_wheel_1)
-    
-    def _get_ou_actions(self, is_yellow_robot: bool, robot_id: int):
-        if is_yellow_robot:
-            ou_action_id = self.n_robots_blue + robot_id
-        else:
-            ou_action_id = robot_id
-
-        return self.ou_actions[ou_action_id].sample()
-    
-    def _create_robot_with_ou_action(
-        self,
-        robot_id: int,
-        is_yellow_robot: bool
-    ):
-        actions = self._get_ou_actions(is_yellow_robot, robot_id)
-        v_wheel0, v_wheel1 = self._actions_to_v_wheels(
-            actions,
-            not is_yellow_robot)
-
-        return self._create_robot(
-            robot_id,
-            is_yellow_robot,
-            v_wheel0,
-            v_wheel1)
     
     def _frame_to_observations(self):
         observation = []
@@ -132,24 +86,24 @@ class Environment(BaseEnvironment):
 
         for i in range(self.n_robots_blue):
             robot = frame.robots_blue[i]
-            theta = -RSoccerHelper.get_corrected_angle(robot.theta)
+            theta = -RSoccerUtils.get_corrected_angle(robot.theta) / np.pi
 
             observation.extend([
                 self.norm_x(robot.x),
                 self.norm_y(-robot.y),
-                theta / np.pi,
+                theta,
                 self.norm_v(robot.v_x),
                 self.norm_v(-robot.v_y)
             ])
 
         for i in range(self.n_robots_yellow):
             robot = frame.robots_yellow[i]
-            theta = -RSoccerHelper.get_corrected_angle(robot.theta)
+            theta = -RSoccerUtils.get_corrected_angle(robot.theta) / np.pi
 
             observation.extend([
                 self.norm_x(robot.x),
                 self.norm_y(-robot.y),
-                theta / np.pi,
+                theta,
                 self.norm_v(robot.v_x),
                 self.norm_v(-robot.v_y)
             ])
@@ -169,7 +123,7 @@ class Environment(BaseEnvironment):
         ])
 
         def get_norm_theta(robot: Robot):
-            theta = -RSoccerHelper.get_corrected_angle(robot.theta)
+            theta = -RSoccerUtils.get_corrected_angle(robot.theta)
 
             if theta < 0:
                 theta += np.pi
@@ -192,7 +146,7 @@ class Environment(BaseEnvironment):
             ])
 
         for i in range(self.n_robots_blue):
-            robot = frame.robots_blue[0]
+            robot = frame.robots_blue[i]
 
             observation.extend([
                 self.norm_x(-robot.x),
@@ -204,36 +158,82 @@ class Environment(BaseEnvironment):
 
         return np.array(observation, dtype=np.float32)
     
-    def _go_to_point(self, robot_id: int, is_yellow_team: bool):
+    def _go_to_point_v_wheels(
+        self,
+        robot_id: int,
+        is_yellow_team: bool,
+        point: tuple[float, float]
+    ):
         if is_yellow_team:
-            robot = RSoccerHelper.to_robot(self.frame.robots_yellow[robot_id])
+            robot = RSoccerUtils.to_robot(self.frame.robots_yellow[robot_id])
         else:
-            robot = RSoccerHelper.to_robot(self.frame.robots_blue[robot_id])
+            robot = RSoccerUtils.to_robot(self.frame.robots_blue[robot_id])
+
+        velocities = MotionUtils.go_to_point(robot, point, self.error, self.max_motor_speed)
+
+        #verificar se salvo o erro para cada robô
+        (left_speed, right_speed, self.error) = velocities
+
+        return left_speed, right_speed
+    
+
+    def _create_robot_by_behavior(self, behavior: RobotCurriculumBehavior):
+        robot = self._get_robot_by_id(behavior.id, behavior.is_yellow)
+
+        robot_curriculum_behavior_enum = behavior.robot_curriculum_behavior_enum
+        robot_id = robot.id
+        is_yellow = behavior.is_yellow
+
+        ball = self.get_ball()
+
+        def create_robot(v_wheel_0, v_wheel_1):
+            return self._create_robot(
+                robot_id,
+                is_yellow,
+                v_wheel_0,
+                v_wheel_1)
+
+        if robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.STOPPED:
+            return create_robot(0, 0)
+        elif robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.BALL_FOLLOWING:
+            # colocar moderação de velocidade
+            left_speed, right_speed = self._go_to_point_v_wheels(
+                robot_id,
+                is_yellow,
+                (ball.x, ball.y)
+            )
+            return create_robot(left_speed, right_speed)
+        elif robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.FROM_MODEL:
+            actions = behavior.model.predict(self._frame_to_opponent_observations())
+            left_speed, right_speed = self._actions_to_v_wheels(actions, True)
+            return create_robot(left_speed, right_speed)
+        
+        return create_robot(0, 0)
         
     def _get_commands(self, actions):
         commands = []
 
         v_wheel0, v_wheel1 = self._actions_to_v_wheels(actions, True)
 
-        robot = self._create_robot(0, False, v_wheel0, v_wheel1)
+        robot = self._create_robot(
+            self.robot_id,
+            False,
+            v_wheel0,
+            v_wheel1)
         
         commands.append(robot)
 
         blue_behaviors = self.behaviors["blue"]
         yellow_behaviors = self.behaviors["yellow"]
 
-        for i in range(1, len(blue_behaviors)):
+        for i in range(len(blue_behaviors)):
+            if i == self.robot_id: continue
             behavior = blue_behaviors[i]
-            if i == 1:
-                pass
-            
-        for i in range(1, self.n_robots_blue):
-            robot = self._create_robot(i, False, 0, 0)
-            commands.append(robot)
+            commands.append(self._create_robot_by_behavior(behavior))
 
-        for i in range(self.n_robots_yellow):
-            robot = self._create_robot(i, True, 0, 0)
-            commands.append(robot)
+        for i in range(len(yellow_behaviors)):
+            behavior = yellow_behaviors[i]
+            commands.append(self._create_robot_by_behavior(behavior))
 
         return commands
 
@@ -318,27 +318,6 @@ class Environment(BaseEnvironment):
 
         return np.clip(move_reward / 0.4, -5.0, 5.0)
     
-    def _energy_penalty(self):
-        en_penalty_1 = abs(self.sent_commands[0].v_wheel0)
-        en_penalty_2 = abs(self.sent_commands[0].v_wheel1)
-        return - (en_penalty_1 + en_penalty_2)
-    
-    def _any_team_scored_goal(self):
-        ball = self.get_ball()
-        return abs(ball.x) > (self.get_field_length() / 2)
-    
-    def _has_received_goal(self):        
-        ball = self.get_ball()
-        return ball.x < -self.get_field_length() / 2
-
-    def _has_scored_goal(self):
-        if not self._any_team_scored_goal():
-            return None
-        return not self._has_received_goal()
-    
-    def _get_agent(self):
-        return self.frame.robots_blue[0]
-    
     def _calculate_reward_and_done(self):
         reward = 0
         w_move = 0.2
@@ -372,91 +351,6 @@ class Environment(BaseEnvironment):
                 self.last_game_score = 0
 
         return reward, self._is_done()
-    
-    def _get_random_position_inside_field(self):
-        return FieldHelper.get_random_position_inside_field(
-            self.get_field_length(),
-            self.get_field_width())
-    
-    def _get_random_position_inside_own_penalty_area(self):
-        return FieldHelper.get_random_position_inside_own_penalty_area(
-            self.get_field_length(),
-            self.get_penalty_length(),
-            self.get_penalty_width(),
-            True,
-            self.get_robot_radius())
-    
-    def _get_random_position_inside_opponent_penalty_area(self):
-        return FieldHelper.get_random_position_inside_own_penalty_area(
-            self.get_field_length(),
-            self.get_penalty_length(),
-            self.get_penalty_width(),
-            False,
-            self.get_robot_radius())
-    
-    def _get_random_position_inside_own_area(self):
-        return FieldHelper.get_random_position_inside_own_area(
-            self.get_field_length(),
-            self.get_field_width(),
-            True)
-    
-    def _get_random_position_inside_opponent_area(self):
-        return FieldHelper.get_random_position_inside_own_area(
-            self.get_field_length(),
-            self.get_field_width(),
-            False)
-    
-    @staticmethod
-    def get_position(places: KDTree, min_distance, get_position_fn):
-        position = get_position_fn()
-
-        while places.get_nearest(position)[1] < min_distance:
-            position = get_position_fn()
-
-        places.insert(position)
-
-        return position
-    
-    def get_position_function_by_position_enum(
-        self,
-        is_yellow_team: bool,
-        position_enum: PositionEnum,
-        ball_position: tuple[float, float]
-    ):
-        if position_enum == PositionEnum.OWN_AREA:
-            if is_yellow_team:
-                return self._get_random_position_inside_opponent_area
-            else:
-                return self._get_random_position_inside_own_area
-        elif position_enum == PositionEnum.GOAL_AREA:
-            if is_yellow_team:
-                return self._get_random_position_inside_opponent_penalty_area
-            else:
-                return self._get_random_position_inside_own_penalty_area
-        elif position_enum == PositionEnum.OWN_AREA_EXCEPT_GOAL_AREA:#mudar
-            if is_yellow_team:
-                return self._get_random_position_inside_opponent_area
-            else:
-                return self._get_random_position_inside_own_area
-        elif position_enum ==  PositionEnum.OPPONENT_AREA:
-            if not is_yellow_team:
-                return self._get_random_position_inside_opponent_area
-            else:
-                return self._get_random_position_inside_own_area
-        elif position_enum ==  PositionEnum.OPPONENT_GOAL_AREA:
-            if not is_yellow_team:
-                return self._get_random_position_inside_opponent_area
-            else:
-                return self._get_random_position_inside_own_area
-        elif position_enum ==  PositionEnum.OPPONENT_AREA_EXCEPT_GOAL_AREA:#mudar
-            if not is_yellow_team:
-                return self._get_random_position_inside_opponent_area
-            else:
-                return self._get_random_position_inside_own_area
-        elif position_enum ==  PositionEnum.RELATIVE_TO_BALL:
-            return lambda _: (0,0)#criar
-        
-        return lambda _: (0,0)#definir melhor
     
     def _get_default_initial_positions_frame(self):
         def theta(): return random.uniform(0, 360)

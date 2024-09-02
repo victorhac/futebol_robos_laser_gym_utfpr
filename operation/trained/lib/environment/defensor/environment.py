@@ -10,16 +10,16 @@ from rsoccer_gym.Utils import KDTree
 
 from ...environment.base_environment import BaseEnvironment
 
-from ...helpers.rsoccer_helper import RSoccerHelper
-from ...helpers.field_helper import FieldHelper
-from ...helpers.configuration_helper import ConfigurationHelper
-from ...helpers.model_helper import ModelHelper
+from ...utils.rsoccer_utils import RSoccerUtils
+from ...utils.field_utils import FieldUtils
+from ...utils.configuration_utils import ConfigurationUtils
+from ...utils.model_utils import ModelUtils
 
-TRAINING_EPISODE_DURATION = ConfigurationHelper.get_rsoccer_training_episode_duration()
-V_WHEEL_DEADZONE = ConfigurationHelper.get_rsoccer_robot_speed_dead_zone_meters_seconds()
+TRAINING_EPISODE_DURATION = ConfigurationUtils.get_rsoccer_training_episode_duration()
+V_WHEEL_DEADZONE = ConfigurationUtils.get_rsoccer_robot_speed_dead_zone_meters_seconds()
 
 # addapt this for your robot
-MAX_MOTOR_SPEED = ConfigurationHelper.get_firasim_robot_speed_max_radians_seconds()
+MAX_MOTOR_SPEED = ConfigurationUtils.get_firasim_robot_speed_max_radians_seconds()
 
 class Environment(BaseEnvironment):
     def __init__(self):
@@ -47,7 +47,7 @@ class Environment(BaseEnvironment):
 
         self.has_robot_touched_ball = False
         self.previous_ball_potential = None
-        self.attacker = ModelHelper.get_attacker_model()
+        self.attacker = ModelUtils.get_attacker_model()
         self.episode_initial_time = 0
 
         self.__set_ou_actions()
@@ -67,7 +67,7 @@ class Environment(BaseEnvironment):
         return self._is_inside_opponent_area((ball.x, ball.y))
     
     def _is_inside_opponent_area(self, position: tuple[float, float]):
-        return FieldHelper.is_inside_opponent_area(position, True)
+        return FieldUtils.is_inside_opponent_area(position, True)
     
     def _is_robot_touching_ball(self):
         robot = self.frame.robots_blue[0]
@@ -76,7 +76,7 @@ class Environment(BaseEnvironment):
         robot_position = (robot.x, robot.y)
         ball_position = (ball.x, ball.y)
 
-        return FieldHelper.is_touching(
+        return FieldUtils.is_touching(
             robot_position,
             self.get_robot_radius(),
             ball_position,
@@ -84,7 +84,7 @@ class Environment(BaseEnvironment):
             .01)
     
     def _is_inside_own_goal_area(self, position: tuple[float, float]):
-        return FieldHelper.is_inside_own_goal_area(
+        return FieldUtils.is_inside_own_goal_area(
             position,
             self.get_field_length(),
             self.get_penalty_length(),
@@ -154,7 +154,7 @@ class Environment(BaseEnvironment):
         ])
 
         def get_norm_theta(robot: Robot):
-            theta = -RSoccerHelper.get_corrected_angle(robot.theta)
+            theta = -RSoccerUtils.get_corrected_angle(robot.theta)
 
             if theta < 0:
                 theta += np.pi
@@ -205,7 +205,7 @@ class Environment(BaseEnvironment):
 
         for i in range(self.n_robots_blue):
             robot = frame.robots_blue[i]
-            theta = -RSoccerHelper.get_corrected_angle(robot.theta)
+            theta = -RSoccerUtils.get_corrected_angle(robot.theta)
 
             observation.extend([
                 self.norm_x(robot.x),
@@ -217,7 +217,7 @@ class Environment(BaseEnvironment):
 
         for i in range(self.n_robots_yellow):
             robot = frame.robots_yellow[i]
-            theta = -RSoccerHelper.get_corrected_angle(robot.theta)
+            theta = -RSoccerUtils.get_corrected_angle(robot.theta)
 
             observation.extend([
                 self.norm_x(robot.x),
@@ -376,12 +376,12 @@ class Environment(BaseEnvironment):
         return reward, self._is_done()
     
     def _get_random_position_inside_field(self):
-        return FieldHelper.get_random_position_inside_field(
+        return FieldUtils.get_random_position_inside_field(
             self.get_field_length(),
             self.get_field_width())
     
     def _get_random_position_inside_own_area(self):
-        return FieldHelper.get_random_position_inside_own_area(
+        return FieldUtils.get_random_position_inside_own_area(
             self.get_field_length(),
             self.get_field_width(),
             True)

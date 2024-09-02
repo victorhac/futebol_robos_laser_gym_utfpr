@@ -7,6 +7,10 @@ import pygame
 from rsoccer_gym.Entities import Frame, Robot
 from rsoccer_gym.Render import COLORS, Ball, VSSRenderField, VSSRobot
 from rsoccer_gym.Simulators.rsim import RSimVSS
+from rsoccer_gym.Utils import KDTree
+
+from lib.enums.position_enum import PositionEnum
+from lib.utils.field_utils import FieldUtils
 
 class BaseEnvironment(gym.Env):
     metadata = {
@@ -22,12 +26,14 @@ class BaseEnvironment(gym.Env):
         n_robots_blue: int,
         n_robots_yellow: int,
         time_step: float,
+        robot_id: int,
         render_mode="human",
     ):
         # Initialize Simulator
         super().__init__()
         self.render_mode = render_mode
         self.time_step = time_step
+        self.robot_id = robot_id
 
         self.rsim = RSimVSS(
             field_type=field_type,
@@ -241,3 +247,135 @@ class BaseEnvironment(gym.Env):
     
     def get_frame(self):
         return self.frame
+    
+    @staticmethod
+    def get_position(places: KDTree, min_distance, get_position_fn):
+        position = get_position_fn()
+
+        while places.get_nearest(position)[1] < min_distance:
+            position = get_position_fn()
+
+        places.insert(position)
+
+        return position
+    
+    def _get_random_position_inside_field(self):
+        return FieldUtils.get_random_position_inside_field(
+            self.get_field_length(),
+            self.get_field_width())
+    
+    def _get_random_position_inside_own_penalty_area(self):
+        return FieldUtils.get_random_position_inside_own_penalty_area(
+            self.get_field_length(),
+            self.get_penalty_length(),
+            self.get_penalty_width(),
+            True,
+            self.get_robot_radius())
+    
+    def _get_random_position_inside_opponent_penalty_area(self):
+        return FieldUtils.get_random_position_inside_own_penalty_area(
+            self.get_field_length(),
+            self.get_penalty_length(),
+            self.get_penalty_width(),
+            False,
+            self.get_robot_radius())
+    
+    def _get_random_position_inside_own_area(self):
+        return FieldUtils.get_random_position_inside_own_area(
+            self.get_field_length(),
+            self.get_field_width(),
+            True)
+    
+    def _get_random_position_inside_opponent_area(self):
+        return FieldUtils.get_random_position_inside_own_area(
+            self.get_field_length(),
+            self.get_field_width(),
+            False)
+    
+    def get_position_function_by_position_enum(
+        self,
+        is_yellow_team: bool,
+        position_enum: PositionEnum,
+        ball_position: tuple[float, float]
+    ):
+        #mudar para receber behavior e adicionar a distância
+        if position_enum == PositionEnum.OWN_AREA:
+            if is_yellow_team:
+                return self._get_random_position_inside_opponent_area
+            else:
+                return self._get_random_position_inside_own_area
+        elif position_enum == PositionEnum.GOAL_AREA:
+            if is_yellow_team:
+                return self._get_random_position_inside_opponent_penalty_area
+            else:
+                return self._get_random_position_inside_own_penalty_area
+        elif position_enum == PositionEnum.OWN_AREA_EXCEPT_GOAL_AREA:#mudar
+            if is_yellow_team:
+                return self._get_random_position_inside_opponent_area
+            else:
+                return self._get_random_position_inside_own_area
+        elif position_enum ==  PositionEnum.OPPONENT_AREA:
+            if not is_yellow_team:
+                return self._get_random_position_inside_opponent_area
+            else:
+                return self._get_random_position_inside_own_area
+        elif position_enum ==  PositionEnum.OPPONENT_GOAL_AREA:
+            if not is_yellow_team:
+                return self._get_random_position_inside_opponent_area
+            else:
+                return self._get_random_position_inside_own_area
+        elif position_enum ==  PositionEnum.OPPONENT_AREA_EXCEPT_GOAL_AREA:#mudar
+            if not is_yellow_team:
+                return self._get_random_position_inside_opponent_area
+            else:
+                return self._get_random_position_inside_own_area
+        elif position_enum ==  PositionEnum.RELATIVE_TO_BALL:
+            return lambda: (0,0)#criar
+        
+        return lambda: (0,0)#definir melhor
+    
+    def _energy_penalty(self):
+        en_penalty_1 = abs(self.sent_commands[0].v_wheel0)
+        en_penalty_2 = abs(self.sent_commands[0].v_wheel1)
+        return - (en_penalty_1 + en_penalty_2)
+    
+    def _any_team_scored_goal(self):
+        ball = self.get_ball()
+        return abs(ball.x) > (self.get_field_length() / 2)
+    
+    def _has_received_goal(self):        
+        ball = self.get_ball()
+        return ball.x < -self.get_field_length() / 2
+
+    def _has_scored_goal(self):
+        if not self._any_team_scored_goal():
+            return None
+        return not self._has_received_goal()
+    
+    def _get_agent(self):
+        return self.frame.robots_blue[self.robot_id]
+    
+    def _create_robot(
+        self,
+        id: int,
+        is_yellow_robot: bool,
+        v_wheel_0: float,
+        v_wheel_1: float
+    ):
+        return Robot(
+            yellow=is_yellow_robot,
+            id=id,
+            v_wheel0=v_wheel_0,
+            v_wheel1=v_wheel_1)
+    
+    def _get_yellow_robot_by_id(self, id: int):
+        return self.frame.robots_yellow[id]
+    
+    def _get_blue_robot_by_id(self, id: int):
+        return self.frame.robots_blue[id]
+    
+    def _get_robot_by_id(self, id: int, is_yellow: bool):
+        if is_yellow:
+            return self._get_yellow_robot_by_id(id)
+        else:
+            return self._get_blue_robot_by_id(id)

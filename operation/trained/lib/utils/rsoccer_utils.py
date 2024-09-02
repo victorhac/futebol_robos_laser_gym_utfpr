@@ -1,4 +1,4 @@
-from .configuration_helper import ConfigurationHelper
+from .configuration_utils import ConfigurationUtils
 from ..domain.field_data import FieldData
 from ..domain.robot import Robot
 from ..domain.ball import Ball
@@ -9,20 +9,20 @@ from rsoccer_gym.Entities.Frame import Frame
 
 import numpy as np
 
-class RSoccerHelper:
-    GOAL_DEPTH = ConfigurationHelper.get_field_goal_depth()
-    FIELD_WIDTH = ConfigurationHelper.get_field_width()
-    FIELD_LENGTH = ConfigurationHelper.get_field_length()
+class RSoccerUtils:
+    GOAL_DEPTH = ConfigurationUtils.get_field_goal_depth()
+    FIELD_WIDTH = ConfigurationUtils.get_field_width()
+    FIELD_LENGTH = ConfigurationUtils.get_field_length()
 
-    ROBOT_WHEEL_RADIUS = ConfigurationHelper.get_rsoccer_robot_wheel_radius()
-    ROBOT_MAX_RPM = ConfigurationHelper.get_rsoccer_robot_motor_max_rpm()
-    V_WHEEL_DEADZONE = ConfigurationHelper.get_rsoccer_robot_speed_dead_zone_meters_seconds()
+    ROBOT_WHEEL_RADIUS = ConfigurationUtils.get_rsoccer_robot_wheel_radius()
+    ROBOT_MAX_RPM = ConfigurationUtils.get_rsoccer_robot_motor_max_rpm()
+    V_WHEEL_DEADZONE = ConfigurationUtils.get_rsoccer_robot_speed_dead_zone_meters_seconds()
     MAX_V = (ROBOT_MAX_RPM / 60) * 2 * np.pi * ROBOT_WHEEL_RADIUS
 
     @staticmethod
     def get_corrected_angle(angle: float):
         angleRadians = np.deg2rad(angle)
-        return GeometryUtils.normalizeInPI(angleRadians)
+        return GeometryUtils.normalize_in_PI(angleRadians)
 
     @staticmethod
     def to_robot(rSoccerRobot: RSoccerRobot):
@@ -30,11 +30,11 @@ class RSoccerHelper:
 
         robot.position.x = rSoccerRobot.x
         robot.position.y = rSoccerRobot.y
-        robot.position.theta = RSoccerHelper.get_corrected_angle(rSoccerRobot.theta)
+        robot.position.theta = RSoccerUtils.get_corrected_angle(rSoccerRobot.theta)
 
         robot.velocity.x = rSoccerRobot.v_x
         robot.velocity.y = rSoccerRobot.v_y
-        robot.velocity.theta = RSoccerHelper.get_corrected_angle(rSoccerRobot.v_theta)
+        robot.velocity.theta = RSoccerUtils.get_corrected_angle(rSoccerRobot.v_theta)
         
         return robot
     
@@ -68,7 +68,7 @@ class RSoccerHelper:
         fieldData = FieldData()
         opponentFieldData = FieldData()
 
-        ball = RSoccerHelper.to_ball(next_state[0])
+        ball = RSoccerUtils.to_ball(next_state[0])
 
         blueTeam = []
         yellowTeam = []
@@ -77,9 +77,9 @@ class RSoccerHelper:
             robot = next_state[i]
             if robot.yellow is not None:
                 if robot.yellow:
-                    yellowTeam.append(RSoccerHelper.to_robot(robot))
+                    yellowTeam.append(RSoccerUtils.to_robot(robot))
                 else:
-                    blueTeam.append(RSoccerHelper.to_robot(robot))
+                    blueTeam.append(RSoccerUtils.to_robot(robot))
 
         fieldData.ball = ball
         opponentFieldData.ball = ball
@@ -103,10 +103,10 @@ class RSoccerHelper:
     def get_field_data(frame: Frame, is_yellow_team: bool):
         field_data = FieldData()
 
-        ball = RSoccerHelper.to_ball(frame.ball)
+        ball = RSoccerUtils.to_ball(frame.ball)
 
-        blue_team = [RSoccerHelper.to_robot(frame.robots_blue[i]) for i in frame.robots_blue]
-        yellow_team = [RSoccerHelper.to_robot(frame.robots_yellow[i]) for i in frame.robots_yellow]
+        blue_team = [RSoccerUtils.to_robot(frame.robots_blue[i]) for i in frame.robots_blue]
+        yellow_team = [RSoccerUtils.to_robot(frame.robots_yellow[i]) for i in frame.robots_yellow]
 
         field_data.ball = ball
 
@@ -120,19 +120,19 @@ class RSoccerHelper:
         return field_data
 
     def norm_v(v):
-        return np.clip(v * 1.25 / RSoccerHelper.MAX_V, -1, 1)
+        return np.clip(v * 1.25 / RSoccerUtils.MAX_V, -1, 1)
     
     def norm_x(x):
-        return np.clip(x / RSoccerHelper.get_max_x(), -1, 1)
+        return np.clip(x / RSoccerUtils.get_max_x(), -1, 1)
     
     def norm_y(y):
-        return np.clip(y / RSoccerHelper.get_max_y(), -1, 1)
+        return np.clip(y / RSoccerUtils.get_max_y(), -1, 1)
     
     def get_max_x():
-        return RSoccerHelper.FIELD_LENGTH / 2 + RSoccerHelper.GOAL_DEPTH
+        return RSoccerUtils.FIELD_LENGTH / 2 + RSoccerUtils.GOAL_DEPTH
     
     def get_max_y():
-        return RSoccerHelper.FIELD_WIDTH / 2
+        return RSoccerUtils.FIELD_WIDTH / 2
     
     @staticmethod
     def get_attacker_observation(
@@ -140,7 +140,7 @@ class RSoccerHelper:
         is_left_team: bool,
         robot_id: int
     ):
-        return RSoccerHelper.get_default_observation(field_data, is_left_team, robot_id)
+        return RSoccerUtils.get_default_observation(field_data, is_left_team, robot_id)
     
     @staticmethod
     def get_defensor_observation(
@@ -148,16 +148,16 @@ class RSoccerHelper:
         is_left_team: bool,
         robot_id: int
     ):
-        return RSoccerHelper.get_default_observation(field_data, is_left_team, robot_id)
+        return RSoccerUtils.get_default_observation(field_data, is_left_team, robot_id)
 
     @staticmethod
     def get_robot_observation(
         is_left_team: bool,
         robot: Robot
     ):
-        def norm_x(x): return RSoccerHelper.norm_x(x)
-        def norm_y(y): return RSoccerHelper.norm_y(y)
-        def norm_v(v): return RSoccerHelper.norm_v(v)
+        def norm_x(x): return RSoccerUtils.norm_x(x)
+        def norm_y(y): return RSoccerUtils.norm_y(y)
+        def norm_v(v): return RSoccerUtils.norm_v(v)
 
         position = robot.position
         velocity = robot.velocity
@@ -178,9 +178,9 @@ class RSoccerHelper:
     ):
         ball = field_data.ball
 
-        def norm_x(x): return RSoccerHelper.norm_x(x)
-        def norm_y(y): return RSoccerHelper.norm_y(y)
-        def norm_v(v): return RSoccerHelper.norm_v(v)
+        def norm_x(x): return RSoccerUtils.norm_x(x)
+        def norm_y(y): return RSoccerUtils.norm_y(y)
+        def norm_v(v): return RSoccerUtils.norm_v(v)
 
         position = ball.position
         velocity = ball.velocity
@@ -200,13 +200,13 @@ class RSoccerHelper:
     ):
         observation = []
 
-        observation.extend(RSoccerHelper.get_ball_observation(field_data, is_left_team))
+        observation.extend(RSoccerUtils.get_ball_observation(field_data, is_left_team))
 
         robot = field_data.robots[robot_id]
-        observation.extend(RSoccerHelper.get_robot_observation(is_left_team, robot))
+        observation.extend(RSoccerUtils.get_robot_observation(is_left_team, robot))
 
         robot = field_data.foes[0]
-        observation.extend(RSoccerHelper.get_robot_observation(is_left_team, robot))
+        observation.extend(RSoccerUtils.get_robot_observation(is_left_team, robot))
 
         return np.array(observation, dtype=np.float32)
     
@@ -215,8 +215,8 @@ class RSoccerHelper:
         actions: np.ndarray,
         is_own_team: bool
     ):
-        max_v = RSoccerHelper.MAX_V
-        rbt_wheel_radius = RSoccerHelper.ROBOT_WHEEL_RADIUS
+        max_v = RSoccerUtils.MAX_V
+        rbt_wheel_radius = RSoccerUtils.ROBOT_WHEEL_RADIUS
 
         # the actions were switched because rsoccer uses a different convention
         left_wheel_speed = actions[1] * max_v
@@ -235,7 +235,7 @@ class RSoccerHelper:
         left_wheel_speed *= factor
         right_wheel_speed *= factor
 
-        v_wheel_deadzone = RSoccerHelper.V_WHEEL_DEADZONE
+        v_wheel_deadzone = RSoccerUtils.V_WHEEL_DEADZONE
 
         if abs(left_wheel_speed) < v_wheel_deadzone:
             left_wheel_speed = 0

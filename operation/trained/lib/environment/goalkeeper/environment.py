@@ -9,23 +9,23 @@ from rsoccer_gym.Entities import Frame, Robot, Ball
 from rsoccer_gym.Utils import KDTree
 from stable_baselines3 import PPO
 
-from lib.helpers.rsoccer_helper import RSoccerHelper
+from lib.utils.rsoccer_utils import RSoccerUtils
 
 from ...environment.base_environment import BaseEnvironment
-from ...helpers.field_helper import FieldHelper
-from ...helpers.configuration_helper import ConfigurationHelper
+from ...utils.field_utils import FieldUtils
+from ...utils.configuration_utils import ConfigurationUtils
 
-TRAINING_EPISODE_DURATION = ConfigurationHelper.get_rsoccer_training_episode_duration()
+TRAINING_EPISODE_DURATION = ConfigurationUtils.get_rsoccer_training_episode_duration()
 
-NUMBER_ROBOTS_BLUE = ConfigurationHelper.get_rsoccer_team_blue_number_robots()
-NUMBER_ROBOTS_YELLOW = ConfigurationHelper.get_rsoccer_team_yellow_number_robots()
+NUMBER_ROBOTS_BLUE = ConfigurationUtils.get_rsoccer_team_blue_number_robots()
+NUMBER_ROBOTS_YELLOW = ConfigurationUtils.get_rsoccer_team_yellow_number_robots()
 
-V_WHEEL_DEADZONE = ConfigurationHelper.get_rsoccer_robot_speed_dead_zone_meters_seconds()
+V_WHEEL_DEADZONE = ConfigurationUtils.get_rsoccer_robot_speed_dead_zone_meters_seconds()
 
-TIME_STEP = ConfigurationHelper.get_rsoccer_training_time_step_seconds()
+TIME_STEP = ConfigurationUtils.get_rsoccer_training_time_step_seconds()
 
 # addapt this for your robot
-MAX_MOTOR_SPEED = ConfigurationHelper.get_firasim_robot_speed_max_radians_seconds()
+MAX_MOTOR_SPEED = ConfigurationUtils.get_firasim_robot_speed_max_radians_seconds()
 
 class Environment(BaseEnvironment):
     def __init__(self, render_mode="rgb_array"):
@@ -91,7 +91,7 @@ class Environment(BaseEnvironment):
         ])
 
         def get_norm_theta(robot: Robot):
-            theta = -RSoccerHelper.get_corrected_angle(robot.theta)
+            theta = -RSoccerUtils.get_corrected_angle(robot.theta)
 
             if theta < 0:
                 theta += np.pi
@@ -139,7 +139,7 @@ class Environment(BaseEnvironment):
         frame = self.frame
 
         robot = frame.robots_blue[0]
-        theta = -RSoccerHelper.get_corrected_angle(robot.theta)
+        theta = -RSoccerUtils.get_corrected_angle(robot.theta)
 
         observation.extend([
             self.norm_x(robot.x),
@@ -299,12 +299,12 @@ class Environment(BaseEnvironment):
         return reward, self._is_done()
     
     def _get_random_position_inside_field(self):
-        return FieldHelper.get_random_position_inside_field(
+        return FieldUtils.get_random_position_inside_field(
             self.get_field_length(),
             self.get_field_width())
     
     def _get_random_position_inside_own_penalty_area(self):
-        return FieldHelper.get_random_position_inside_own_penalty_area(
+        return FieldUtils.get_random_position_inside_own_penalty_area(
             self.get_field_length(),
             self.get_penalty_length(),
             self.get_penalty_width(),
@@ -312,7 +312,7 @@ class Environment(BaseEnvironment):
             self.get_robot_radius())
     
     def _get_random_position_inside_opponent_penalty_area(self):
-        return FieldHelper.get_random_position_inside_own_penalty_area(
+        return FieldUtils.get_random_position_inside_own_penalty_area(
             self.get_field_length(),
             self.get_penalty_length(),
             self.get_penalty_width(),
@@ -320,13 +320,13 @@ class Environment(BaseEnvironment):
             self.get_robot_radius())
     
     def _get_random_position_inside_own_area(self):
-        return FieldHelper.get_random_position_inside_own_area(
+        return FieldUtils.get_random_position_inside_own_area(
             self.get_field_length(),
             self.get_field_width(),
             True)
     
     def _get_random_position_inside_opponent_area(self):
-        return FieldHelper.get_random_position_inside_own_area(
+        return FieldUtils.get_random_position_inside_own_area(
             self.get_field_length(),
             self.get_field_width(),
             False)

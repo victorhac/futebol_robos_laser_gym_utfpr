@@ -6,7 +6,7 @@ from ..domain.rectangle import Rectangle
 
 class GeometryUtils:
     @staticmethod
-    def smallestAngleDiff(angle1: float, angle2: float):
+    def smallest_angle_diff(angle1: float, angle2: float):
         PI = math.pi
         angle = (angle2 - angle1) % (2 * PI)
         if angle >= PI:
@@ -16,7 +16,7 @@ class GeometryUtils:
         return angle
 
     @staticmethod
-    def normalizeAngle(
+    def normalize_angle(
         value: float,
         center: float,
         amplitude: float):
@@ -29,9 +29,8 @@ class GeometryUtils:
         return value
 
     @staticmethod
-    def normalizeInPI(radians: float):
-        PI = math.pi
-        return GeometryUtils.normalizeAngle(radians, 0, PI)
+    def normalize_in_PI(radians: float):
+        return GeometryUtils.normalize_angle(radians, 0, math.pi)
 
     @staticmethod
     def distance(position1: tuple[float, float], position2: tuple[float, float]):
@@ -41,7 +40,7 @@ class GeometryUtils:
         return math.sqrt((position2x - position1x) ** 2 + (position2y - position1y) ** 2)
 
     @staticmethod
-    def isClose(
+    def is_close(
         position1: tuple[float, float], 
         position2: tuple[float, float],
         tolerance: float):

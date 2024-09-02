@@ -1,41 +1,40 @@
 import random
-import math
 
 from ..geometry.geometry_utils import GeometryUtils
 
-class FieldHelper:
+class FieldUtils:
     @staticmethod
-    def isLeftTeam(isYellowTeam: bool, isYellowLeftTeam: bool):
-        return isYellowLeftTeam == isYellowTeam
+    def is_left_team(is_yellow_yeam: bool, is_yellow_left_team: bool):
+        return is_yellow_left_team == is_yellow_yeam
     
     @staticmethod
-    def isInsideField(
-        x: float, y: float,
-        fieldWidth: float,
-        fieldHeight: float
+    def is_inside_field(
+        x: float,
+        y: float,
+        field_width: float,
+        field_height: float
     ):
-        
-        return abs(x) < fieldWidth / 2 and abs(y) < fieldHeight / 2
+        return abs(x) < field_width / 2 and abs(y) < field_height / 2
     
     @staticmethod
-    def getOpponentGoalPosition(
-        fieldLength: float,
-        isLeftTeam: bool
+    def get_opponent_goal_position(
+        field_length: float,
+        is_left_team: bool
     ):
-        if isLeftTeam:
-            return (fieldLength / 2, 0)
+        if is_left_team:
+            return (field_length / 2, 0)
         else:
-            return (-fieldLength / 2, 0)
+            return (-field_length / 2, 0)
     
     @staticmethod
-    def getOwnGoalPosition(
-        fieldLength: float,
-        isLeftTeam: bool
+    def get_own_goal_position(
+        field_length: float,
+        is_left_team: bool
     ):
-        if isLeftTeam:
-            return (-fieldLength / 2, 0)
+        if is_left_team:
+            return (-field_length / 2, 0)
         else:
-            return (fieldLength / 2, 0)
+            return (field_length / 2, 0)
         
     @staticmethod
     def getOwnPenaltyPosition(
@@ -47,37 +46,6 @@ class FieldHelper:
             return (-fieldLength / 2 + penaltyLength, 0)
         else:
             return (fieldLength / 2 - penaltyLength, 0)
-        
-    # deprecated
-    @staticmethod
-    def getFieldRandomPosition(fieldLength: float, fieldWidth: float):
-        return random.uniform(-fieldLength / 2, fieldLength / 2), random.uniform(-fieldWidth / 2, fieldWidth / 2)
-    
-    @staticmethod
-    def getRandomTheta():
-        return random.uniform(-math.pi, math.pi)
-    
-    @staticmethod
-    def getMaxDistanceToPoint(
-        position: tuple[float, float],
-        fieldLength: float,
-        fieldWidth: float
-    ):
-        distances = [
-            GeometryUtils.distance(position, (fieldLength / 2, fieldWidth / 2)),
-            GeometryUtils.distance(position, (fieldLength / 2, -fieldWidth / 2)),
-            GeometryUtils.distance(position, (-fieldLength / 2, fieldWidth / 2)),
-            GeometryUtils.distance(position, (-fieldLength / 2, -fieldWidth / 2))
-        ]
-        
-        return max(distances)
-    
-    @staticmethod
-    def get_biggest_distance(
-        field_length: float,
-        field_width: float,
-    ):
-        return math.sqrt(field_length ** 2 + field_width ** 2) / 2
     
     @staticmethod
     def is_inside_own_goal_area(
@@ -157,7 +125,7 @@ class FieldHelper:
         field_width: float,
         is_left_team: bool,
     ):
-        return FieldHelper.get_random_position_inside_own_area(
+        return FieldUtils.get_random_position_inside_own_area(
             field_length,
             field_width,
             not is_left_team

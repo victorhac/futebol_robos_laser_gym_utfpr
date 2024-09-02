@@ -1,74 +1,74 @@
-from ..helpers.field_helper import FieldHelper
+from ..utils.field_utils import FieldUtils
 from ..domain.field_data import FieldData
 from ..domain.rectangle import Rectangle
 from ..domain.robot import Robot
 from ..geometry.geometry_utils import GeometryUtils
-from ..helpers.configuration_helper import ConfigurationHelper
-from ..helpers.robot_helper import RobotHelper
+from ..utils.configuration_utils import ConfigurationUtils
+from ..utils.robot_utils import RobotUtils
 
 import math
 
-ROBOT_LENGTH = ConfigurationHelper.get_firasim_robot_length()
-ROBOT_WIDTH = ConfigurationHelper.get_firasim_robot_width()
+ROBOT_LENGTH = ConfigurationUtils.get_firasim_robot_length()
+ROBOT_WIDTH = ConfigurationUtils.get_firasim_robot_width()
 
-FIELD_WIDTH = ConfigurationHelper.get_field_width()
-FIELD_LENGTH = ConfigurationHelper.get_field_length()
+FIELD_WIDTH = ConfigurationUtils.get_field_width()
+FIELD_LENGTH = ConfigurationUtils.get_field_length()
 
-MOTION_COLLISION_AVOIDANCE_MIN_DISTANCE = ConfigurationHelper.get_motion_collision_avoidance_min_distance()
+MOTION_COLLISION_AVOIDANCE_MIN_DISTANCE = ConfigurationUtils.get_motion_collision_avoidance_min_distance()
+
+KP = ConfigurationUtils.get_motion_pid_constants_kp()
+KD = ConfigurationUtils.get_motion_pid_constants_kd()
 
 class MotionUtils:
     @staticmethod
     def go_to_point(
         robot: Robot, 
-        targetPosition: tuple[float, float],
-        lastError: float = 0,
-        baseSpeed: float = 30
+        target_position: tuple[float, float],
+        last_error: float = 0,
+        base_speed: float = 30
     ):
-        positionX, positionY = robot.get_position_tuple()
-        robotAngle = robot.position.theta
+        x, y = robot.get_position_tuple()
+        robot_angle = robot.position.theta
 
-        xTarget, yTarget = (targetPosition[0], targetPosition[1])
+        x_target, y_target = (target_position[0], target_position[1])
 
-        angleToTarget = math.atan2(yTarget - positionY, xTarget - positionX)
+        angle_to_target = math.atan2(y_target - y, x_target - x)
 
-        error = GeometryUtils.smallestAngleDiff(angleToTarget, robotAngle)
+        error = GeometryUtils.smallest_angle_diff(angle_to_target, robot_angle)
 
         if abs(error) > math.pi / 2.0 + math.pi / 20.0:
             reversed = True
-            robotAngle = GeometryUtils.normalizeInPI(robotAngle + math.pi)
-            error = GeometryUtils.smallestAngleDiff(angleToTarget, robotAngle)
+            robot_angle = GeometryUtils.normalize_in_PI(robot_angle + math.pi)
+            error = GeometryUtils.smallest_angle_diff(angle_to_target, robot_angle)
         else:
             reversed = False
 
-        kP = ConfigurationHelper.get_motion_pid_constants_kp()
-        kD = ConfigurationHelper.get_motion_pid_constants_kd()
+        motorSpeed = (KP * error) + (KD * (error - last_error))
 
-        motorSpeed = (kP * error) + (kD * (error - lastError))
+        motorSpeed = RobotUtils.truncateMotorSpeed(motorSpeed, base_speed)
 
-        motorSpeed = RobotHelper.truncateMotorSpeed(motorSpeed, baseSpeed)
-
-        leftMotorSpeed, rightMotorSpeed = MotionUtils._get_speeds(motorSpeed, baseSpeed, reversed)
+        leftMotorSpeed, rightMotorSpeed = MotionUtils._get_speeds(motorSpeed, base_speed, reversed)
 
         return leftMotorSpeed, rightMotorSpeed, error
     
     @staticmethod
-    def _get_speeds(motorSpeed: float, baseSpeed: float, reversed: bool):
+    def _get_speeds(motor_speed: float, base_speed: float, reversed: bool):
         if reversed:
-            if motorSpeed > 0:
-                leftMotorSpeed = -baseSpeed + motorSpeed
-                rightMotorSpeed = -baseSpeed
+            if motor_speed > 0:
+                left_motor_speed = -base_speed + motor_speed
+                right_motor_speed = -base_speed
             else:
-                leftMotorSpeed = -baseSpeed
-                rightMotorSpeed = -baseSpeed - motorSpeed
+                left_motor_speed = -base_speed
+                right_motor_speed = -base_speed - motor_speed
         else:
-            if motorSpeed > 0:
-                leftMotorSpeed = baseSpeed
-                rightMotorSpeed = baseSpeed - motorSpeed
+            if motor_speed > 0:
+                left_motor_speed = base_speed
+                right_motor_speed = base_speed - motor_speed
             else:
-                leftMotorSpeed = baseSpeed + motorSpeed
-                rightMotorSpeed = baseSpeed
+                left_motor_speed = base_speed + motor_speed
+                right_motor_speed = base_speed
 
-        return leftMotorSpeed, rightMotorSpeed
+        return left_motor_speed, right_motor_speed
     
     @staticmethod
     def spin(clockwise: bool, spinPower: float):
@@ -97,7 +97,7 @@ class MotionUtils:
         for i in range(len(opponentFieldData.robots)):
             otherRobot = opponentFieldData.robots[i]
 
-            otherRobotRectangle = RobotHelper.getRectangle(otherRobot, ROBOT_WIDTH, ROBOT_LENGTH)
+            otherRobotRectangle = RobotUtils.getRectangle(otherRobot, ROBOT_WIDTH, ROBOT_LENGTH)
 
             if GeometryUtils.hasIntersection(rectangle, otherRobotRectangle):
                 obstacles.append(otherRobot)
@@ -108,7 +108,7 @@ class MotionUtils:
 
             otherRobot = fieldData.robots[i]
 
-            otherRobotRectangle = RobotHelper.getRectangle(otherRobot, ROBOT_WIDTH, ROBOT_LENGTH)
+            otherRobotRectangle = RobotUtils.getRectangle(otherRobot, ROBOT_WIDTH, ROBOT_LENGTH)
 
             if GeometryUtils.hasIntersection(rectangle, otherRobotRectangle):
                 obstacles.append(otherRobot)

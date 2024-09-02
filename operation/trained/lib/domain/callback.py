@@ -3,8 +3,8 @@ from stable_baselines3.common.callbacks import BaseCallback
 import os
 from collections import deque
 
-from lib.helpers.behavior.behavior_helper import BehaviorHelper
-from operation.trained.lib.enums.robot_curriculum_behavior_enum import RobotCurriculumBehaviorEnum
+from lib.utils.behavior.behavior_utils import BehaviorUtils
+from lib.enums.robot_curriculum_behavior_enum import RobotCurriculumBehaviorEnum
 
 import tempfile
 
@@ -31,10 +31,9 @@ class ScoreCallback(BaseCallback):
         self.number_robot_yellow = number_robot_yellow
 
         self.behaviors = [
-            BehaviorHelper.get_task_1_behaviors(number_robot_blue, number_robot_yellow),
-            BehaviorHelper.get_task_2_behaviors(number_robot_blue, number_robot_yellow),
-            BehaviorHelper.get_task_3_behaviors(number_robot_blue, number_robot_yellow),
-            BehaviorHelper.get_task_4_behaviors(number_robot_blue, number_robot_yellow)
+            BehaviorUtils.get_task_1_behaviors(number_robot_blue, number_robot_yellow),
+            BehaviorUtils.get_task_2_behaviors(number_robot_blue, number_robot_yellow),
+            BehaviorUtils.get_task_3_behaviors(number_robot_blue, number_robot_yellow)
         ]
 
         current_task = 0
@@ -58,7 +57,7 @@ class ScoreCallback(BaseCallback):
     def _set_next_task(self):
         self.current_task += 1
 
-        if self.current_task < 4:
+        if self.current_task < len(self.behaviors):
             self.current_behavior = self.behaviors[self.current_task]
 
     def _set_behaviors(self):

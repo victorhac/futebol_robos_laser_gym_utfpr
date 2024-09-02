@@ -1,7 +1,7 @@
 from ..domain.rectangle import Rectangle
 from ..domain.robot import Robot
 
-class RobotHelper:
+class RobotUtils:
     @staticmethod
     def truncateMotorSpeed(motorSpeed: float, baseSpeed: float):
         if motorSpeed > baseSpeed:

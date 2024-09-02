@@ -1,7 +1,7 @@
 from stable_baselines3 import DDPG
 import os
 
-class ModelHelper():
+class ModelUtils():
     __models_folder_name = "models"
     __attacker_folder_name = "attacker_v2"
     __goalkeeper_folder_name = "goalkeeper"
@@ -18,26 +18,26 @@ class ModelHelper():
             current_directory_path,
             "..",
             "..",
-            ModelHelper.__models_folder_name,
+            ModelUtils.__models_folder_name,
             role_name)
 
     @staticmethod
     def get_attacker_model() -> DDPG:
-        return ModelHelper.get_model_by_relative_path(
-            ModelHelper.__attacker_folder_name,
-            ModelHelper.__latest_attacker_datetime_folder_name)
+        return ModelUtils.get_model_by_relative_path(
+            ModelUtils.__attacker_folder_name,
+            ModelUtils.__latest_attacker_datetime_folder_name)
     
     @staticmethod
     def get_goalkeeper_model() -> DDPG:
-        return ModelHelper.get_model_by_relative_path(
-            ModelHelper.__goalkeeper_folder_name,
-            ModelHelper.__latest_goalkeeper_datetime_folder_name)
+        return ModelUtils.get_model_by_relative_path(
+            ModelUtils.__goalkeeper_folder_name,
+            ModelUtils.__latest_goalkeeper_datetime_folder_name)
     
     @staticmethod
     def get_defensor_model() -> DDPG:
-        return ModelHelper.get_model_by_relative_path(
-            ModelHelper.__defensor_folder_name,
-            ModelHelper.__latest_defensor_datetime_folder_name)
+        return ModelUtils.get_model_by_relative_path(
+            ModelUtils.__defensor_folder_name,
+            ModelUtils.__latest_defensor_datetime_folder_name)
     
     def get_model_by_relative_path(
         role_name: str,
@@ -45,10 +45,10 @@ class ModelHelper():
         model_name: str | None = None
     ) -> DDPG:
         if model_name is None:
-            model_name = ModelHelper.__default_model_name
+            model_name = ModelUtils.__default_model_name
 
         model_path = os.path.join(
-            ModelHelper._get_relative_path_to_model_folder(role_name),
+            ModelUtils._get_relative_path_to_model_folder(role_name),
             datetime_folder_name,
             model_name)
 

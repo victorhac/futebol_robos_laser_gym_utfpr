@@ -1,8 +1,8 @@
 import logging
 
-from ..helpers.field_helper import FieldHelper
-from ..helpers.configuration_helper import ConfigurationHelper
-from ..helpers.firasim_helper import FIRASimHelper
+from ..utils.field_utils import FieldUtils
+from ..utils.configuration_utils import ConfigurationUtils
+from ..utils.firasim_utils import FIRASimUtils
 
 from ..domain.field_data import FieldData
 from ..domain.robot import Robot
@@ -72,7 +72,7 @@ class ProtoVision(Receiver):
         sum_to_angle = 0 if not isLeftTeam else np.pi
 
         entity_data.position.x, entity_data.position.y = \
-            FIRASimHelper.normalizePosition(
+            FIRASimUtils.normalizePosition(
                 data_dict.get('x', 0), 
                 data_dict.get('y', 0),
                 isLeftTeam)
@@ -80,15 +80,15 @@ class ProtoVision(Receiver):
         # The ball dict does not contain 'orientation' so it will always be 0
         if not foes:
             entity_data.position.theta = \
-                FIRASimHelper.normalizeAngle(
+                FIRASimUtils.normalizeAngle(
                     self._assert_angle(data_dict.get('orientation', 0) + sum_to_angle))
         else:
             entity_data.position.theta = \
-                FIRASimHelper.normalizeAngle(
+                FIRASimUtils.normalizeAngle(
                     self._assert_angle(data_dict.get('orientation', 0)))
 
         entity_data.velocity.x, entity_data.velocity.y = \
-            FIRASimHelper.normalizeSpeed(
+            FIRASimUtils.normalizeSpeed(
                 data_dict.get('vx', 0),
                 data_dict.get('vy', 0),
                 isLeftTeam)
@@ -98,7 +98,7 @@ class ProtoVision(Receiver):
 
 
     def _field_data_from_dict(self, field_data: FieldData, raw_data_dict):
-        isLeftTeam = ConfigurationHelper.get_firasim_is_left_team()
+        isLeftTeam = ConfigurationUtils.get_firasim_is_left_team()
 
         rotate_field = isLeftTeam
         

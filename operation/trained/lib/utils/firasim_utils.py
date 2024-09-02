@@ -1,6 +1,6 @@
 import math
 
-class FIRASimHelper:
+class FIRASimUtils:
     @staticmethod
     def normalizeAngle(angle: float):
         if angle < 0:
