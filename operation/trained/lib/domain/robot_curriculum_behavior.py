@@ -8,10 +8,11 @@ class RobotCurriculumBehavior:
         id: int,
         is_yellow: bool,
         position_enum: PositionEnum,
+        steps: int = 1000,
+        is_positive_distance_beta: bool = True,
         distance_range: tuple[float, float] | None = None,
         start_distance: float | None = None,
-        distance_beta: float | None = None,
-        velocity_beta: float | None = None,
+        is_positive_velocity_beta: bool = True,
         start_velocity_alpha: float | None = None
     ):
         self.robot_curriculum_behavior_enum = robot_curriculum_behavior_enum
@@ -24,10 +25,22 @@ class RobotCurriculumBehavior:
 
         self.distance_range = distance_range
         self.distance = start_distance
-        self.distance_beta = distance_beta
 
+        if distance_range is None:
+            self.distance_beta = 0
+        else:
+            self.distance_beta = RobotCurriculumBehavior._get_beta(
+                steps,
+                distance_range,
+                is_positive_distance_beta)
+
+        self.alpha_range = (0,1)
         self.velocity_alpha = start_velocity_alpha
-        self.velocity_beta = velocity_beta
+
+        self.velocity_beta = RobotCurriculumBehavior._get_beta(
+            steps,
+            self.alpha_range,
+            is_positive_velocity_beta)
 
     def set_model(self, model):
         self.model = model
@@ -47,24 +60,41 @@ class RobotCurriculumBehavior:
         self.distance = self.backup_start_distance
         self.model = None
 
-    @staticmethod
-    def _truncate(value: float, range: tuple[float, float]):
-        return max(range[0], min(value, range[1]))
-
-    def _is_distance_in_range(self):
-        return self.distance >= self.distance_range[0] and self.distance <= self.distance_range[1]
+    def _is_distance_in_limit(self):
+        if self.distance_beta > 0:
+            return self.distance == self.distance_range[1]
+        elif self.distance_beta < 0:
+            return self.distance == self.distance_range[0]
+        return True
     
-    def _is_velocity_alpha_in_range(self):
-        return self.velocity_alpha >= 0 and self.velocity_alpha <= 1
+    def _is_velocity_alpha_in_limit(self):
+        if self.velocity_beta > 0:
+            return self.velocity_alpha == 1
+        elif self.velocity_beta < 0:
+            return self.velocity_alpha == 0
+        return True
 
-    def is_over(self): #rever
+    def is_over(self):
         if self.robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.BALL_FOLLOWING:
-            return not self._is_distance_in_range() or\
-                not self._is_velocity_alpha_in_range()
+            return self._is_distance_in_limit() and self._is_velocity_alpha_in_limit()
         elif self.robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.FROM_MODEL:
-            return not self._is_distance_in_range()
-        
-        return False
+            return self._is_distance_in_limit()
+        return True
     
     def has_behavior(self, robot_curriculum_behavior_enum: RobotCurriculumBehaviorEnum):
         return self.robot_curriculum_behavior_enum == robot_curriculum_behavior_enum
+    
+    @staticmethod
+    def _truncate(value: float, range: tuple[float, float]):
+        return max(range[0], min(value, range[1]))
+    
+    @staticmethod
+    def _get_beta(
+        steps: int,
+        range: tuple[float, float],
+        is_positive: bool
+    ):
+        beta = (range[1] - range[0]) / steps
+        if not is_positive:
+            return -beta
+        return beta

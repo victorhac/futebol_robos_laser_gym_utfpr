@@ -292,47 +292,16 @@ class BaseEnvironment(gym.Env):
             self.get_field_width(),
             False)
     
-    def get_position_function_by_position_enum(
+    def _get_random_position_at_distance(
         self,
-        is_yellow_team: bool,
-        position_enum: PositionEnum,
-        ball_position: tuple[float, float]
+        distance: float,
+        position: tuple[float, float]
     ):
-        #mudar para receber behavior e adicionar a distância
-        if position_enum == PositionEnum.OWN_AREA:
-            if is_yellow_team:
-                return self._get_random_position_inside_opponent_area
-            else:
-                return self._get_random_position_inside_own_area
-        elif position_enum == PositionEnum.GOAL_AREA:
-            if is_yellow_team:
-                return self._get_random_position_inside_opponent_penalty_area
-            else:
-                return self._get_random_position_inside_own_penalty_area
-        elif position_enum == PositionEnum.OWN_AREA_EXCEPT_GOAL_AREA:#mudar
-            if is_yellow_team:
-                return self._get_random_position_inside_opponent_area
-            else:
-                return self._get_random_position_inside_own_area
-        elif position_enum ==  PositionEnum.OPPONENT_AREA:
-            if not is_yellow_team:
-                return self._get_random_position_inside_opponent_area
-            else:
-                return self._get_random_position_inside_own_area
-        elif position_enum ==  PositionEnum.OPPONENT_GOAL_AREA:
-            if not is_yellow_team:
-                return self._get_random_position_inside_opponent_area
-            else:
-                return self._get_random_position_inside_own_area
-        elif position_enum ==  PositionEnum.OPPONENT_AREA_EXCEPT_GOAL_AREA:#mudar
-            if not is_yellow_team:
-                return self._get_random_position_inside_opponent_area
-            else:
-                return self._get_random_position_inside_own_area
-        elif position_enum ==  PositionEnum.RELATIVE_TO_BALL:
-            return lambda: (0,0)#criar
-        
-        return lambda: (0,0)#definir melhor
+        return FieldUtils.get_random_position_at_distance(
+            self.get_field_length(),
+            self.get_field_width(),
+            position,
+            distance)
     
     def _energy_penalty(self):
         en_penalty_1 = abs(self.sent_commands[0].v_wheel0)

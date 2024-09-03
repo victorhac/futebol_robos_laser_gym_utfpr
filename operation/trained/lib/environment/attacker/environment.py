@@ -9,6 +9,7 @@ from rsoccer_gym.Entities import Frame, Robot, Ball
 from rsoccer_gym.Utils import KDTree
 
 from lib.domain.robot_curriculum_behavior import RobotCurriculumBehavior
+from lib.enums.position_enum import PositionEnum
 from lib.enums.robot_curriculum_behavior_enum import RobotCurriculumBehaviorEnum
 from lib.motion.motion_utils import MotionUtils
 
@@ -196,13 +197,15 @@ class Environment(BaseEnvironment):
         if robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.STOPPED:
             return create_robot(0, 0)
         elif robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.BALL_FOLLOWING:
-            # colocar moderação de velocidade
+            velocity_alpha = behavior.velocity_alpha
+
             left_speed, right_speed = self._go_to_point_v_wheels(
                 robot_id,
                 is_yellow,
                 (ball.x, ball.y)
             )
-            return create_robot(left_speed, right_speed)
+
+            return create_robot(left_speed * velocity_alpha, right_speed * velocity_alpha)
         elif robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.FROM_MODEL:
             actions = behavior.model.predict(self._frame_to_opponent_observations())
             left_speed, right_speed = self._actions_to_v_wheels(actions, True)
@@ -352,6 +355,49 @@ class Environment(BaseEnvironment):
 
         return reward, self._is_done()
     
+    def get_position_function_by_behavior(
+        self,
+        behavior: RobotCurriculumBehavior,
+        ball_position: tuple[float, float]
+    ):
+        position_enum = behavior.position_enum
+        is_yellow = behavior.is_yellow
+
+        if position_enum == PositionEnum.OWN_AREA:
+            if is_yellow:
+                return self._get_random_position_inside_opponent_area
+            else:
+                return self._get_random_position_inside_own_area
+        elif position_enum == PositionEnum.GOAL_AREA:
+            if is_yellow:
+                return self._get_random_position_inside_opponent_penalty_area
+            else:
+                return self._get_random_position_inside_own_penalty_area
+        elif position_enum == PositionEnum.OWN_AREA_EXCEPT_GOAL_AREA:#mudar
+            if is_yellow:
+                return self._get_random_position_inside_opponent_area
+            else:
+                return self._get_random_position_inside_own_area
+        elif position_enum == PositionEnum.OPPONENT_AREA:
+            if not is_yellow:
+                return self._get_random_position_inside_opponent_area
+            else:
+                return self._get_random_position_inside_own_area
+        elif position_enum == PositionEnum.OPPONENT_GOAL_AREA:
+            if not is_yellow:
+                return self._get_random_position_inside_opponent_area
+            else:
+                return self._get_random_position_inside_own_area
+        elif position_enum == PositionEnum.OPPONENT_AREA_EXCEPT_GOAL_AREA:#mudar
+            if not is_yellow:
+                return self._get_random_position_inside_opponent_area
+            else:
+                return self._get_random_position_inside_own_area
+        elif position_enum == PositionEnum.RELATIVE_TO_BALL:
+            return lambda: self._get_random_position_at_distance(behavior.distance, ball_position)
+        
+        return self._get_random_position_inside_own_area
+    
     def _get_default_initial_positions_frame(self):
         def theta(): return random.uniform(0, 360)
 
@@ -422,10 +468,7 @@ class Environment(BaseEnvironment):
         for item in range(len(blue_behaviors)):
             behavior = blue_behaviors[item]
 
-            position_function = self.get_position_function_by_position_enum(
-                False,
-                behavior.position_enum,
-                ball_position)
+            position_function = self.get_position_function_by_behavior(behavior, ball_position)
             
             position = get_position(position_function)
             frame.robots_blue[item] = Robot(x=position[0], y=position[1], theta=theta())
@@ -433,10 +476,7 @@ class Environment(BaseEnvironment):
         for item in range(len(yellow_behaviors)):
             behavior = yellow_behaviors[item]
 
-            position_function = self.get_position_function_by_position_enum(
-                True,
-                behavior.position_enum,
-                ball_position)
+            position_function = self.get_position_function_by_behavior(behavior, ball_position)
             
             position = get_position(position_function)
             frame.robots_yellow[item] = Robot(x=position[0], y=position[1], theta=theta())

@@ -1,4 +1,5 @@
 import random
+import math
 
 from ..geometry.geometry_utils import GeometryUtils
 
@@ -128,8 +129,7 @@ class FieldUtils:
         return FieldUtils.get_random_position_inside_own_area(
             field_length,
             field_width,
-            not is_left_team
-        )
+            not is_left_team)
     
     @staticmethod
     def get_random_position_inside_own_penalty_area(
@@ -152,3 +152,25 @@ class FieldUtils:
             return -max_x + penalty_x, y
         else:
             return max_x - penalty_x, y
+
+    @staticmethod  
+    def get_random_position_at_distance(
+        field_length,
+        field_width,
+        position,
+        distance,
+        margin = 0.15
+    ):
+        x, y = position
+
+        (x_min, x_max) = (-field_length / 2 + margin, field_length / 2 - margin)
+        (y_min, y_max) = (-field_width / 2 + margin, field_width / 2 - margin)
+
+        while True:
+            angle = random.uniform(0, 2 * math.pi)
+
+            new_x = x + distance * math.cos(angle)
+            new_y = y + distance * math.sin(angle)
+            
+            if x_min <= new_x <= x_max and y_min <= new_y <= y_max:
+                return new_x, new_y

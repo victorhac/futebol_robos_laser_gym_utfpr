@@ -3,29 +3,34 @@ from stable_baselines3.common.callbacks import BaseCallback
 import os
 from collections import deque
 
-from lib.utils.behavior.behavior_utils import BehaviorUtils
 from lib.enums.robot_curriculum_behavior_enum import RobotCurriculumBehaviorEnum
 
 import tempfile
 
 from stable_baselines3 import PPO
 
-class ScoreCallback(BaseCallback):
+from lib.utils.behavior.behavior_utils import BehaviorUtils
+
+class BehaviorCallback(BaseCallback):
     def __init__(
         self,
-        check_freq,
-        save_path,
+        check_freq: int,
+        model_name: str,
+        save_path: str,
         number_robot_blue: int,
         number_robot_yellow: int,
         threshold=0.6,
-        n_games=100,
+        n_games=10,
         verbose=1
     ):
-        super(ScoreCallback, self).__init__(verbose)
+        super(BehaviorCallback, self).__init__(verbose)
+
         self.check_freq = check_freq
+        self.model_name = model_name
         self.save_path = save_path
         self.threshold = threshold
         self.n_games = n_games
+
         self.scores = deque(maxlen=n_games)
         self.number_robot_blue = number_robot_blue
         self.number_robot_yellow = number_robot_yellow
@@ -40,8 +45,7 @@ class ScoreCallback(BaseCallback):
 
         self.current_task = current_task
         self.current_behavior = self.behaviors[current_task]
-
-        self._set_behaviors()
+        self.first_setted = False
 
     def _get_model(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -50,7 +54,10 @@ class ScoreCallback(BaseCallback):
             return PPO.load(model_path) #TODO: deixar genérico
 
     def _save_model(self):
-        model_path = os.path.join(self.save_path, f'model_task_{self.current_task + 1}_{self.num_timesteps}')
+        model_path = os.path.join(
+            self.save_path,
+            f'{self.model_name}_model_task_{self.current_task + 1}_{self.num_timesteps}')
+        
         self.model.save(model_path)
         return model_path
     
@@ -59,9 +66,6 @@ class ScoreCallback(BaseCallback):
 
         if self.current_task < len(self.behaviors):
             self.current_behavior = self.behaviors[self.current_task]
-
-    def _set_behaviors(self):
-        self.training_env.env_method('set_behaviors', self.current_behavior)
 
     def _update_behaviors(self):
         blue_behaviors = self.current_behavior["blue"]
@@ -79,8 +83,8 @@ class ScoreCallback(BaseCallback):
         blue_behaviors = self.current_behavior["blue"]
         yellow_behaviors = self.current_behavior["yellow"]
 
-        return any(item.is_over() for item in blue_behaviors) or\
-            any(item.is_over() for item in yellow_behaviors)
+        return all(item.is_over() for item in blue_behaviors) and\
+            all(item.is_over() for item in yellow_behaviors)
     
     def _set_previous_model_to_opponent(self):
         yellow_behaviors = self.current_behavior["yellow"]
@@ -90,7 +94,14 @@ class ScoreCallback(BaseCallback):
                 model = self._get_model()
                 item.set_model(model)
 
+    def _set_behaviors(self):
+        self.training_env.env_method('set_behaviors', self.current_behavior)
+        self.first_setted = True
+
     def _on_step(self) -> bool:
+        if not self.first_setted:
+            self._set_behaviors()
+
         last_scores = self.training_env.get_attr('last_game_score')
         
         self.scores.extend(last_scores)
@@ -99,7 +110,7 @@ class ScoreCallback(BaseCallback):
             self._save_model()
 
         if len(self.scores) == self.n_games:
-            if np.mean(self.scores) >= self.threshold:
+            if len(self.scores) == self.n_games:
                 self.scores = []
                 self._update_behaviors()
 
