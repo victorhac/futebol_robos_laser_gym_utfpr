@@ -7,7 +7,7 @@ from ..helpers.firasim_helper import FIRASimHelper
 import math
 
 class Motion:
-     @staticmethod
+    @staticmethod
     def goToPoint(robot: EntityData, 
             targetPosition: 'tuple[float, float]',
             isLeftTeam: bool,
@@ -71,3 +71,43 @@ class Motion:
             return spinPower, -spinPower
         
         return -spinPower, spinPower
+    
+    def FaceDirection(robot: EntityData, targetPosition:'tuple[float, float]', isLeftTeam = True):
+        
+        configuration = ConfigurationHelper.getConfiguration()
+
+        position = robot.position
+
+        positionX = position.x
+        positionY = position.y
+        robotAngle = position.theta
+
+        xTarget, yTarget = FIRASimHelper.normalizePosition(targetPosition[0], targetPosition[1], isLeftTeam)
+
+        angleToTarget = math.atan2(yTarget - positionY, xTarget - positionX)
+
+        error = Geometry.smallestAngleDiff(angleToTarget, robotAngle)
+
+        if abs(error) > math.pi / 2.0 + math.pi / 20.0:
+            reversed = True
+            robotAngle = Geometry.normalizeInPI(robotAngle + math.pi)
+            error = Geometry.smallestAngleDiff(angleToTarget, robotAngle)
+        else:
+            reversed = False
+            
+        kP = configuration["motion"]["pid"]["constants"]["Kp"]
+        kD = configuration["motion"]["pid"]["constants"]["Kd"]
+
+        motorSpeed = (kP * error) + (kD * (error))
+
+        baseSpeed = configuration["robot"]["speed"]["base"]
+
+        motorSpeed = RobotHelper.truncateMotorSpeed(motorSpeed, baseSpeed)
+
+        motorSpeed = kP * error
+
+        leftMotorSpeed = motorSpeed
+
+        rightMotorSpeed = -motorSpeed
+
+        return leftMotorSpeed, rightMotorSpeed, error
