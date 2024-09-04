@@ -7,9 +7,9 @@ from ..helpers.firasim_helper import FIRASimHelper
 import math
 
 class Motion:
-    @staticmethod
+     @staticmethod
     def goToPoint(robot: EntityData, 
-            targetPosition: tuple[float, float],
+            targetPosition: 'tuple[float, float]',
             isLeftTeam: bool,
             lastError: float = 0):
         configuration = ConfigurationHelper.getConfiguration()
