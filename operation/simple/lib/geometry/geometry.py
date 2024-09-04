@@ -30,11 +30,17 @@ class Geometry:
         return Geometry.normalizeAngle(radians, 0, PI)
 
     @staticmethod
-    def distance(position1: tuple[float, float], position2: tuple[float, float]):
-        position1x, position1y = position1
-        position2x, position2y = position2
+    def distance(position1: 'tuple[float, float]', position2: 'tuple[float, float]'):
+        
+        deltx = position1[0] - position2[0]
+        delty = position1[1] - position2[1]
+        
+        deltx = deltx * deltx
+        delty = delty * delty
 
-        return math.sqrt((position2x - position1x) ** 2 + (position2y - position1y) ** 2)
+        dist = math.sqrt((deltx + delty))
+        
+        return dist
 
     @staticmethod
     def isClose(
