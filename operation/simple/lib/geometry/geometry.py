@@ -42,11 +42,12 @@ class Geometry:
         
         return dist
 
+
     @staticmethod
     def isClose(
-        position1: tuple[float, float], 
-        position2: tuple[float, float],
-        tolerance: float):
+            position1: 'tuple[float, float]', 
+            position2: 'tuple[float, float]',
+            tolerance: float):
 
         return Geometry.distance(position1, position2) < tolerance
     
