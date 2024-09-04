@@ -111,3 +111,39 @@ class Motion:
         rightMotorSpeed = -motorSpeed
 
         return leftMotorSpeed, rightMotorSpeed, error
+    def GoOnDirection(direction, robot, lastError: float = 0):
+        configuration = ConfigurationHelper.getConfiguration()
+
+        position = robot.position
+
+        positionX = position.x
+        positionY = position.y
+        robotAngle = position.theta
+
+        # Use the direction vector as the target position
+        xTarget, yTarget = direction
+
+        angleToTarget = math.atan2(yTarget - positionY, xTarget - positionX)
+
+        error = Geometry.smallestAngleDiff(angleToTarget, robotAngle)
+
+        if abs(error) > math.pi / 2.0 + math.pi / 20.0:
+            reversed = True
+            robotAngle = Geometry.normalizeInPI(robotAngle + math.pi)
+            error = Geometry.smallestAngleDiff(angleToTarget, robotAngle)
+        else:
+            reversed = False
+
+        kP = configuration["motion"]["pid"]["constants"]["Kp"]
+        kD = configuration["motion"]["pid"]["constants"]["Kd"]
+
+        motorSpeed = (kP * error) + (kD * (error - lastError))
+
+        baseSpeed = configuration["robot"]["speed"]["base"]
+
+        motorSpeed = RobotHelper.truncateMotorSpeed(motorSpeed, baseSpeed)
+
+        leftMotorSpeed, rightMotorSpeed = Motion._getSpeeds(motorSpeed, baseSpeed, reversed)
+
+        return leftMotorSpeed, rightMotorSpeed, error
+    
