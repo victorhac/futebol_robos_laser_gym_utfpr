@@ -52,7 +52,7 @@ class Geometry:
         return Geometry.distance(position1, position2) < tolerance
     
     @staticmethod
-    def findIntersection(line1: tuple[float, float, float], line2: tuple[float, float, float]):
+    def findIntersection(line1: 'tuple[float, float, float]', line2: 'tuple[float, float, float]'):
         """
         Extract coefficients (a, b, c) from line equations (ax + by = c)
         """
@@ -67,9 +67,11 @@ class Geometry:
         x = (c1 * b2 - c2 * b1) / determinant
         y = (a1 * c2 - a2 * c1) / determinant
 
-        return x, y
+        return (x, y)
+
     
-    def lineEquation(point1: tuple[float, float], point2: tuple[float, float]):
+    @staticmethod
+    def lineEquation(point1: 'tuple[float, float]', point2: 'tuple[float, float]'):
         """
         Return the equation of the line passing through two points in the form (a, b, c): (ax + by = c).
         """
@@ -79,8 +81,10 @@ class Geometry:
         if x2 - x1 != 0:
             m = (y2 - y1) / (x2 - x1)
         else:
+            print("morri legal")
             return None
         
-        b = y1 - m * x1
+        c = y1 - m * x1
 
-        return -m, 1, b
+        return (-m, 1, c)
+    
