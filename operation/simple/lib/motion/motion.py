@@ -183,3 +183,45 @@ class Motion:
             teamControl.transmit_robot(id, leftMotorSpeed, rightMotorSpeed)
             theta += 0.0614
             lastError = error
+            
+    def goToOrbitPoint(robot: EntityData, 
+            targetPosition: 'tuple[float, float]',
+            isLeftTeam: bool,
+            orientation: int,
+            lastError: float = 0,
+            phaseShift: float = -math.pi / 5,
+            deslocamento: int = 0.075): 
+        configuration = ConfigurationHelper.getConfiguration()
+
+        position = robot.position
+
+        positionX = position.x
+        positionY = position.y
+        robotAngle = position.theta
+
+        xTarget, yTarget = FIRASimHelper.normalizePosition(targetPosition[0], targetPosition[1] + (orientation *deslocamento), isLeftTeam)
+
+        # Add a phase shift to the angle calculation for orbital motion
+        angleToTarget = math.atan2(yTarget - positionY, xTarget - positionX) + (orientation * phaseShift)
+
+        error = Geometry.smallestAngleDiff(angleToTarget, robotAngle)
+
+        if abs(error) > math.pi / 2.0 + math.pi / 20.0:
+            reversed = True
+            robotAngle = Geometry.normalizeInPI(robotAngle + math.pi)
+            error = Geometry.smallestAngleDiff(angleToTarget, robotAngle)
+        else:
+            reversed = False
+
+        kP = configuration["motion"]["pid"]["constants"]["Kp"]
+        kD = configuration["motion"]["pid"]["constants"]["Kd"]
+
+        motorSpeed = (kP * error) + (kD * (error - lastError))
+
+        baseSpeed = configuration["robot"]["speed"]["base"]
+
+        motorSpeed = RobotHelper.truncateMotorSpeed(motorSpeed, baseSpeed)
+
+        leftMotorSpeed, rightMotorSpeed = Motion._getSpeeds(motorSpeed, baseSpeed, reversed)
+
+        return leftMotorSpeed, rightMotorSpeed, error
