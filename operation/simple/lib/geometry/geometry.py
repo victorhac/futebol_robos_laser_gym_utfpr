@@ -88,3 +88,39 @@ class Geometry:
 
         return (-m, 1, c)
     
+    def directionalVector(point: 'tuple[float, float]', other: 'tuple[float, float]') :
+            A = point
+            B = other
+
+            vetor_direcao = (B[0] - A[0], B[1] - A[1])
+
+            norma = math.sqrt(vetor_direcao[0]**2 + vetor_direcao[1]**2)
+
+            if norma != 0:
+                vetor_unitario = (vetor_direcao[0] / norma, vetor_direcao[1] / norma)
+            else:
+                vetor_unitario = (0, 0)  
+
+            return tuple(vetor_unitario)
+    def PointOnDirection(position: 'tuple[float, float]', direction: 'tuple[float, float]', raio):
+        
+        C = (position[0] + raio * direction[0], position[1] + raio* direction[1])
+        return C
+    
+    def sumVector(dirVet: 'tuple[float, float]', other: 'tuple[float, float]') -> tuple:
+        result = (dirVet[0] + other[0], dirVet[1] + other[1])
+        
+        norm = math.sqrt(result[0]**2 + result[1]**2)
+        if norm != 0:
+            normalized_result = (result[0] / norm, result[1] / norm)
+        else:
+            normalized_result = (0, 0)
+            
+        print(f"vet bola {other}")
+
+        print(f"vet robo->bola {dirVet}")
+
+        print(f"vet final {normalized_result}")
+        return normalized_result
+    def perpendicularVector(directionalVector: 'tuple[float, float]'):
+        return (directionalVector[1], -directionalVector[0])
