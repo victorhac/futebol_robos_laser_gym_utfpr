@@ -147,3 +147,39 @@ class Motion:
 
         return leftMotorSpeed, rightMotorSpeed, error
     
+    def Orbit(fsimcontroler, id: int, isLeftTeam: bool, lastError: float = 0):
+        raio = 0.0002
+
+        fieldData = fsimcontroler[0]
+        vision = fsimcontroler[1]
+        teamControl = fsimcontroler[2]
+
+        robot = fieldData.robots[id]
+        ball = fieldData.ball
+        center = ball.position.x, ball.position.y
+
+        # Compute the initial angle in radians
+        theta = math.atan2(center[1] - robot.position.y, center[0] - robot.position.x)
+            
+        x_d = center[0] + raio * math.cos(theta)
+        y_d = center[1] + raio * math.sin(theta)
+        orientation =1
+
+        while ball.position.x < 0.1: 
+            vision.update()
+            if(not Geometry.isClose(center, (robot.position.x, robot.position.y), 0.05)):
+                center = ball.position.x, ball.position.y
+                x_d = center[0] + raio * math.cos(theta)
+                y_d = center[1] + raio * math.sin(theta)
+                
+            desired_position = (x_d, y_d)
+            
+            if(ball.position.y > 0):
+                orientation = -1
+            else:
+                orientation = 1
+            leftMotorSpeed, rightMotorSpeed, error = Motion.goToOrbitPoint(robot, desired_position, isLeftTeam, orientation, lastError)
+
+            teamControl.transmit_robot(id, leftMotorSpeed, rightMotorSpeed)
+            theta += 0.0614
+            lastError = error
