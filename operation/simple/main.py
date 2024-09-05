@@ -11,6 +11,8 @@ from lib.motion.motion import Motion
 from lib.helpers.field_helper import FieldHelper
 from lib.helpers.firasim_helper import FIRASimHelper
 
+from communication.receiver.receiver import Receiver
+
 CONFIGURATION = ConfigurationHelper.getConfiguration()
     
 IS_YELLOW_TEAM = CONFIGURATION["team"]["is-yellow-team"]
@@ -199,10 +201,14 @@ def defensePlayerThread(
 def goalkeeperPlayerThread(
     fieldData: FieldData,
     vision: ProtoVision,
-    teamControl: ProtoControl
+    teamControl: ProtoControl,
+    visioTest: Receiver
 ):
     ball = fieldData.ball
     goalkeeperRobot = fieldData.robots[GOALKEEPER_ROBOT_ID]
+
+    #dataTest = visioTest.dataFinal(visioTest)
+    
 
     if IS_LEFT_TEAM:
         xCoordinateGoalkeeper = -GOAL_LINE_DISTANCE_TO_CENTER
@@ -220,6 +226,7 @@ def goalkeeperPlayerThread(
 
     while True:
         vision.update()
+        #print(f'Dados: {dataTest}')
 
         ballPosition = (ball.position.x, ball.position.y)
 
@@ -243,6 +250,16 @@ def goalkeeperPlayerThread(
                     goalkeeperRobot,
                     vision,
                     teamControl)
+                
+def visionPlayerThread(
+    fieldData: FieldData,
+    vision: ProtoVision,
+    teamControl: ProtoControl,
+    visioTest: Receiver
+):
+    dataTest = visioTest.dataFinal(visioTest)
+    while(True):
+        print(dataTest)
 
 def atackerPlayerThread(
     fieldData: FieldData,
@@ -275,6 +292,8 @@ def main():
         team_color_yellow=IS_YELLOW_TEAM, 
         field_data=fieldData)
     
+    visionTest = Receiver
+    
     teamControl = ProtoControl(
         team_color_yellow=IS_YELLOW_TEAM, 
         control_ip=CONTROL_IP, 
@@ -283,18 +302,23 @@ def main():
     threads = []
 
     args = (fieldData, vision, teamControl)
+    argsTest = (fieldData, vision, teamControl, visionTest)
 
-    goalkeeperThread = threading.Thread(target=goalkeeperPlayerThread, args=args)
+    visionThread = threading.Thread(target=visionPlayerThread, args=argsTest)
+    goalkeeperThread = threading.Thread(target=goalkeeperPlayerThread, args=argsTest)
     defensorThread = threading.Thread(target=defensePlayerThread, args=args)
     atackerThread = threading.Thread(target=atackerPlayerThread, args=args)
 
     threads.append(goalkeeperThread)
     threads.append(defensorThread)
     threads.append(atackerThread)
+    threads.append(visionThread)
+    
 
     goalkeeperThread.start()
     defensorThread.start()
     atackerThread.start()
+    visionThread.start()
 
     for thread in threads:
         thread.join()
