@@ -7,6 +7,7 @@ from gymnasium.spaces import Box
 
 from rsoccer_gym.Entities import Frame, Robot, Ball
 from rsoccer_gym.Utils import KDTree
+from stable_baselines3 import PPO
 
 from lib.domain.robot_curriculum_behavior import RobotCurriculumBehavior
 from lib.enums.position_enum import PositionEnum
@@ -31,7 +32,11 @@ TIME_STEP = ConfigurationUtils.get_rsoccer_training_time_step_seconds()
 MAX_MOTOR_SPEED = ConfigurationUtils.get_firasim_robot_speed_max_radians_seconds()
 
 class Environment(BaseEnvironment):
-    def __init__(self, render_mode="rgb_array", robot_id=1):
+    def __init__(
+        self,
+        render_mode="rgb_array",
+        robot_id=1
+    ):
         super().__init__(
             field_type=0,
             n_robots_blue=NUMBER_ROBOTS_BLUE,
@@ -60,16 +65,26 @@ class Environment(BaseEnvironment):
         self.behaviors: dict[str, list[RobotCurriculumBehavior]] = None
 
         self.previous_ball_potential = None
-        self.episode_initial_time = 0
-        self.last_game_score = 0
+        self.last_game_score = None
         self.error = 0
+
+        self.opponent_model = None
+        self.opponent_model_path = None
     
     def _is_done(self):
         if self._any_team_scored_goal():
             return True
-        elif time.time() - self.episode_initial_time > TRAINING_EPISODE_DURATION:
+        elif self._has_episode_time_exceeded():
             return True
         return False
+    
+    def _has_episode_time_exceeded(self):
+        elapsed_time = int(self.steps * self.time_step)
+
+        if elapsed_time == 0:
+            return False
+
+        return elapsed_time % self.training_episode_duration == 0
     
     def _frame_to_observations(self):
         observation = []
@@ -202,13 +217,13 @@ class Environment(BaseEnvironment):
             left_speed, right_speed = self._go_to_point_v_wheels(
                 robot_id,
                 is_yellow,
-                (ball.x, ball.y)
-            )
+                (ball.x, ball.y))
 
             return create_robot(left_speed * velocity_alpha, right_speed * velocity_alpha)
         elif robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.FROM_MODEL:
-            actions = behavior.model.predict(self._frame_to_opponent_observations())
-            left_speed, right_speed = self._actions_to_v_wheels(actions, True)
+            model = self._get_model(behavior.model_path)
+            actions = model.predict(self._frame_to_opponent_observations())
+            left_speed, right_speed = self._actions_to_v_wheels(actions[0], True)
             return create_robot(left_speed, right_speed)
         
         return create_robot(0, 0)
@@ -440,8 +455,6 @@ class Environment(BaseEnvironment):
         return frame
 
     def _get_initial_positions_frame(self):
-        self.episode_initial_time = time.time()
-
         if self.behaviors is None:
             return self._get_default_initial_positions_frame()
         
@@ -485,3 +498,10 @@ class Environment(BaseEnvironment):
     
     def set_behaviors(self, behaviors: dict[str, list[RobotCurriculumBehavior]]):
         self.behaviors = behaviors
+
+    def _get_model(self, model_path: str):
+        if self.opponent_model_path != model_path:
+            self.opponent_model = PPO.load(model_path)
+            self.opponent_model_path = model_path
+
+        return self.opponent_model

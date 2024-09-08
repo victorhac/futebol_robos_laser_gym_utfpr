@@ -8,7 +8,7 @@ class RobotCurriculumBehavior:
         id: int,
         is_yellow: bool,
         position_enum: PositionEnum,
-        steps: int = 1000,
+        updates_per_task: int = 10,
         is_positive_distance_beta: bool = True,
         distance_range: tuple[float, float] | None = None,
         start_distance: float | None = None,
@@ -30,7 +30,7 @@ class RobotCurriculumBehavior:
             self.distance_beta = 0
         else:
             self.distance_beta = RobotCurriculumBehavior._get_beta(
-                steps,
+                updates_per_task,
                 distance_range,
                 is_positive_distance_beta)
 
@@ -38,12 +38,14 @@ class RobotCurriculumBehavior:
         self.velocity_alpha = start_velocity_alpha
 
         self.velocity_beta = RobotCurriculumBehavior._get_beta(
-            steps,
+            updates_per_task,
             self.alpha_range,
             is_positive_velocity_beta)
+        
+        self.model_path = None
 
-    def set_model(self, model):
-        self.model = model
+    def set_model_path(self, model_path):
+        self.model_path = model_path
 
     def update(self):
         def trucate(value: float, range: tuple[float, float]):
@@ -58,7 +60,7 @@ class RobotCurriculumBehavior:
     def reset(self):
         self.velocity_alpha = 0
         self.distance = self.backup_start_distance
-        self.model = None
+        self.model_path = None
 
     def _is_distance_in_limit(self):
         if self.distance_beta > 0:
@@ -90,11 +92,11 @@ class RobotCurriculumBehavior:
     
     @staticmethod
     def _get_beta(
-        steps: int,
+        updates_per_task: int,
         range: tuple[float, float],
         is_positive: bool
     ):
-        beta = (range[1] - range[0]) / steps
+        beta = (range[1] - range[0]) / updates_per_task
         if not is_positive:
             return -beta
         return beta
