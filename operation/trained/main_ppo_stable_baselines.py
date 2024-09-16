@@ -1,8 +1,10 @@
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import SubprocVecEnv
-from lib.domain.behavior_callback import BehaviorCallback
 
+from lib.domain.behavior_callback import BehaviorCallback
+from lib.domain.curriculum_task import CurriculumTask
 from lib.environment.attacker.environment import Environment
+from lib.utils.behavior.behavior_utils import BehaviorUtils
 
 import os
 from datetime import datetime
@@ -10,16 +12,42 @@ from datetime import datetime
 task_training_name = "attacker"
 algorithm_name = "PPO"
 
-def create_env():
+render_mode = "human"
+robot_id = 0
+
+num_threads = 2
+
+total_timesteps = 100000
+
+gae_lambda = 0.95
+gamma = 0.99
+learning_rate = 0.0004
+clip_range = 0.2
+policy = "MlpPolicy"
+batch_size = 128
+
+load_model = False
+loaded_model_path = "models/attacker/PPO/2024_6_11_13_34_28/PPO_model"
+
+updates_per_task = 10
+check_frequency = 3
+number_games = 10
+
+log_interval = total_timesteps // 10
+
+number_robot_blue = 3
+number_robot_yellow = 3
+
+def create_env(task: CurriculumTask):
     def _init():
-        return Environment("human")
+        return Environment(task, render_mode, robot_id)
     return _init
 
 def create_folder_if_not_exists(folder_path):
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
-def get_task_models_path():
+def get_datetime_folder_name():
     current_datetime = datetime.now()
 
     year = current_datetime.year
@@ -29,28 +57,31 @@ def get_task_models_path():
     minute = current_datetime.minute
     second = current_datetime.second
 
-    datetime_name = f"{year}_{month}_{day}_{hour}_{minute}_{second}"
+    return f"{year}_{month}_{day}_{hour}_{minute}_{second}"
 
-    return f"models/{task_training_name}/{algorithm_name}/{datetime_name}"
+def get_task_models_path():
+    return f"models/{task_training_name}/{algorithm_name}/{get_datetime_folder_name()}"
+
+def get_log_path():
+    return f"log/{get_datetime_folder_name()}"
 
 def main():
+    tasks = [
+        BehaviorUtils.get_task_1(updates_per_task),
+        BehaviorUtils.get_task_2(updates_per_task),
+        BehaviorUtils.get_task_3(updates_per_task),
+        BehaviorUtils.get_task_4(updates_per_task),
+        BehaviorUtils.get_task_5(updates_per_task),
+        BehaviorUtils.get_task_6(updates_per_task),
+        BehaviorUtils.get_task_7(updates_per_task)
+    ]
+
     save_path = get_task_models_path()
+    log_path = get_log_path()
 
     create_folder_if_not_exists(save_path)
 
-    num_threads = 2
-
-    env = SubprocVecEnv([create_env() for _ in range(num_threads)])
-
-    gae_lambda = 0.95
-    gamma = 0.99
-    learning_rate = 0.0004
-    clip_range = 0.2
-    policy = "MlpPolicy"
-    batch_size = 128
-
-    load_model = False
-    loaded_model_path = "models/attacker/PPO/2024_6_11_13_34_28/PPO_model"
+    env = SubprocVecEnv([create_env(tasks[0]) for _ in range(num_threads)])
 
     model = PPO(
         policy=policy,
@@ -64,20 +95,14 @@ def main():
     if load_model:
         model.set_parameters(loaded_model_path)
 
-    total_timesteps = 200_000_000
-
-    updates_per_task = 1000
-    check_frequency = 5
-    log_interval = total_timesteps // 10
-    number_games = 100
-
     checkpoint_callback = BehaviorCallback(
         check_frequency=check_frequency,
+        total_timesteps=total_timesteps,
         model_name=algorithm_name,
         save_path=save_path,
-        number_robot_blue=3,
-        number_robot_yellow=3,
-        updates_per_task=updates_per_task,
+        number_robot_blue=number_robot_blue,
+        number_robot_yellow=number_robot_yellow,
+        tasks=tasks,
         number_games=number_games)
 
     model.learn(

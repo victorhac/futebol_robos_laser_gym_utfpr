@@ -292,6 +292,16 @@ class BaseEnvironment(gym.Env):
             self.get_field_width(),
             False)
     
+    def _get_own_goal_position(self):
+        return FieldUtils.get_own_goal_position(
+            self.get_field_length(),
+            True)
+    
+    def _get_opponent_goal_position(self):
+        return FieldUtils.get_own_goal_position(
+            self.get_field_length(),
+            False)
+    
     def _get_random_position_at_distance(
         self,
         distance: float,
@@ -302,6 +312,16 @@ class BaseEnvironment(gym.Env):
             self.get_field_width(),
             position,
             distance)
+    
+    def _is_inside_field(
+        self,
+        position: tuple[float, float]
+    ):
+        return FieldUtils.is_inside_field(
+            position[0],
+            position[1],
+            self.get_field_length(),
+            self.get_field_width())
     
     def _energy_penalty(self):
         en_penalty_1 = abs(self.sent_commands[0].v_wheel0)

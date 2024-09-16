@@ -12,9 +12,9 @@ ROBOT_SPEED_BASE = ConfigurationUtils.get_rsoccer_robot_speed_max_radians_second
 
 env = Environment("human")
 
-behaviors = BehaviorUtils.get_task_2_behaviors(3,3)
+behaviors = BehaviorUtils.get_task_1(10)
 
-env.set_behaviors(behaviors)
+env.set_task(behaviors)
 
 try:
     for i in range(100):

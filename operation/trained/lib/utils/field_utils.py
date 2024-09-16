@@ -36,17 +36,6 @@ class FieldUtils:
             return (-field_length / 2, 0)
         else:
             return (field_length / 2, 0)
-        
-    @staticmethod
-    def getOwnPenaltyPosition(
-        fieldLength: float,
-        penaltyLength: float,
-        isLeftTeam: bool
-    ):
-        if isLeftTeam:
-            return (-fieldLength / 2 + penaltyLength, 0)
-        else:
-            return (fieldLength / 2 - penaltyLength, 0)
     
     @staticmethod
     def is_inside_own_goal_area(

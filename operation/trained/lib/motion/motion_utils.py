@@ -34,12 +34,12 @@ class MotionUtils:
 
         angle_to_target = math.atan2(y_target - y, x_target - x)
 
-        error = GeometryUtils.smallest_angle_diff(angle_to_target, robot_angle)
+        error = GeometryUtils.smallest_angle_difference(angle_to_target, robot_angle)
 
         if abs(error) > math.pi / 2.0 + math.pi / 20.0:
             reversed = True
             robot_angle = GeometryUtils.normalize_in_PI(robot_angle + math.pi)
-            error = GeometryUtils.smallest_angle_diff(angle_to_target, robot_angle)
+            error = GeometryUtils.smallest_angle_difference(angle_to_target, robot_angle)
         else:
             reversed = False
 
