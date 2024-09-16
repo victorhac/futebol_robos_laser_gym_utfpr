@@ -54,7 +54,7 @@ class BehaviorUtils:
         is_yellow: bool,
         position_enum: PositionEnum,
         is_positive_distance_beta: bool,
-        distance_range: tuple[float, float],
+        distance_range: 'tuple[float, float]',
         is_positive_velocity_beta: bool,
         start_velocity_alpha: float,
         updates_per_task: int
@@ -90,7 +90,7 @@ class BehaviorUtils:
         position_enum: PositionEnum,
         updates_per_task: int = 10,
         is_positive_distance_beta: bool = True,
-        distance_range: tuple[float, float] | None = None
+        distance_range: 'tuple[float, float]' | None = None
     ):
         return BallCurriculumBehavior(
             position_enum=position_enum,

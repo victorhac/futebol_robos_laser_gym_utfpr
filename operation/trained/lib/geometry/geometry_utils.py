@@ -34,8 +34,8 @@ class GeometryUtils:
 
     @staticmethod
     def distance(
-        position1: tuple[float, float],
-        position2: tuple[float, float]
+        position1: 'tuple[float, float]',
+        position2: 'tuple[float, float]'
     ):
         x1, y1 = position1
         x2, y2 = position2
@@ -44,8 +44,8 @@ class GeometryUtils:
     
     @staticmethod
     def angle_between_points(
-        position1: tuple[float, float],
-        position2: tuple[float, float]
+        position1: 'tuple[float, float]',
+        position2: 'tuple[float, float]'
     ):
         x1, y1 = position1
         x2, y2 = position2
@@ -54,24 +54,24 @@ class GeometryUtils:
 
     @staticmethod
     def is_close(
-        position1: tuple[float, float], 
-        position2: tuple[float, float],
+        position1: 'tuple[float, float]', 
+        position2: 'tuple[float, float]',
         tolerance: float
     ):
         return GeometryUtils.distance(position1, position2) < tolerance
     
     @staticmethod
     def circunferences_intersect(
-        center1: tuple[float, float],
+        center1: 'tuple[float, float]',
         radius1: float,
-        center2: tuple[float, float],
+        center2: 'tuple[float, float]',
         radius2: float
     ):
         distance = GeometryUtils.distance(center1, center2)
         return distance <= radius1 + radius2 and distance >= abs(radius1 - radius2)
     
     @staticmethod
-    def findIntersection(line1: tuple[float, float, float], line2: tuple[float, float, float]):
+    def findIntersection(line1: 'tuple[float, float, float]', line2: 'tuple[float, float, float]'):
         """
         Extract coefficients (a, b, c) from line equations (ax + by = c)
         """
@@ -89,7 +89,7 @@ class GeometryUtils:
         return x, y
     
     @staticmethod
-    def lineEquation(point1: tuple[float, float], point2: tuple[float, float]):
+    def lineEquation(point1: 'tuple[float, float]', point2: 'tuple[float, float]'):
         """
         Return the equation of the line passing through two points in the form (a, b, c): (ax + by = c).
         """
@@ -107,8 +107,8 @@ class GeometryUtils:
     
     @staticmethod
     def point_to_line_distance(
-        point: tuple[float, float],
-        line_equation: tuple[float, float, float]
+        point: 'tuple[float, float]',
+        line_equation: 'tuple[float, float, float]'
     ):
         px, py = point
         a, b, c = line_equation
@@ -116,9 +116,9 @@ class GeometryUtils:
 
     @staticmethod
     def is_between(
-        point: tuple[float, float],
-        endpoint1: tuple[float, float],
-        endpoint2: tuple[float, float]
+        point: 'tuple[float, float]',
+        endpoint1: 'tuple[float, float]',
+        endpoint2: 'tuple[float, float]'
     ):
         px, py = point
         x1, y1 = endpoint1
@@ -137,8 +137,8 @@ class GeometryUtils:
 
     @staticmethod
     def point_to_point_distance(
-        point1: tuple[float, float],
-        point2: tuple[float, float]
+        point1: 'tuple[float, float]',
+        point2: 'tuple[float, float]'
     ):
         x1, y1 = point1
         x2, y2 = point2
@@ -146,9 +146,9 @@ class GeometryUtils:
 
     @staticmethod
     def distance_point_to_line_segment(
-        point: tuple[float, float],
-        endpoint1: tuple[float, float],
-        endpoint2: tuple[float, float]
+        point: 'tuple[float, float]',
+        endpoint1: 'tuple[float, float]',
+        endpoint2: 'tuple[float, float]'
     ):
         x1, y1 = endpoint1
         x2, y2 = endpoint2
@@ -170,7 +170,7 @@ class GeometryUtils:
         
     @staticmethod
     def find_y(
-        line_equation: tuple[float, float, float],
+        line_equation: 'tuple[float, float, float]',
         x: float
     ):
         a, b, c = line_equation
@@ -182,7 +182,7 @@ class GeometryUtils:
     
     @staticmethod
     def lineEquationByPointAndAngle(
-        point: tuple[float, float],
+        point: 'tuple[float, float]',
         angle: float
     ):
         x, y = point
@@ -192,7 +192,7 @@ class GeometryUtils:
         return -m, 1, b
     
     @staticmethod
-    def getMidpoint(point1: tuple[float, float], point2: tuple[float, float]):
+    def getMidpoint(point1: 'tuple[float, float]', point2: 'tuple[float, float]'):
         x1, y1 = point1
         x2, y2 = point2
 
@@ -242,7 +242,7 @@ class GeometryUtils:
         return poly1.contains(poly2)
     
     @staticmethod
-    def getTangentPoints(center: tuple[float, float], radius: float, point: tuple[float, float]):
+    def getTangentPoints(center: 'tuple[float, float]', radius: float, point: 'tuple[float, float]'):
         """
         Calculate the tangent points on a circle to a given point.
 

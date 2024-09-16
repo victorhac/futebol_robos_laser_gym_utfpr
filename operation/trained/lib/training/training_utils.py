@@ -10,7 +10,7 @@ class TrainingUtils():
     def rSpeed(
         ballPast: Ball,
         ballCurrent: Ball,
-        goalPosition: tuple[float, float]
+        goalPosition: 'tuple[float, float]'
     ):
         v = TrainingUtils.v(ballPast, ballCurrent, goalPosition)
         return np.clip(v, -1, 1)
@@ -30,9 +30,9 @@ class TrainingUtils():
     
     @staticmethod
     def psi(
-        aPosition: tuple[float, float],
-        bPosition: tuple[float, float],
-        cPosition: tuple[float, float]
+        aPosition: 'tuple[float, float]',
+        bPosition: 'tuple[float, float]',
+        cPosition: 'tuple[float, float]'
     ):
         ba = np.array([bPosition[0] - aPosition[0], bPosition[1] - aPosition[1]])
         bc = np.array([bPosition[0] - cPosition[0], bPosition[1] - cPosition[1]])
@@ -46,9 +46,9 @@ class TrainingUtils():
     
     @staticmethod
     def rPos(
-        aPosition: tuple[float, float],
-        bPosition: tuple[float, float],
-        cPosition: tuple[float, float]
+        aPosition: 'tuple[float, float]',
+        bPosition: 'tuple[float, float]',
+        cPosition: 'tuple[float, float]'
     ):
         psi = TrainingUtils.psi(aPosition, bPosition, cPosition)
         
@@ -58,7 +58,7 @@ class TrainingUtils():
     def rOfe(
         robot: Robot,
         ball: Ball,
-        goalOpponentPosition: tuple[float, float]
+        goalOpponentPosition: 'tuple[float, float]'
     ):
         aPosition = (robot.position.x, robot.position.y)
         bPosition = (ball.position.x, ball.position.y)
@@ -70,7 +70,7 @@ class TrainingUtils():
     def rDef(
         robot: Robot,
         ball: Ball,
-        ownGoalPosition: tuple[float, float]
+        ownGoalPosition: 'tuple[float, float]'
     ):
         aPosition = (robot.position.x, robot.position.y)
         bPosition = (ball.position.x, ball.position.y)
@@ -84,7 +84,7 @@ class TrainingUtils():
     def v(
         ballPast: Ball,
         ballCurrent: Ball,
-        goalPosition: tuple[float, float]
+        goalPosition: 'tuple[float, float]'
     ):
         ballPastPosition = (ballPast.position.x, ballPast.position.y)
         ballCurrentPosition = (ballCurrent.position.x, ballCurrent.position.y)
@@ -97,7 +97,7 @@ class TrainingUtils():
         robots: list[Robot],
         ballPast: Ball,
         ballCurrent: Ball,
-        goalPosition: tuple[float, float]
+        goalPosition: 'tuple[float, float]'
     ):
         rSpeed = TrainingUtils.rSpeed(ballPast, ballCurrent, goalPosition)
         rDist = TrainingUtils.rDist(robots, ballCurrent)
@@ -111,8 +111,8 @@ class TrainingUtils():
         robots: list[Robot],
         ballPast: Ball,
         ballCurrent: Ball,
-        goalPosition: tuple[float, float],
-        ownGoalPosition: tuple[float, float]
+        goalPosition: 'tuple[float, float]',
+        ownGoalPosition: 'tuple[float, float]'
     ):
         rSpeed = TrainingUtils.rSpeed(ballPast, ballCurrent, goalPosition)
         rDist = TrainingUtils.rDist(robots, ballCurrent)
@@ -141,7 +141,7 @@ class TrainingUtils():
     def rewardAngleToGoal(
         robot: Robot,
         ball: Ball,
-        opponentGoalPosition: tuple[float, float]
+        opponentGoalPosition: 'tuple[float, float]'
     ):
         robot_vector = GeometryUtils.calculateVectorCoordinates(
             robot.position.x,
@@ -157,7 +157,7 @@ class TrainingUtils():
     @staticmethod
     def rewardDistanceBallOpponentGoal(
         ball: Ball,
-        opponentGoalPosition: tuple[float, float]
+        opponentGoalPosition: 'tuple[float, float]'
     ):
         distanceBallOpponentGoal = GeometryUtils.distance((ball.position.x, ball.position.y), opponentGoalPosition)
 

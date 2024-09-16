@@ -66,7 +66,7 @@ class Environment(BaseEnvironment):
         ball = self.get_ball()
         return self._is_inside_opponent_area((ball.x, ball.y))
     
-    def _is_inside_opponent_area(self, position: tuple[float, float]):
+    def _is_inside_opponent_area(self, position: 'tuple[float, float]'):
         return FieldUtils.is_inside_opponent_area(position, True)
     
     def _is_robot_touching_ball(self):
@@ -83,7 +83,7 @@ class Environment(BaseEnvironment):
             self.get_ball_radius(),
             .01)
     
-    def _is_inside_own_goal_area(self, position: tuple[float, float]):
+    def _is_inside_own_goal_area(self, position: 'tuple[float, float]'):
         return FieldUtils.is_inside_own_goal_area(
             position,
             self.get_field_length(),

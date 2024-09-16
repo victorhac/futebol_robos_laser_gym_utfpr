@@ -176,7 +176,7 @@ class Environment(BaseEnvironment):
         self,
         robot_id: int,
         is_yellow_team: bool,
-        point: tuple[float, float]
+        point: 'tuple[float, float]'
     ):
         if is_yellow_team:
             robot = RSoccerUtils.to_robot(self.frame.robots_yellow[robot_id])
@@ -379,7 +379,7 @@ class Environment(BaseEnvironment):
     def get_position_function_by_behavior(
         self,
         behavior: RobotCurriculumBehavior | BallCurriculumBehavior,
-        relative_position: tuple[float, float] | None = None
+        relative_position: 'tuple[float, float]' | None = None
     ):
         position_enum = behavior.position_enum
 

@@ -39,7 +39,7 @@ class FieldUtils:
     
     @staticmethod
     def is_inside_own_goal_area(
-        position: tuple[float, float],
+        position: 'tuple[float, float]',
         field_length: float,
         penalty_length: float,
         penalty_width: float,
@@ -54,7 +54,7 @@ class FieldUtils:
         
     @staticmethod
     def is_inside_opponent_area(
-        position: tuple[float, float],
+        position: 'tuple[float, float]',
         is_left_team: bool
     ):
         x, _ = position
@@ -66,9 +66,9 @@ class FieldUtils:
         
     @staticmethod
     def is_touching(
-        position1: tuple[float, float],
+        position1: 'tuple[float, float]',
         radius1: float,
-        position2: tuple[float, float],
+        position2: 'tuple[float, float]',
         radius2: float,
         threshold: float
     ):

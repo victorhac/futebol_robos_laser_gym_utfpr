@@ -305,7 +305,7 @@ class BaseEnvironment(gym.Env):
     def _get_random_position_at_distance(
         self,
         distance: float,
-        position: tuple[float, float]
+        position: 'tuple[float, float]'
     ):
         return FieldUtils.get_random_position_at_distance(
             self.get_field_length(),
@@ -315,7 +315,7 @@ class BaseEnvironment(gym.Env):
     
     def _is_inside_field(
         self,
-        position: tuple[float, float]
+        position: 'tuple[float, float]'
     ):
         return FieldUtils.is_inside_field(
             position[0],

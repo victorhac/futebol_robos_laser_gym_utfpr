@@ -7,7 +7,7 @@ class BallCurriculumBehavior:
         position_enum: PositionEnum,
         updates_per_task: int = 10,
         is_positive_distance_beta: bool = True,
-        distance_range: tuple[float, float] | None = None
+        distance_range: 'tuple[float, float]' | None = None
     ):
         self.position_enum = position_enum
         self.updates_per_task = updates_per_task
@@ -30,7 +30,7 @@ class BallCurriculumBehavior:
             
     def update(self):
         if self.distance_range is not None:
-            def trucate(value: float, range: tuple[float, float]):
+            def trucate(value: float, range: 'tuple[float, float]'):
                 return BallCurriculumBehavior._truncate(value, range)
 
             self.distance = trucate(self.distance + self.distance_beta, self.distance_range)
@@ -53,13 +53,13 @@ class BallCurriculumBehavior:
         return True
 
     @staticmethod
-    def _truncate(value: float, range: tuple[float, float]):
+    def _truncate(value: float, range: 'tuple[float, float]'):
         return max(range[0], min(value, range[1]))
 
     @staticmethod
     def _get_beta(
         updates_per_task: int,
-        range: tuple[float, float],
+        range: 'tuple[float, float]',
         is_positive: bool
     ):
         beta = (range[1] - range[0]) / updates_per_task
@@ -68,7 +68,7 @@ class BallCurriculumBehavior:
         return beta
     
     @staticmethod
-    def _get_start_distance(is_positive_beta: float, range: tuple[float, float]):
+    def _get_start_distance(is_positive_beta: float, range: 'tuple[float, float]'):
         if is_positive_beta:
             return range[0]
         return range[1]

@@ -10,7 +10,7 @@ class RobotCurriculumBehavior:
         position_enum: PositionEnum,
         updates_per_task: int,
         is_positive_distance_beta: bool = True,
-        distance_range: tuple[float, float] | None = None,
+        distance_range: 'tuple[float, float]' | None = None,
         is_positive_velocity_beta: bool = True,
         start_velocity_alpha: float | None = None
     ):
@@ -58,7 +58,7 @@ class RobotCurriculumBehavior:
         self.model_path = model_path
 
     def update(self):
-        def trucate(value: float, range: tuple[float, float]):
+        def trucate(value: float, range: 'tuple[float, float]'):
             return RobotCurriculumBehavior._truncate(value, range)
 
         if self.robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.BALL_FOLLOWING:
@@ -103,13 +103,13 @@ class RobotCurriculumBehavior:
         return self.robot_curriculum_behavior_enum == robot_curriculum_behavior_enum
     
     @staticmethod
-    def _truncate(value: float, range: tuple[float, float]):
+    def _truncate(value: float, range: 'tuple[float, float]'):
         return max(range[0], min(value, range[1]))
     
     @staticmethod
     def _get_beta(
         updates_per_task: int,
-        range: tuple[float, float],
+        range: 'tuple[float, float]',
         is_positive: bool
     ):
         beta = (range[1] - range[0]) / updates_per_task
@@ -118,7 +118,7 @@ class RobotCurriculumBehavior:
         return beta
     
     @staticmethod
-    def _get_start_value(is_positive_beta: float, range: tuple[float, float]):
+    def _get_start_value(is_positive_beta: float, range: 'tuple[float, float]'):
         if is_positive_beta:
             return range[0]
         return range[1]

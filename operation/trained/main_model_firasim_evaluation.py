@@ -74,7 +74,7 @@ def act(
 
 def go_to_point(
     robot_id: int,
-    target_position: tuple[float, float],
+    target_position: 'tuple[float, float]',
     last_error: float,
     is_own_team: bool = True
 ):
