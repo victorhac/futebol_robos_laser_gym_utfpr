@@ -135,7 +135,7 @@ class BehaviorCallback(BaseCallback):
             self._try_update_scores()
 
             if len(self.scores) == self.scores.maxlen and\
-                    (self.scores / self.number_games > self.threshold):
+                    (np.mean(self.scores) / self.number_games > self.threshold):
                 self.scores.clear()
 
                 if self.current_task.all_over_behavior():

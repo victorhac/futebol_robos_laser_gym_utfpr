@@ -12,7 +12,7 @@ from datetime import datetime
 task_training_name = "attacker"
 algorithm_name = "PPO"
 
-render_mode = "rgb_array"
+render_mode = "human"
 
 num_threads = 12
 
@@ -32,7 +32,7 @@ loaded_model_path = "models/attacker/PPO/2024_6_11_13_34_28/PPO_model"
 
 updates_per_task = 100
 check_frequency = 100
-number_games = 100
+number_games = 200
 
 log_interval = total_timesteps // 10
 
