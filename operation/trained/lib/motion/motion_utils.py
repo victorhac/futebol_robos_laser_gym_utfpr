@@ -83,7 +83,7 @@ class MotionUtils:
         fieldData: FieldData,
         opponentFieldData: FieldData,
         targetPosition: 'tuple[float, float]'
-    ) -> list[Robot] | None:
+    ) -> 'list[Robot]':
         robot = fieldData.robots[robotId]
         obstacles = []
 
@@ -121,7 +121,7 @@ class MotionUtils:
         fieldData: FieldData,
         opponentFieldData: FieldData,
         targetPosition: 'tuple[float, float]'
-    ) -> Robot | None:
+    ) -> Robot:
         obstacles = MotionUtils.find_obstacles(robotId, fieldData, opponentFieldData, targetPosition)
 
         if len(obstacles) == 0:

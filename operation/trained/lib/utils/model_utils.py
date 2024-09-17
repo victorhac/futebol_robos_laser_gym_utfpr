@@ -42,7 +42,7 @@ class ModelUtils():
     def get_model_by_relative_path(
         role_name: str,
         datetime_folder_name: str,
-        model_name: str | None = None
+        model_name: str = None
     ) -> DDPG:
         if model_name is None:
             model_name = ModelUtils.__default_model_name

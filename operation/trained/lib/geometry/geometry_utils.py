@@ -292,8 +292,8 @@ class GeometryUtils:
     
     @staticmethod
     def angleBetweenVectors(
-        v1: list[float],
-        v2: list[float]
+        v1: 'list[float]',
+        v2: 'list[float]'
     ):
         dot_prod = GeometryUtils.dotProduct(v1, v2)
 
@@ -306,13 +306,13 @@ class GeometryUtils:
     
     @staticmethod
     def dotProduct(
-        v1: list[float],
-        v2: list[float]
+        v1: 'list[float]',
+        v2: 'list[float]'
     ):
         return sum((a * b) for a, b in zip(v1, v2))
 
     @staticmethod
-    def vectorMagnitude(v: list[float]):
+    def vectorMagnitude(v: 'list[float]'):
         return math.sqrt(sum(a**2 for a in v))
     
     @staticmethod

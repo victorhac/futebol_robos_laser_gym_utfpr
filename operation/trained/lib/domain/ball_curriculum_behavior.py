@@ -7,7 +7,7 @@ class BallCurriculumBehavior:
         position_enum: PositionEnum,
         updates_per_task: int = 10,
         is_positive_distance_beta: bool = True,
-        distance_range: 'tuple[float, float]' | None = None
+        distance_range: 'tuple[float, float]' = None
     ):
         self.position_enum = position_enum
         self.updates_per_task = updates_per_task

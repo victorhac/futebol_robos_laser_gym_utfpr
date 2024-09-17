@@ -13,6 +13,7 @@ from lib.domain.curriculum_task import CurriculumTask
 from lib.domain.robot_curriculum_behavior import RobotCurriculumBehavior
 from lib.enums.position_enum import PositionEnum
 from lib.enums.robot_curriculum_behavior_enum import RobotCurriculumBehaviorEnum
+from lib.geometry.geometry_utils import GeometryUtils
 from lib.motion.motion_utils import MotionUtils
 
 from ...utils.rsoccer_utils import RSoccerUtils
@@ -36,15 +37,14 @@ class Environment(BaseEnvironment):
     def __init__(
         self,
         task: CurriculumTask,
-        render_mode="rgb_array",
-        robot_id=0
+        render_mode="rgb_array"
     ):
         super().__init__(
             field_type=0,
             n_robots_blue=NUMBER_ROBOTS_BLUE,
             n_robots_yellow=NUMBER_ROBOTS_YELLOW,
             time_step=TIME_STEP,
-            robot_id=robot_id,
+            robot_id=0,
             render_mode=render_mode)
 
         self.max_motor_speed = MAX_MOTOR_SPEED
@@ -94,14 +94,49 @@ class Environment(BaseEnvironment):
         observation = []
 
         current_robot = self._get_robot_by_id(self.robot_id, False)
+        ball = self.get_ball()
+
+        def get_normalized_distance(distance: float):
+            return distance / self._get_max_distance()
+        
+        def extend_observation_by_ball():
+            current_robot_position = current_robot.x, -current_robot.y
+            ball_position = ball.x, -ball.y
+
+            distance = GeometryUtils.distance(current_robot_position, ball_position)
+            angle = GeometryUtils.angle_between_points(current_robot_position, ball_position)
+
+            observation.extend([
+                get_normalized_distance(distance),
+                angle / np.pi,
+                self.norm_v(ball.v_x),
+                self.norm_v(-ball.v_y)
+            ])
+        
+        def extend_observation_by_current_robot():
+            theta = -RSoccerUtils.get_corrected_angle(current_robot.theta) / np.pi
+
+            observation.extend([
+                self.norm_x(current_robot.x),
+                self.norm_y(-current_robot.y),
+                theta,
+                self.norm_v(current_robot.v_x),
+                self.norm_v(-current_robot.v_y)
+            ])
 
         def extend_observation_by_robot(robot: Robot):
             if self._is_inside_field((robot.x, robot.y)):
                 theta = -RSoccerUtils.get_corrected_angle(robot.theta) / np.pi
 
+                current_robot_position = current_robot.x, -current_robot.y
+                robot_position = robot.x, -robot.y
+
+                distance = GeometryUtils.distance(current_robot_position, robot_position)
+                angle = GeometryUtils.angle_between_points(current_robot_position, robot_position)
+
                 observation.extend([
-                    self.norm_x(robot.x),
-                    self.norm_y(-robot.y),
+                    get_normalized_distance(distance),
+                    angle / np.pi,
                     theta,
                     self.norm_v(robot.v_x),
                     self.norm_v(-robot.v_y)
@@ -109,27 +144,25 @@ class Environment(BaseEnvironment):
             else:
                 observation.extend([0, 0, 0, 0, 0])
 
-        ball = self.get_ball()
-
-        observation.extend([
-            self.norm_x(ball.x),
-            self.norm_y(-ball.y),
-            self.norm_v(ball.v_x),
-            self.norm_v(-ball.v_y)
-        ])
+        extend_observation_by_ball()
+        extend_observation_by_current_robot()
 
         frame = self.frame
 
         for i in range(self.n_robots_blue):
-            extend_observation_by_robot(frame.robots_blue[i])
+            if i != self.robot_id:
+                extend_observation_by_robot(frame.robots_blue[i])
 
         for i in range(self.n_robots_yellow):
             extend_observation_by_robot(frame.robots_yellow[i])
 
         return np.array(observation, dtype=np.float32)
     
-    def _frame_to_opponent_observations(self):
+    def _frame_to_opponent_observations(self, robot_id: int):
         observation = []
+
+        current_robot = self._get_robot_by_id(robot_id, True)
+        ball = self.get_ball()
 
         def get_norm_theta(robot: Robot):
             theta = -RSoccerUtils.get_corrected_angle(robot.theta)
@@ -141,31 +174,62 @@ class Environment(BaseEnvironment):
 
             return theta / np.pi
         
+        def get_normalized_distance(distance: float):
+            return distance / self._get_max_distance()
+        
+        def extend_observation_by_ball():
+            current_robot_position = -current_robot.x, current_robot.y
+            ball_position = -ball.x, ball.y
+
+            distance = GeometryUtils.distance(current_robot_position, ball_position)
+            angle = GeometryUtils.angle_between_points(current_robot_position, ball_position)
+
+            observation.extend([
+                get_normalized_distance(distance),
+                angle / np.pi,
+                self.norm_v(-ball.v_x),
+                self.norm_v(ball.v_y)
+            ])
+
+        def extend_observation_by_current_robot():
+            theta = get_norm_theta(current_robot)
+
+            observation.extend([
+                self.norm_x(-current_robot.x),
+                self.norm_y(current_robot.y),
+                theta,
+                self.norm_v(-current_robot.v_x),
+                self.norm_v(current_robot.v_y)
+            ])
+        
         def extend_observation_by_robot(robot: Robot):
             if self._is_inside_field((robot.x, robot.y)):
+                theta = get_norm_theta(robot)
+
+                current_robot_position = -current_robot.x, current_robot.y
+                robot_position = -robot.x, robot.y
+
+                distance = GeometryUtils.distance(current_robot_position, robot_position)
+                angle = GeometryUtils.angle_between_points(current_robot_position, robot_position)
+
                 observation.extend([
-                    self.norm_x(-robot.x),
-                    self.norm_y(robot.y),
-                    get_norm_theta(robot),
+                    get_normalized_distance(distance),
+                    angle / np.pi,
+                    theta,
                     self.norm_v(-robot.v_x),
                     self.norm_v(robot.v_y)
                 ])
             else:
                 observation.extend([0, 0, 0, 0, 0])
-        
-        ball = self.get_ball()
 
-        observation.extend([
-            self.norm_x(-ball.x),
-            self.norm_y(ball.y),
-            self.norm_v(-ball.v_x),
-            self.norm_v(ball.v_y)
-        ])
+        extend_observation_by_ball()
+        extend_observation_by_current_robot()
 
         frame = self.frame
 
         for i in range(self.n_robots_yellow):
-            extend_observation_by_robot(frame.robots_yellow[i])
+            if robot_id != i:
+                extend_observation_by_robot(frame.robots_yellow[i])
 
         for i in range(self.n_robots_blue):
             extend_observation_by_robot(frame.robots_blue[i])
@@ -189,7 +253,6 @@ class Environment(BaseEnvironment):
         (left_speed, right_speed, self.error) = velocities
 
         return left_speed, right_speed
-    
 
     def _create_robot_by_behavior(self, behavior: RobotCurriculumBehavior):
         robot = self._get_robot_by_id(behavior.robot_id, behavior.is_yellow)
@@ -220,7 +283,7 @@ class Environment(BaseEnvironment):
             return create_robot(left_speed * velocity_alpha, right_speed * velocity_alpha)
         elif robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.FROM_MODEL:
             model = self._get_model(behavior.model_path)
-            actions = model.predict(self._frame_to_opponent_observations())
+            actions = model.predict(self._frame_to_opponent_observations(behavior.robot_id))
             left_speed, right_speed = self._actions_to_v_wheels(actions[0])
             return create_robot(left_speed, right_speed)
         
@@ -296,7 +359,7 @@ class Environment(BaseEnvironment):
     
     def _ball_gradient_reward(
         self,
-        previous_ball_potential: float | None
+        previous_ball_potential: float
     ):
         field_length = self.get_field_length()
         goal_depth = self.get_goal_depth()
@@ -378,8 +441,8 @@ class Environment(BaseEnvironment):
     
     def get_position_function_by_behavior(
         self,
-        behavior: RobotCurriculumBehavior | BallCurriculumBehavior,
-        relative_position: 'tuple[float, float]' | None = None
+        behavior: 'RobotCurriculumBehavior | BallCurriculumBehavior',
+        relative_position: 'tuple[float, float]' = None
     ):
         position_enum = behavior.position_enum
 

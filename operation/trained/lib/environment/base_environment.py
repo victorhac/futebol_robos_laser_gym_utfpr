@@ -10,6 +10,7 @@ from rsoccer_gym.Simulators.rsim import RSimVSS
 from rsoccer_gym.Utils import KDTree
 
 from lib.enums.position_enum import PositionEnum
+from lib.geometry.geometry_utils import GeometryUtils
 from lib.utils.field_utils import FieldUtils
 
 class BaseEnvironment(gym.Env):
@@ -322,6 +323,14 @@ class BaseEnvironment(gym.Env):
             position[1],
             self.get_field_length(),
             self.get_field_width())
+    
+    def _get_max_distance(self):
+        max_x = self.get_max_x() - self.get_goal_depth()
+        max_y = self.get_max_y()
+
+        return GeometryUtils.distance(
+            (-max_x, max_y),
+            (max_x, -max_y))
     
     def _energy_penalty(self):
         en_penalty_1 = abs(self.sent_commands[0].v_wheel0)

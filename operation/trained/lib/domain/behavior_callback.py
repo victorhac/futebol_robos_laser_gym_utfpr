@@ -16,7 +16,7 @@ class BehaviorCallback(BaseCallback):
         log_path: str,
         number_robot_blue: int,
         number_robot_yellow: int,
-        tasks: list[CurriculumTask],
+        tasks: 'list[CurriculumTask]',
         threshold=0.6,
         number_games=100,
         log_interval=1000,
@@ -122,7 +122,7 @@ class BehaviorCallback(BaseCallback):
                 len(self.scores) == self.scores.maxlen:
             self._log(f"Task: {self.current_task_index}; "\
                 f"Update: {self.update_count}; "\
-                f"Last {self.number_games} games score: {np.mean(self.scores)}.")
+                f"Last {self.number_games} games score: {np.mean(self.scores)}.\n")
 
     def _on_step(self) -> bool:
         if self.num_timesteps > self.total_timesteps:

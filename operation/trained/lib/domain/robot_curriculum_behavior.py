@@ -10,9 +10,9 @@ class RobotCurriculumBehavior:
         position_enum: PositionEnum,
         updates_per_task: int,
         is_positive_distance_beta: bool = True,
-        distance_range: 'tuple[float, float]' | None = None,
+        distance_range: 'tuple[float, float]' = None,
         is_positive_velocity_beta: bool = True,
-        start_velocity_alpha: float | None = None
+        start_velocity_alpha: float = None
     ):
         self.robot_curriculum_behavior_enum = robot_curriculum_behavior_enum
         self.robot_id = robot_id

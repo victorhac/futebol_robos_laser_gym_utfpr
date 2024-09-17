@@ -17,7 +17,7 @@ class TrainingUtils():
     
     @staticmethod
     def rDist(
-        robots: list[Robot],
+        robots: 'list[Robot]',
         ball: Ball
     ):
         minDistance = 0
@@ -94,7 +94,7 @@ class TrainingUtils():
     @staticmethod
     def rewardAttack(
         robotId: int,
-        robots: list[Robot],
+        robots: 'list[Robot]',
         ballPast: Ball,
         ballCurrent: Ball,
         goalPosition: 'tuple[float, float]'
@@ -108,7 +108,7 @@ class TrainingUtils():
     @staticmethod
     def rewardDefense(
         robotId: int,
-        robots: list[Robot],
+        robots: 'list[Robot]',
         ballPast: Ball,
         ballCurrent: Ball,
         goalPosition: 'tuple[float, float]',

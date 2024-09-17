@@ -5,7 +5,7 @@ from lib.enums.robot_curriculum_behavior_enum import RobotCurriculumBehaviorEnum
 class CurriculumTask:
     def __init__(
         self,
-        behaviors: list[RobotCurriculumBehavior],
+        behaviors: 'list[RobotCurriculumBehavior]',
         ball_behavior: BallCurriculumBehavior
     ):
         self.behaviors = behaviors
@@ -30,10 +30,10 @@ class CurriculumTask:
             if item.robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.FROM_MODEL:
                 item.set_model_path(model_path)
 
-    def get_yellow_behaviors(self) -> list[RobotCurriculumBehavior]:
+    def get_yellow_behaviors(self) -> 'list[RobotCurriculumBehavior]':
         return filter(lambda item: item.is_yellow, self.behaviors)
     
-    def get_blue_behaviors(self) -> list[RobotCurriculumBehavior]:
+    def get_blue_behaviors(self) -> 'list[RobotCurriculumBehavior]':
         return filter(lambda item: not item.is_yellow, self.behaviors)
     
     def get_yellow_behaviors_by_robot_id(self, robot_id: int):

@@ -90,7 +90,7 @@ class BehaviorUtils:
         position_enum: PositionEnum,
         updates_per_task: int = 10,
         is_positive_distance_beta: bool = True,
-        distance_range: 'tuple[float, float]' | None = None
+        distance_range: 'tuple[float, float]' = None
     ):
         return BallCurriculumBehavior(
             position_enum=position_enum,

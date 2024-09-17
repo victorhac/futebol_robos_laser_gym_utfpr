@@ -289,7 +289,7 @@ class Environment(BaseEnvironment):
     
     def _ball_gradient_reward(
         self,
-        previous_ball_potential: float | None
+        previous_ball_potential: float
     ):
         field_length = self.get_field_length()
         goal_depth = self.get_goal_depth()
