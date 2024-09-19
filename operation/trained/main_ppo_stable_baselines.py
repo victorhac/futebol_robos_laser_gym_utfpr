@@ -12,7 +12,7 @@ from datetime import datetime
 task_training_name = "attacker"
 algorithm_name = "PPO"
 
-render_mode = "human"
+render_mode = "rgb_array"
 
 num_threads = 12
 
@@ -25,7 +25,7 @@ clip_range = 0.2
 policy = "MlpPolicy"
 batch_size = 128
 
-device = "cuda"
+device = "cpu"
 
 load_model = False
 loaded_model_path = "models/attacker/PPO/2024_6_11_13_34_28/PPO_model"
@@ -39,9 +39,9 @@ log_interval = total_timesteps // 10
 number_robot_blue = 3
 number_robot_yellow = 3
 
-def create_env(task: CurriculumTask):
+def create_env(first_task_function):
     def _init():
-        return Environment(task, render_mode)
+        return Environment(first_task_function(), render_mode)
     return _init
 
 def create_folder_if_not_exists(folder_path):
@@ -83,7 +83,7 @@ def main():
     create_folder_if_not_exists(save_path)
     create_folder_if_not_exists(log_path)
 
-    env = SubprocVecEnv([create_env(tasks[0]) for _ in range(num_threads)])
+    env = SubprocVecEnv([create_env(lambda: BehaviorUtils.get_task_1(updates_per_task)) for _ in range(num_threads)])
 
     model = PPO(
         policy=policy,
@@ -107,8 +107,7 @@ def main():
         number_robot_blue=number_robot_blue,
         number_robot_yellow=number_robot_yellow,
         tasks=tasks,
-        number_games=number_games,
-        log_interval=2)
+        number_games=number_games)
 
     model.learn(
         total_timesteps=total_timesteps,

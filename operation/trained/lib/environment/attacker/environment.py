@@ -15,6 +15,7 @@ from lib.enums.position_enum import PositionEnum
 from lib.enums.robot_curriculum_behavior_enum import RobotCurriculumBehaviorEnum
 from lib.geometry.geometry_utils import GeometryUtils
 from lib.motion.motion_utils import MotionUtils
+from lib.utils.behavior.behavior_utils import BehaviorUtils
 
 from ...utils.rsoccer_utils import RSoccerUtils
 from ...utils.configuration_utils import ConfigurationUtils
@@ -72,8 +73,6 @@ class Environment(BaseEnvironment):
 
         self.opponent_model = None
         self.opponent_model_path = None
-
-        self.outside_field_position = (10, 10)
     
     def _is_done(self):
         if self._any_team_scored_goal():
@@ -526,7 +525,7 @@ class Environment(BaseEnvironment):
             behavior = self.task.get_blue_behaviors_by_robot_id(i)
 
             if behavior is None:
-                position = self.outside_field_position
+                position = (10 + i, 10 + i)
             else:
                 position_function = self.get_position_function_by_behavior(behavior, ball_position)
                 position = get_position(position_function)
@@ -537,7 +536,7 @@ class Environment(BaseEnvironment):
             behavior = self.task.get_yellow_behaviors_by_robot_id(i)
 
             if behavior is None:
-                position = self.outside_field_position
+                position = (20 + i, 20 + i)
             else:
                 position_function = self.get_position_function_by_behavior(behavior, ball_position)
                 position = get_position(position_function)
