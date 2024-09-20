@@ -9,7 +9,7 @@ from lib.domain.curriculum_task import CurriculumTask
 class BehaviorCallback(BaseCallback):
     def __init__(
         self,
-        check_frequency: int,
+        check_count: int,
         total_timesteps: int,
         model_name: str,
         save_path: str,
@@ -18,21 +18,23 @@ class BehaviorCallback(BaseCallback):
         number_robot_yellow: int,
         tasks: 'list[CurriculumTask]',
         threshold=0.7,
-        number_games=100,
-        log_interval=10000,
+        games_count=100,
+        log_count=10000,
         verbose=1
     ):
         super(BehaviorCallback, self).__init__(verbose)
 
-        self.check_frequency = check_frequency
+        self.check_count = check_count
         self.model_name = model_name
         self.save_path = save_path
         self.threshold = threshold
-        self.number_games = number_games
-        self.log_interval = log_interval
+        self.games_count = games_count
+        self.log_count = log_count
         self.log_path = log_path
 
-        self.scores = deque(maxlen=number_games)
+        self.scores = deque(maxlen=games_count)
+        self.show_scores = deque(maxlen=games_count)
+
         self.number_robot_blue = number_robot_blue
         self.number_robot_yellow = number_robot_yellow
         self.total_timesteps = total_timesteps
@@ -55,10 +57,9 @@ class BehaviorCallback(BaseCallback):
         return self.num_timesteps // self.training_env.num_envs
 
     def _try_save_model(self):
-        num_calls = self._get_total_num_on_step_calls()
-        num_calls_to_update = num_calls // self.check_frequency
+        num_calls_to_update = self._get_total_num_on_step_calls() // self.check_count
 
-        if (self._get_num_on_step_calls()) % num_calls_to_update == 0:
+        if self._get_num_on_step_calls() % num_calls_to_update == 0:
             self._save_model()
         
     def _save_temporary_opponent_model(self):
@@ -118,20 +119,33 @@ class BehaviorCallback(BaseCallback):
 
                 if last_score is not None:
                     self.scores.append(last_score)
+                    self.show_scores.append(last_score)
 
     def _log(self, text: str):
         with open(f"{self.log_path}/{self.log_file_name}", 'a') as file:
             file.write(text)
 
     def _try_log(self):
-        if self._get_num_on_step_calls() % self.log_interval == 0 and\
-                self._is_scores_max_len():
+        num_calls_to_log = self._get_total_num_on_step_calls() // self.log_count
+        if self._is_show_scores_max_len() and\
+                self._get_num_on_step_calls() % num_calls_to_log == 0:
             self._log(f"Task: {self.current_task_index + 1}; "\
                 f"Update: {self.update_count}; "\
-                f"Last {self.number_games} games score: {np.mean(self.scores)}.\n")
+                f"Last {self.games_count} games score: {np.mean(self.show_scores)}.\n")
+            
+    def _log_on_update(self):
+        self._log(
+            f"UPDATED; "
+            f"Timesteps: {self.num_timesteps}; "\
+            f"Task: {self.current_task_index + 1}; "\
+            f"Update: {self.update_count}; "\
+            f"Last {self.games_count} games score: {np.mean(self.show_scores)}.\n")
             
     def _is_scores_max_len(self):
         return len(self.scores) == self.scores.maxlen
+    
+    def _is_show_scores_max_len(self):
+        return len(self.show_scores) == self.show_scores.maxlen
     
     def _has_scores_mean_exceeded_threshold(self):
         return np.mean(self.scores) > self.threshold
@@ -148,9 +162,12 @@ class BehaviorCallback(BaseCallback):
 
             if self._is_scores_max_len() and\
                     self._has_scores_mean_exceeded_threshold():
+                self._log_on_update()
                 self.scores.clear()
 
                 if self.current_task.all_over_behavior():
+                    self._save_model()
+
                     if self.current_task_index + 1 < len(self.tasks):
                         self._set_next_task()
                     else:

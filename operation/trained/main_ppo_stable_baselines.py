@@ -26,12 +26,12 @@ batch_size = 128
 
 device = "cpu"
 
-load_model = False
-loaded_model_path = "models/attacker/PPO/2024_6_11_13_34_28/PPO_model"
+load_model = True
+loaded_model_path = "models/attacker/PPO/2024_9_19_23_56_39/PPO_model_task_1_update_100_3000000_steps"
 
 updates_per_task = 100
-check_frequency = 100
-number_games = 200
+check_count = 100
+games_count = 200
 
 log_interval = total_timesteps // 10
 
@@ -66,8 +66,10 @@ def get_log_path():
     return f"log/{get_datetime_folder_name()}"
 
 def main():
+    get_task_1 = lambda: BehaviorUtils.get_task_1(updates_per_task)
+
     tasks = [
-        BehaviorUtils.get_task_1(updates_per_task),
+        get_task_1(),
         BehaviorUtils.get_task_2(updates_per_task),
         BehaviorUtils.get_task_3(updates_per_task),
         BehaviorUtils.get_task_4(updates_per_task),
@@ -82,7 +84,7 @@ def main():
     create_folder_if_not_exists(save_path)
     create_folder_if_not_exists(log_path)
 
-    env = SubprocVecEnv([create_env(lambda: BehaviorUtils.get_task_1(updates_per_task)) for _ in range(num_threads)])
+    env = SubprocVecEnv([create_env(get_task_1) for _ in range(num_threads)])
 
     model = PPO(
         policy=policy,
@@ -98,7 +100,7 @@ def main():
         model.set_parameters(loaded_model_path)
 
     checkpoint_callback = BehaviorCallback(
-        check_frequency=check_frequency,
+        check_count=check_count,
         total_timesteps=total_timesteps,
         model_name=algorithm_name,
         save_path=save_path,
@@ -106,7 +108,7 @@ def main():
         number_robot_blue=number_robot_blue,
         number_robot_yellow=number_robot_yellow,
         tasks=tasks,
-        number_games=number_games)
+        games_count=games_count)
 
     model.learn(
         total_timesteps=total_timesteps,
