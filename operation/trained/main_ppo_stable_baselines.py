@@ -66,11 +66,10 @@ def get_log_path():
     return f"log/{get_datetime_folder_name()}"
 
 def main():
-    get_task_1 = lambda: BehaviorUtils.get_task_1(updates_per_task)
+    get_task_1 = lambda: BehaviorUtils.get_task_2(updates_per_task)
 
     tasks = [
         get_task_1(),
-        BehaviorUtils.get_task_2(updates_per_task),
         BehaviorUtils.get_task_3(updates_per_task),
         BehaviorUtils.get_task_4(updates_per_task),
         BehaviorUtils.get_task_5(updates_per_task),
