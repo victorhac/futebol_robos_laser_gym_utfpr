@@ -27,11 +27,9 @@ batch_size = 128
 device = "cpu"
 
 load_model = True
-loaded_model_path = "models/attacker/PPO/2024_9_19_23_56_39/PPO_model_task_1_update_100_3000000_steps"
+loaded_model_path = "models/attacker/PPO/2024_9_20_0_54_36/PPO_model_task_2_update_64_51999792_steps"
 
-updates_per_task = 100
 check_count = 100
-games_count = 200
 
 log_interval = total_timesteps // 10
 
@@ -62,28 +60,22 @@ def get_datetime_folder_name():
 def get_task_models_path():
     return f"models/{task_training_name}/{algorithm_name}/{get_datetime_folder_name()}"
 
-def get_log_path():
-    return f"log/{get_datetime_folder_name()}"
-
 def main():
-    get_task_1 = lambda: BehaviorUtils.get_task_2(updates_per_task)
+    get_first_task = lambda: BehaviorUtils.get_task_3()
 
     tasks = [
-        get_task_1(),
-        BehaviorUtils.get_task_3(updates_per_task),
-        BehaviorUtils.get_task_4(updates_per_task),
-        BehaviorUtils.get_task_5(updates_per_task),
-        BehaviorUtils.get_task_6(updates_per_task),
-        BehaviorUtils.get_task_7(updates_per_task)
+        get_first_task(),
+        BehaviorUtils.get_task_4(),
+        BehaviorUtils.get_task_5(),
+        BehaviorUtils.get_task_6(),
+        BehaviorUtils.get_task_7()
     ]
 
     save_path = get_task_models_path()
-    log_path = get_log_path()
 
     create_folder_if_not_exists(save_path)
-    create_folder_if_not_exists(log_path)
 
-    env = SubprocVecEnv([create_env(get_task_1) for _ in range(num_threads)])
+    env = SubprocVecEnv([create_env(get_first_task) for _ in range(num_threads)])
 
     model = PPO(
         policy=policy,
@@ -103,11 +95,10 @@ def main():
         total_timesteps=total_timesteps,
         model_name=algorithm_name,
         save_path=save_path,
-        log_path=log_path,
+        log_path=save_path,
         number_robot_blue=number_robot_blue,
         number_robot_yellow=number_robot_yellow,
-        tasks=tasks,
-        games_count=games_count)
+        tasks=tasks)
 
     model.learn(
         total_timesteps=total_timesteps,

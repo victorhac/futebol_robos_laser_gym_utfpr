@@ -15,7 +15,6 @@ from lib.enums.position_enum import PositionEnum
 from lib.enums.robot_curriculum_behavior_enum import RobotCurriculumBehaviorEnum
 from lib.geometry.geometry_utils import GeometryUtils
 from lib.motion.motion_utils import MotionUtils
-from lib.utils.behavior.behavior_utils import BehaviorUtils
 
 from ...utils.rsoccer_utils import RSoccerUtils
 from ...utils.configuration_utils import ConfigurationUtils
@@ -272,21 +271,31 @@ class Environment(BaseEnvironment):
         if robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.STOPPED:
             return create_robot(0, 0)
         elif robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.BALL_FOLLOWING:
-            velocity_alpha = behavior.velocity_alpha
-
             left_speed, right_speed = self._go_to_point_v_wheels(
                 robot_id,
                 is_yellow,
                 (ball.x, ball.y))
+            
+            velocity_alpha = behavior.get_velocity_alpha()
 
             return create_robot(left_speed * velocity_alpha, right_speed * velocity_alpha)
         elif robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.FROM_MODEL:
-            model = self._get_model(behavior.model_path)
-            actions = model.predict(self._frame_to_opponent_observations(behavior.robot_id))
+            actions = self._get_opponent_actions(behavior)
+
             left_speed, right_speed = self._actions_to_v_wheels(actions[0])
-            return create_robot(left_speed, right_speed)
+            velocity_alpha = behavior.get_velocity_alpha()
+
+            return create_robot(left_speed * velocity_alpha, right_speed * velocity_alpha)
         
         return create_robot(0, 0)
+    
+    def _get_opponent_actions(self, behavior: RobotCurriculumBehavior):
+        model = self._get_model(behavior.model_path)
+
+        if model is None:
+            return (0, 0)
+        
+        return model.predict(self._frame_to_opponent_observations(behavior.robot_id))
         
     def _get_commands(self, actions):
         commands = []

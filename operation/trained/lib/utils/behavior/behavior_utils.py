@@ -30,6 +30,7 @@ class BehaviorUtils:
             robot_id,
             False,
             position_enum,
+            is_positive_distance_beta=True,
             distance_range=(.2, .5),
             updates_per_task=updates_per_task)
     
@@ -44,8 +45,10 @@ class BehaviorUtils:
             robot_id,
             True,
             position_enum,
-            distance_range=(.3, .6),
             is_positive_distance_beta=True,
+            distance_range=(.3, .6),
+            is_positive_velocity_beta=True,
+            velocity_alpha_range=(0, .5),
             updates_per_task=updates_per_task)
     
     @staticmethod
@@ -56,7 +59,7 @@ class BehaviorUtils:
         is_positive_distance_beta: bool,
         distance_range: 'tuple[float, float]',
         is_positive_velocity_beta: bool,
-        start_velocity_alpha: float,
+        velocity_alpha_range: 'tuple[float, float]',
         updates_per_task: int
     ):
         return RobotCurriculumBehavior(
@@ -67,7 +70,7 @@ class BehaviorUtils:
             is_positive_distance_beta=is_positive_distance_beta,
             distance_range=distance_range,
             is_positive_velocity_beta=is_positive_velocity_beta,
-            start_velocity_alpha=start_velocity_alpha,
+            velocity_alpha_range=velocity_alpha_range,
             updates_per_task=updates_per_task)
     
     @staticmethod
@@ -82,7 +85,7 @@ class BehaviorUtils:
             is_positive_distance_beta=True,
             distance_range=(.3, .6),
             is_positive_velocity_beta=True,
-            start_velocity_alpha=0,
+            velocity_alpha_range=(0, .5),
             updates_per_task=updates_per_task)
     
     @staticmethod
@@ -99,7 +102,9 @@ class BehaviorUtils:
             distance_range=distance_range)
     
     @staticmethod
-    def get_task_1(updates_per_task: int):
+    def get_task_1(update_count: int = 0):
+        updates_per_task = 100
+
         behaviors = [
             BehaviorUtils.get_from_model_behavior(
                 0,
@@ -114,10 +119,16 @@ class BehaviorUtils:
             distance_range=(.2, 1.3)
         )
 
-        return CurriculumTask(behaviors, ball_behavior)
+        return CurriculumTask(
+            "1",
+            behaviors,
+            ball_behavior,
+            update_count=update_count)
     
     @staticmethod
-    def get_task_2(updates_per_task: int):
+    def get_task_2(update_count: int = 0):
+        updates_per_task = 100
+        
         behaviors = [
             BehaviorUtils.get_from_model_behavior(
                 0,
@@ -135,10 +146,16 @@ class BehaviorUtils:
             updates_per_task
         )
 
-        return CurriculumTask(behaviors, ball_behavior)
+        return CurriculumTask(
+            "2",
+            behaviors,
+            ball_behavior,
+            update_count=update_count)
     
     @staticmethod
-    def get_task_3(updates_per_task: int):
+    def get_task_3(update_count: int = 0):
+        updates_per_task = 100
+        
         behaviors = [
             BehaviorUtils.get_from_model_behavior(
                 0,
@@ -154,10 +171,16 @@ class BehaviorUtils:
             updates_per_task
         )
 
-        return CurriculumTask(behaviors, ball_behavior)
+        return CurriculumTask(
+            "3",
+            behaviors,
+            ball_behavior,
+            update_count=update_count)
     
     @staticmethod
-    def get_task_4(updates_per_task: int):
+    def get_task_4(update_count: int = 0):
+        updates_per_task = 100
+        
         behaviors = [
             BehaviorUtils.get_from_model_behavior(
                 0,
@@ -183,10 +206,18 @@ class BehaviorUtils:
             updates_per_task
         )
 
-        return CurriculumTask(behaviors, ball_behavior)
+        return CurriculumTask(
+            "4",
+            behaviors,
+            ball_behavior,
+            update_count=update_count,
+            threshold=.6,
+            games_count=200)
 
     @staticmethod
-    def get_task_5(updates_per_task: int):
+    def get_task_5(update_count: int = 0):
+        updates_per_task = 100
+        
         behaviors = [
             BehaviorUtils.get_from_model_behavior(
                 0,
@@ -222,10 +253,18 @@ class BehaviorUtils:
             updates_per_task
         )
 
-        return CurriculumTask(behaviors, ball_behavior)
+        return CurriculumTask(
+            "5",
+            behaviors,
+            ball_behavior,
+            update_count=update_count,
+            threshold=.5,
+            games_count=200)
     
     @staticmethod
-    def get_task_6(updates_per_task: int):
+    def get_task_6(update_count: int = 0):
+        updates_per_task = 100
+        
         behaviors = [
             BehaviorUtils.get_from_model_behavior(
                 0,
@@ -262,10 +301,18 @@ class BehaviorUtils:
             updates_per_task
         )
 
-        return CurriculumTask(behaviors, ball_behavior)
+        return CurriculumTask(
+            "6",
+            behaviors,
+            ball_behavior,
+            update_count=update_count,
+            threshold=.5,
+            games_count=200)
     
     @staticmethod
-    def get_task_7(updates_per_task: int):
+    def get_task_7(update_count: int = 0):
+        updates_per_task = 200
+        
         behaviors = [
             BehaviorUtils.get_from_model_behavior(
                 0,
@@ -300,4 +347,10 @@ class BehaviorUtils:
             updates_per_task
         )
 
-        return CurriculumTask(behaviors, ball_behavior)
+        return CurriculumTask(
+            "7",
+            behaviors,
+            ball_behavior,
+            update_count=update_count,
+            threshold=.4,
+            games_count=300)

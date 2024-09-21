@@ -28,12 +28,14 @@ class BallCurriculumBehavior:
                 is_positive_distance_beta
             )
             
-    def update(self):
+    def update(self, times: int = 1):
         if self.distance_range is not None:
             def trucate(value: float, range: 'tuple[float, float]'):
                 return BallCurriculumBehavior._truncate(value, range)
 
-            self.distance = trucate(self.distance + self.distance_beta, self.distance_range)
+            self.distance = trucate(
+                self.distance + self.distance_beta * times,
+                self.distance_range)
 
     def reset(self):
         if self.distance_range is not None:
