@@ -211,8 +211,9 @@ class BehaviorUtils:
             behaviors,
             ball_behavior,
             update_count=update_count,
-            threshold=.6,
-            games_count=200)
+            games_count=200,
+            default_threshold=.6,
+            threshold_intervals=[(82, .55)])
 
     @staticmethod
     def get_task_5(update_count: int = 0):
@@ -258,7 +259,7 @@ class BehaviorUtils:
             behaviors,
             ball_behavior,
             update_count=update_count,
-            threshold=.5,
+            default_threshold=.5,
             games_count=200)
     
     @staticmethod
@@ -306,7 +307,7 @@ class BehaviorUtils:
             behaviors,
             ball_behavior,
             update_count=update_count,
-            threshold=.5,
+            default_threshold=.5,
             games_count=200)
     
     @staticmethod
@@ -352,5 +353,5 @@ class BehaviorUtils:
             behaviors,
             ball_behavior,
             update_count=update_count,
-            threshold=.4,
+            default_threshold=.4,
             games_count=300)

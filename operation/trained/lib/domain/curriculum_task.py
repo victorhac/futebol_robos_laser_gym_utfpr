@@ -11,15 +11,18 @@ class CurriculumTask:
         id: str,
         behaviors: 'list[RobotCurriculumBehavior]',
         ball_behavior: BallCurriculumBehavior,
-        update_count: int = 0,
-        threshold=0.7,
-        games_count=100
+        update_count: int=0,
+        games_count: int=100,
+        threshold_intervals: 'list[tuple[int, float]]'=[],
+        default_threshold: float=.7
     ):
         self.id = id
         self.behaviors = behaviors
         self.ball_behavior = ball_behavior
-        self.threshold = threshold
         self.update_count = 0
+
+        self.default_threshold=default_threshold
+        self.threshold_intervals = threshold_intervals
 
         self.scores = deque(maxlen=games_count)
 
@@ -45,13 +48,27 @@ class CurriculumTask:
         self.scores.extend(scores)
 
     def get_scores_log_text(self):
-        return f"Last {len(self.scores)} games score: {np.mean(self.scores)}"
+        return f"Last {len(self.scores)} games score: {self.get_scores_mean()}"
     
-    def has_scores_mean_exceeded_threshold(self):
+    def is_limit_reached(self):
         if len(self.scores) < self.scores.maxlen:
             return False
         
-        return np.mean(self.scores) > self.threshold
+        update_threshold = None
+
+        for item in self.threshold_intervals:
+            if item[0] > self.update_count:
+                break
+
+            update_threshold = item[1]
+
+        if update_threshold is None:
+            update_threshold = self.default_threshold
+        
+        return self.get_scores_mean() > update_threshold
+    
+    def get_scores_mean(self):
+        return np.mean(self.scores)
 
     def set_opponent_model_path(self, model_path: str):
         yellow_behaviors = self.get_yellow_behaviors()

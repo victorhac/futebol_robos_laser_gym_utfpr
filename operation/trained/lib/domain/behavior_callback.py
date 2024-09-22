@@ -140,7 +140,7 @@ class BehaviorCallback(BaseCallback):
         if any(self.locals["dones"]):
             self._try_update_scores()
 
-            if self.current_task.has_scores_mean_exceeded_threshold():
+            if self.current_task.is_limit_reached():
                 self._log_on_update()
 
                 if self.current_task.all_over_behavior():
