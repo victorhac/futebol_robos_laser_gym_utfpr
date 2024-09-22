@@ -1,0 +1,9 @@
+Task: 4; Update: 89; Last 30 games score: 0.5333333333333333.
+Task: 4; Update: 89; Last 72 games score: 0.5.
+Task: 4; Update: 89; Last 113 games score: 0.4690265486725664.
+Task: 4; Update: 89; Last 147 games score: 0.4557823129251701.
+Task: 4; Update: 89; Last 186 games score: 0.42473118279569894.
+Task: 4; Update: 89; Last 200 games score: 0.4.
+Task: 4; Update: 89; Last 200 games score: 0.37.
+Task: 4; Update: 89; Last 200 games score: 0.38.
+Task: 4; Update: 89; Last 200 games score: 0.36.
