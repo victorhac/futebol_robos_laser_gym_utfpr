@@ -314,7 +314,7 @@ class BehaviorUtils:
     
     @staticmethod
     def get_task_7(update_count: int = 0):
-        updates_per_task = 200
+        updates_per_task = 100
         
         behaviors = [
             BehaviorUtils.get_from_model_behavior(

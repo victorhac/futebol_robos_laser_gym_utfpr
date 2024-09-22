@@ -13,7 +13,7 @@ algorithm_name = "PPO"
 
 render_mode = "rgb_array"
 
-num_threads = 14
+num_threads = 12
 
 total_timesteps = 200_000_000
 
@@ -27,7 +27,7 @@ batch_size = 128
 device = "cpu"
 
 load_model = True
-loaded_model_path = "models/attacker/PPO/2024_9_22_12_10_2/PPO_model_task_4_update_89_11999952_steps"
+loaded_model_path = "models/attacker/PPO/2024_9_22_14_47_53/PPO_model_task_5_update_0_7999992_steps"
 
 check_count = 100
 
@@ -61,11 +61,10 @@ def get_task_models_path():
     return f"models/{task_training_name}/{algorithm_name}/{get_datetime_folder_name()}"
 
 def main():
-    get_first_task = lambda: BehaviorUtils.get_task_4(89)
+    get_first_task = lambda: BehaviorUtils.get_task_5()
 
     tasks = [
         get_first_task(),
-        BehaviorUtils.get_task_5(),
         BehaviorUtils.get_task_6(),
         BehaviorUtils.get_task_7()
     ]
