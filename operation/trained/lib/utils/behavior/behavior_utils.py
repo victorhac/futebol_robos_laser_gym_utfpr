@@ -102,9 +102,12 @@ class BehaviorUtils:
             distance_range=distance_range)
     
     @staticmethod
-    def get_task_1(update_count: int = 0):
-        updates_per_task = 100
-
+    def get_task_1(
+        update_count: int = 0,
+        updates_per_task: int = 100,
+        games_count: int = 100,
+        default_threshold: float = .7
+    ):
         behaviors = [
             BehaviorUtils.get_from_model_behavior(
                 0,
@@ -123,12 +126,17 @@ class BehaviorUtils:
             "1",
             behaviors,
             ball_behavior,
-            update_count=update_count)
+            update_count=update_count,
+            games_count=games_count,
+            default_threshold=default_threshold)
     
     @staticmethod
-    def get_task_2(update_count: int = 0):
-        updates_per_task = 100
-        
+    def get_task_2(
+        update_count: int = 0,
+        updates_per_task: int = 100,
+        games_count: int = 100,
+        default_threshold: float = .7
+    ):
         behaviors = [
             BehaviorUtils.get_from_model_behavior(
                 0,
@@ -150,12 +158,17 @@ class BehaviorUtils:
             "2",
             behaviors,
             ball_behavior,
-            update_count=update_count)
+            update_count=update_count,
+            games_count=games_count,
+            default_threshold=default_threshold)
     
     @staticmethod
-    def get_task_3(update_count: int = 0):
-        updates_per_task = 100
-        
+    def get_task_3(
+        update_count: int = 0,
+        updates_per_task: int = 100,
+        games_count: int = 100,
+        default_threshold: float = .7
+    ):
         behaviors = [
             BehaviorUtils.get_from_model_behavior(
                 0,
@@ -175,12 +188,17 @@ class BehaviorUtils:
             "3",
             behaviors,
             ball_behavior,
-            update_count=update_count)
+            update_count=update_count,
+            games_count=games_count,
+            default_threshold=default_threshold)
     
     @staticmethod
-    def get_task_4(update_count: int = 0):
-        updates_per_task = 100
-        
+    def get_task_4(
+        update_count: int = 0,
+        updates_per_task: int = 100,
+        games_count: int = 200,
+        default_threshold: float = .6
+    ):
         behaviors = [
             BehaviorUtils.get_from_model_behavior(
                 0,
@@ -211,16 +229,19 @@ class BehaviorUtils:
             behaviors,
             ball_behavior,
             update_count=update_count,
-            games_count=200,
-            default_threshold=.6,
+            games_count=games_count,
+            default_threshold=default_threshold,
             threshold_intervals=[
                 (82, .55),
                 (89, .5)])
 
     @staticmethod
-    def get_task_5(update_count: int = 0):
-        updates_per_task = 100
-        
+    def get_task_5(
+        update_count: int = 0,
+        updates_per_task: int = 100,
+        default_threshold: float = .5,
+        games_count: int = 200
+    ):
         behaviors = [
             BehaviorUtils.get_from_model_behavior(
                 0,
@@ -261,16 +282,20 @@ class BehaviorUtils:
             behaviors,
             ball_behavior,
             update_count=update_count,
-            default_threshold=.5,
-            games_count=200,
+            default_threshold=default_threshold,
+            games_count=games_count,
             threshold_intervals=[
                 (74, .45),
-                (83, .33)])
+                (83, .33)
+            ])
     
     @staticmethod
-    def get_task_6(update_count: int = 0):
-        updates_per_task = 100
-        
+    def get_task_6(
+        update_count: int = 0,
+        updates_per_task: int = 100,
+        default_threshold: float = .4,
+        games_count: int = 200
+    ):
         behaviors = [
             BehaviorUtils.get_from_model_behavior(
                 0,
@@ -312,15 +337,17 @@ class BehaviorUtils:
             behaviors,
             ball_behavior,
             update_count=update_count,
-            default_threshold=.4,
-            games_count=200,
-            threshold_intervals=[
-                (14, .3)])
+            default_threshold=default_threshold,
+            games_count=games_count,
+            threshold_intervals=[(14, .3)])
     
     @staticmethod
-    def get_task_7(update_count: int = 0):
-        updates_per_task = 100
-        
+    def get_task_7(
+        update_count: int = 0,
+        updates_per_task: int = 100,
+        default_threshold: float = .3,
+        games_count: int = 300
+    ):
         behaviors = [
             BehaviorUtils.get_from_model_behavior(
                 0,
@@ -360,5 +387,5 @@ class BehaviorUtils:
             behaviors,
             ball_behavior,
             update_count=update_count,
-            default_threshold=.3,
-            games_count=300)
+            default_threshold=default_threshold,
+            games_count=games_count)
