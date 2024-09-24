@@ -27,10 +27,10 @@ batch_size = 128
 device = "cpu"
 
 load_model = True
-loaded_model_path = "models/attacker/PPO/2024_9_22_22_20_47/PPO_model_task_6_update_9_11999988_steps"
+loaded_model_path = "models/attacker/PPO/2024_9_23_13_11_52/PPO_model_task_6_update_14_3999996_steps"
 
 check_count = 100
-starting_update = 10
+starting_update = 14
 
 log_interval = total_timesteps // 10
 
