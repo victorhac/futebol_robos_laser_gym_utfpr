@@ -1,33 +1,26 @@
 import math
-import random
-import time
 import numpy as np
+
 from gymnasium.spaces import Box
 
-from rsoccer_gym.Utils.Utils import OrnsteinUhlenbeckAction
-from rsoccer_gym.Entities import Frame, Robot, Ball
-from rsoccer_gym.Utils import KDTree
+from rsoccer_gym.Entities import Robot
 
-from ...environment.base_environment import BaseEnvironment
+from lib.domain.curriculum_task import CurriculumTask
+from lib.environment.base_curriculum_environment import BaseCurriculumEnvironment
+from lib.geometry.geometry_utils import GeometryUtils
 
 from ...utils.rsoccer_utils import RSoccerUtils
-from ...utils.field_utils import FieldUtils
-from ...utils.configuration_utils import ConfigurationUtils
-from ...utils.model_utils import ModelUtils
 
-TRAINING_EPISODE_DURATION = ConfigurationUtils.get_rsoccer_training_episode_duration()
-V_WHEEL_DEADZONE = ConfigurationUtils.get_rsoccer_robot_speed_dead_zone_meters_seconds()
-
-# addapt this for your robot
-MAX_MOTOR_SPEED = ConfigurationUtils.get_firasim_robot_speed_max_radians_seconds()
-
-class Environment(BaseEnvironment):
-    def __init__(self):
+class Environment(BaseCurriculumEnvironment):
+    def __init__(
+        self,
+        task: CurriculumTask,
+        render_mode="rgb_array"
+    ):
         super().__init__(
-            field_type=0,
-            n_robots_blue=3,
-            n_robots_yellow=3,
-            time_step=0.025)
+            task=task,
+            render_mode=render_mode,
+            robot_id=0)
 
         self.action_space = Box(
             low=-1,
@@ -38,120 +31,103 @@ class Environment(BaseEnvironment):
         self.observation_space = Box(
             low=-1,
             high=1,
-            shape=(40,),
+            shape=(34,),
             dtype=np.float32)
         
-        self.v_wheel_deadzone = V_WHEEL_DEADZONE
-        self.max_motor_speed = MAX_MOTOR_SPEED
-        self.training_episode_duration = TRAINING_EPISODE_DURATION
+        self.defensive_line_x = -.2
+        self.last_robot_touched_ball = None
 
-        self.has_robot_touched_ball = False
-        self.previous_ball_potential = None
-        self.attacker = ModelUtils.get_attacker_model()
-        self.episode_initial_time = 0
-
-        self.__set_ou_actions()
-
-    def __set_ou_actions(self):
-        self.ou_actions = [
-            OrnsteinUhlenbeckAction(self.action_space, dt=self.time_step) \
-            for _ in range(self.n_robots_blue + self.n_robots_yellow)
-        ]
-    
-    def _is_ball_inside_goal_area(self):
-        ball = self.get_ball()
-        return self._is_inside_own_goal_area((ball.x, ball.y))
-    
-    def _is_ball_inside_opponent_area(self):
-        ball = self.get_ball()
-        return self._is_inside_opponent_area((ball.x, ball.y))
-    
-    def _is_inside_opponent_area(self, position: 'tuple[float, float]'):
-        return FieldUtils.is_inside_opponent_area(position, True)
-    
-    def _is_robot_touching_ball(self):
-        robot = self.frame.robots_blue[0]
-        ball = self.get_ball()
-
-        robot_position = (robot.x, robot.y)
-        ball_position = (ball.x, ball.y)
-
-        return FieldUtils.is_touching(
-            robot_position,
-            self.get_robot_radius(),
-            ball_position,
-            self.get_ball_radius(),
-            .01)
-    
-    def _is_inside_own_goal_area(self, position: 'tuple[float, float]'):
-        return FieldUtils.is_inside_own_goal_area(
-            position,
-            self.get_field_length(),
-            self.get_penalty_length(),
-            self.get_penalty_width(),
-            True)
+    def reset(
+        self,
+        *,
+        seed=None,
+        options=None
+    ):
+        self.last_robot_touched_ball = None
+        return super().reset(seed=seed, options=options)
     
     def _is_done(self):
-        if self._is_ball_inside_goal_area():
+        if self._is_ball_inside_defensive_area():
             return True
-        elif self._has_robot_defended():
+        elif self._has_episode_time_exceeded():
             return True
-        elif time.time() - self.episode_initial_time > self.training_episode_duration:
+        elif self.last_robot_touched_ball == self._get_agent():
             return True
         return False
     
-    def _create_robot(
-            self,
-            id: int,
-            is_yellow_robot: bool,
-            v_wheel_0: float,
-            v_wheel_1: float
-    ):
-        return Robot(
-            yellow=is_yellow_robot,
-            id=id,
-            v_wheel0=v_wheel_0,
-            v_wheel1=v_wheel_1)
-    
-    def _get_ou_actions(self, is_yellow_robot: bool, robot_id: int):
-        if is_yellow_robot:
-            ou_action_id = self.n_robots_blue + robot_id
-        else:
-            ou_action_id = robot_id
-
-        return self.ou_actions[ou_action_id].sample()
-    
-    def _create_robot_with_ou_action(
-        self,
-        id: int,
-        is_yellow_robot: bool
-    ):
-        actions = self._get_ou_actions(is_yellow_robot, id)
-        v_wheel0, v_wheel1 = self._actions_to_v_wheels(actions)
-
-        return self._create_robot(id, is_yellow_robot, v_wheel0, v_wheel1)
-    
-    def reset(self):
-        self.actions = None
-        self.previous_ball_potential = None
-        self.has_robot_touched_ball = False
-
-        for ou in self.ou_actions:
-            ou.reset()
-
-        return super().reset()
-
-    def _frame_to_attacker_observations(self):
+    def _frame_to_observations(self):
         observation = []
 
+        current_robot = self._get_robot_by_id(self.robot_id, False)
         ball = self.get_ball()
 
-        observation.extend([
-            self.norm_x(-ball.x),
-            self.norm_y(ball.y),
-            self.norm_v(-ball.v_x),
-            self.norm_v(ball.v_y)
-        ])
+        def get_normalized_distance(distance: float):
+            return distance / self._get_max_distance()
+        
+        def extend_observation_by_ball():
+            current_robot_position = current_robot.x, -current_robot.y
+            ball_position = ball.x, -ball.y
+
+            distance = GeometryUtils.distance(current_robot_position, ball_position)
+            angle = GeometryUtils.angle_between_points(current_robot_position, ball_position)
+
+            observation.extend([
+                get_normalized_distance(distance),
+                angle / np.pi,
+                self.norm_v(ball.v_x),
+                self.norm_v(-ball.v_y)
+            ])
+        
+        def extend_observation_by_current_robot():
+            theta = -RSoccerUtils.get_corrected_angle(current_robot.theta) / np.pi
+
+            observation.extend([
+                self.norm_x(current_robot.x),
+                self.norm_y(-current_robot.y),
+                theta,
+                self.norm_v(current_robot.v_x),
+                self.norm_v(-current_robot.v_y)
+            ])
+
+        def extend_observation_by_robot(robot: Robot):
+            if self._is_inside_field((robot.x, robot.y)):
+                theta = -RSoccerUtils.get_corrected_angle(robot.theta) / np.pi
+
+                current_robot_position = current_robot.x, -current_robot.y
+                robot_position = robot.x, -robot.y
+
+                distance = GeometryUtils.distance(current_robot_position, robot_position)
+                angle = GeometryUtils.angle_between_points(current_robot_position, robot_position)
+
+                observation.extend([
+                    get_normalized_distance(distance),
+                    angle / np.pi,
+                    theta,
+                    self.norm_v(robot.v_x),
+                    self.norm_v(-robot.v_y)
+                ])
+            else:
+                observation.extend([0, 0, 0, 0, 0])
+
+        extend_observation_by_ball()
+        extend_observation_by_current_robot()
+
+        frame = self.frame
+
+        for i in range(self.n_robots_blue):
+            if i != self.robot_id:
+                extend_observation_by_robot(frame.robots_blue[i])
+
+        for i in range(self.n_robots_yellow):
+            extend_observation_by_robot(frame.robots_yellow[i])
+
+        return np.array(observation, dtype=np.float32)
+    
+    def _frame_to_opponent_observations(self, robot_id: int):
+        observation = []
+
+        current_robot = self._get_robot_by_id(robot_id, True)
+        ball = self.get_ball()
 
         def get_norm_theta(robot: Robot):
             theta = -RSoccerUtils.get_corrected_angle(robot.theta)
@@ -162,131 +138,69 @@ class Environment(BaseEnvironment):
                 theta -= np.pi
 
             return theta / np.pi
+        
+        def get_normalized_distance(distance: float):
+            return distance / self._get_max_distance()
+        
+        def extend_observation_by_ball():
+            current_robot_position = -current_robot.x, current_robot.y
+            ball_position = -ball.x, ball.y
+
+            distance = GeometryUtils.distance(current_robot_position, ball_position)
+            angle = GeometryUtils.angle_between_points(current_robot_position, ball_position)
+
+            observation.extend([
+                get_normalized_distance(distance),
+                angle / np.pi,
+                self.norm_v(-ball.v_x),
+                self.norm_v(ball.v_y)
+            ])
+
+        def extend_observation_by_current_robot():
+            theta = get_norm_theta(current_robot)
+
+            observation.extend([
+                self.norm_x(-current_robot.x),
+                self.norm_y(current_robot.y),
+                theta,
+                self.norm_v(-current_robot.v_x),
+                self.norm_v(current_robot.v_y)
+            ])
+        
+        def extend_observation_by_robot(robot: Robot):
+            if self._is_inside_field((robot.x, robot.y)):
+                theta = get_norm_theta(robot)
+
+                current_robot_position = -current_robot.x, current_robot.y
+                robot_position = -robot.x, robot.y
+
+                distance = GeometryUtils.distance(current_robot_position, robot_position)
+                angle = GeometryUtils.angle_between_points(current_robot_position, robot_position)
+
+                observation.extend([
+                    get_normalized_distance(distance),
+                    angle / np.pi,
+                    theta,
+                    self.norm_v(-robot.v_x),
+                    self.norm_v(robot.v_y)
+                ])
+            else:
+                observation.extend([0, 0, 0, 0, 0])
+
+        extend_observation_by_ball()
+        extend_observation_by_current_robot()
 
         frame = self.frame
 
         for i in range(self.n_robots_yellow):
-            robot = frame.robots_yellow[i]
-
-            observation.extend([
-                self.norm_x(-robot.x),
-                self.norm_y(robot.y),
-                get_norm_theta(robot),
-                self.norm_v(-robot.v_x),
-                self.norm_v(robot.v_y)
-            ])
+            if robot_id != i:
+                extend_observation_by_robot(frame.robots_yellow[i])
 
         for i in range(self.n_robots_blue):
-            robot = frame.robots_blue[0]
-
-            observation.extend([
-                self.norm_x(-robot.x),
-                self.norm_y(robot.y),
-                get_norm_theta(robot),
-                self.norm_v(-robot.v_x),
-                self.norm_v(robot.v_y)
-            ])
+            extend_observation_by_robot(frame.robots_blue[i])
 
         return np.array(observation, dtype=np.float32)
-    
-    def _frame_to_observations(self):
-        observation = []
 
-        ball = self.get_ball()
-
-        observation.extend([
-            self.norm_x(ball.x),
-            self.norm_y(-ball.y),
-            self.norm_v(ball.v_x),
-            self.norm_v(-ball.v_y)
-        ])
-
-        frame = self.frame
-
-        for i in range(self.n_robots_blue):
-            robot = frame.robots_blue[i]
-            theta = -RSoccerUtils.get_corrected_angle(robot.theta)
-
-            observation.extend([
-                self.norm_x(robot.x),
-                self.norm_y(-robot.y),
-                theta / np.pi,
-                self.norm_v(robot.v_x),
-                self.norm_v(-robot.v_y)
-            ])
-
-        for i in range(self.n_robots_yellow):
-            robot = frame.robots_yellow[i]
-            theta = -RSoccerUtils.get_corrected_angle(robot.theta)
-
-            observation.extend([
-                self.norm_x(robot.x),
-                self.norm_y(-robot.y),
-                theta / np.pi,
-                self.norm_v(robot.v_x),
-                self.norm_v(-robot.v_y)
-            ])
-
-        return np.array(observation, dtype=np.float32)
-        
-    def _get_commands(self, actions):
-        commands = []
-
-        v_wheel0, v_wheel1 = self._actions_to_v_wheels(actions)
-
-        robot = self._create_robot(0, False, v_wheel0, v_wheel1)
-        
-        commands.append(robot)
-
-        for i in range(1, self.n_robots_blue):
-            blue_robot = self._create_robot_with_ou_action(i, False)
-            commands.append(blue_robot)
-
-        attacker_action, _ = self.attacker.predict(self._frame_to_attacker_observations())
-        v_wheel0, v_wheel1 = self._actions_to_v_wheels(attacker_action)
-
-        attacker_robot = self._create_robot(0, True, v_wheel1, v_wheel0)
-        commands.append(attacker_robot)
-
-        for i in range(1, self.n_robots_yellow):
-            yellow_robot = self._create_robot_with_ou_action(i, True, i)
-            commands.append(yellow_robot)
-
-        return commands
-
-    def _actions_to_v_wheels(
-        self,
-        actions: np.ndarray,
-        is_own_team: bool
-    ):
-        left_wheel_speed = actions[0] * self.max_v
-        right_wheel_speed = actions[1] * self.max_v
-
-        left_wheel_speed, right_wheel_speed = np.clip(
-            (left_wheel_speed, right_wheel_speed),
-            -self.max_v,
-            self.max_v)
-        
-        if is_own_team:
-            rsoccer_max_motor_speed = (self.max_v / self.field.rbt_wheel_radius)
-            factor = self.max_motor_speed / rsoccer_max_motor_speed
-        else:
-            factor = 1
-
-        left_wheel_speed *= factor
-        right_wheel_speed *= factor
-
-        if abs(left_wheel_speed) < self.v_wheel_deadzone:
-            left_wheel_speed = 0
-
-        if abs(right_wheel_speed) < self.v_wheel_deadzone:
-            right_wheel_speed = 0
-
-        left_wheel_speed /= self.field.rbt_wheel_radius
-        right_wheel_speed /= self.field.rbt_wheel_radius
-
-        return left_wheel_speed, right_wheel_speed
-    
     def _ball_gradient_reward(
         self,
         previous_ball_potential: float
@@ -322,7 +236,7 @@ class Environment(BaseEnvironment):
         
     def _move_reward(self):
         ball = self.get_ball()
-        robot = self.frame.robots_blue[0]
+        robot = self._get_agent()
 
         ball_position = np.array([ball.x, ball.y])
         robot_position = np.array([robot.x, robot.y])
@@ -335,92 +249,42 @@ class Environment(BaseEnvironment):
 
         return np.clip(move_reward / 0.4, -5.0, 5.0)
     
-    def _energy_penalty(self):
-        en_penalty_1 = abs(self.sent_commands[0].v_wheel0)
-        en_penalty_2 = abs(self.sent_commands[0].v_wheel1)
-        return - (en_penalty_1 + en_penalty_2)
-    
-    def _has_robot_defended(self):
-        return self.has_robot_touched_ball and self._is_ball_inside_opponent_area()
-    
     def _calculate_reward_and_done(self):
         reward = 0
-        w_move = 0.2
-        w_ball_grad = 0.8
-        w_energy = 2e-4
 
-        robot = self.frame.robots_blue[0]
-
-        if self._is_robot_touching_ball():
-            self.has_robot_touched_ball = True
-
-        if self._has_robot_defended():
-            reward = 10
-        elif self._is_ball_inside_goal_area():
-            reward = -10
-        elif self._is_inside_opponent_area((robot.x, robot.y)):
-            reward = -5
+        if self._is_agent_inside_defensive_area() and\
+                self._is_ball_inside_defensive_area():
+            pass
+        elif self._is_agent_inside_defensive_area() and\
+                not self._is_agent_inside_defensive_area():
+            pass
+        elif not self._is_agent_inside_defensive_area() and\
+                self._is_agent_inside_defensive_area():
+            pass
         else:
-            grad_ball_potential, ball_gradient = \
-                self._ball_gradient_reward(self.previous_ball_potential)
+            pass
             
-            self.previous_ball_potential = ball_gradient
+        is_done = self._is_done()
 
-            move_reward = self._move_reward()
-            energy_penalty = self._energy_penalty()
-
-            reward = w_move * move_reward + \
-                w_ball_grad * grad_ball_potential + \
-                w_energy * energy_penalty
-
-        return reward, self._is_done()
+        return reward, is_done
     
-    def _get_random_position_inside_field(self):
-        return FieldUtils.get_random_position_inside_field(
-            self.get_field_length(),
-            self.get_field_width())
-    
-    def _get_random_position_inside_own_area(self):
-        return FieldUtils.get_random_position_inside_own_area(
-            self.get_field_length(),
-            self.get_field_width(),
-            True)
+    def _is_ball_inside_defensive_area(self):
+        pass
 
-    def _get_initial_positions_frame(self):
-        def theta(): return random.uniform(0, 360)
+    def _is_ball_inside_goal_area(self):
+        pass
 
-        frame: Frame = Frame()
-        ball_position = self._get_random_position_inside_field()
-        frame.ball = Ball(x=ball_position[0], y=ball_position[1])
+    def _is_agent_inside_defensive_area(self):
+        pass
 
-        min_distance = 0.15
+    def _get_security_position(self):
+        pass
 
-        places = KDTree()
+    def _get_ball_gradient_related_to_y_reward(self):
+        pass
 
-        places.insert(ball_position)
+    def _get_ball_gradient_related_to_security_position_reward(self):
+        pass
 
-        def get_position(get_position_fn):
-            position = get_position_fn()
-
-            while places.get_nearest(position)[1] < min_distance:
-                position = get_position_fn()
-
-            places.insert(position)
-
-            return position
-
-        position = get_position(self._get_random_position_inside_own_area)
-
-        frame.robots_blue[0] = Robot(x=position[0], y=position[1], theta=theta())
-        
-        for i in range(1, self.n_robots_blue):
-            position = get_position(self._get_random_position_inside_field)
-            frame.robots_blue[i] = Robot(x=position[0], y=position[1], theta=theta())
-
-        for i in range(self.n_robots_yellow):
-            position = get_position(self._get_random_position_inside_field)
-            frame.robots_yellow[i] = Robot(x=position[0], y=position[1], theta=theta())
-
-        self.episode_initial_time = time.time()
-
-        return frame
+    def _try_set_last_robot_touched_ball(self):
+        pass
