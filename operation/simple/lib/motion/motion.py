@@ -72,7 +72,7 @@ class Motion:
         
         return -spinPower, spinPower
     
-    def FaceDirection(robot: EntityData, targetPosition:'tuple[float, float]', isLeftTeam = True):
+    def faceDirection(robot: EntityData, targetPosition:'tuple[float, float]', isLeftTeam = True):
         
         configuration = ConfigurationHelper.getConfiguration()
 
@@ -111,7 +111,8 @@ class Motion:
         rightMotorSpeed = -motorSpeed
 
         return leftMotorSpeed, rightMotorSpeed, error
-    def GoOnDirection(direction, robot, lastError: float = 0):
+    
+    def goOnDirection(direction, robot, lastError: float = 0):
         configuration = ConfigurationHelper.getConfiguration()
 
         position = robot.position
@@ -147,7 +148,7 @@ class Motion:
 
         return leftMotorSpeed, rightMotorSpeed, error
     
-    def Orbit(fsimcontroler, id: int, isLeftTeam: bool, lastError: float = 0):
+    def orbit(fsimcontroler, id: int, isLeftTeam: bool, lastError: float = 0):
         raio = 0.0002
 
         fieldData = fsimcontroler[0]
@@ -226,7 +227,7 @@ class Motion:
 
         return leftMotorSpeed, rightMotorSpeed, error
     
-    def AtkOrbit(fsimcontroler, id: int, isLeftTeam: bool, lastError: float = 0):
+    def atkOrbit(fsimcontroler, id: int, isLeftTeam: bool, lastError: float = 0):
         raio = 0.0002
         fieldData = fsimcontroler[0]
         vision = fsimcontroler[1]
