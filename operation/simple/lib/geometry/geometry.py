@@ -38,24 +38,19 @@ class Geometry:
         deltx = deltx * deltx
         delty = delty * delty
 
-        dist = math.sqrt((deltx + delty))
+        return math.sqrt((deltx + delty))
         
-        return dist
-
 
     @staticmethod
     def isClose(
-            position1: 'tuple[float, float]', 
-            position2: 'tuple[float, float]',
-            tolerance: float):
-
+        position1: 'tuple[float, float]', 
+        position2: 'tuple[float, float]',
+        tolerance: float):
         return Geometry.distance(position1, position2) < tolerance
     
     @staticmethod
     def findIntersection(line1: 'tuple[float, float, float]', line2: 'tuple[float, float, float]'):
-        """
-        Extract coefficients (a, b, c) from line equations (ax + by = c)
-        """
+
         a1, b1, c1 = line1
         a2, b2, c2 = line2
 
@@ -81,7 +76,6 @@ class Geometry:
         if x2 - x1 != 0:
             m = (y2 - y1) / (x2 - x1)
         else:
-            print("morri legal")
             return None
         
         c = y1 - m * x1
@@ -92,20 +86,20 @@ class Geometry:
             A = point
             B = other
 
-            vetor_direcao = (B[0] - A[0], B[1] - A[1])
+            dirVector = (B[0] - A[0], B[1] - A[1])
 
-            norma = math.sqrt(vetor_direcao[0]**2 + vetor_direcao[1]**2)
+            norm = math.sqrt(dirVector[0]**2 + dirVector[1]**2)
 
-            if norma != 0:
-                vetor_unitario = (vetor_direcao[0] / norma, vetor_direcao[1] / norma)
+            if norm != 0:
+                unitaryVector = (dirVector[0] / norm, dirVector[1] / norm)
             else:
-                vetor_unitario = (0, 0)  
+                unitaryVector = (0, 0)  
 
-            return tuple(vetor_unitario)
-    def PointOnDirection(position: 'tuple[float, float]', direction: 'tuple[float, float]', raio):
+            return tuple(unitaryVector)
         
-        C = (position[0] + raio * direction[0], position[1] + raio* direction[1])
-        return C
+    def pointOnDirection(position: 'tuple[float, float]', direction: 'tuple[float, float]', radius):
+        
+        return (position[0] + radius * direction[0], position[1] + radius* direction[1])
     
     def sumVector(dirVet: 'tuple[float, float]', other: 'tuple[float, float]') -> tuple:
         result = (dirVet[0] + other[0], dirVet[1] + other[1])
@@ -115,12 +109,8 @@ class Geometry:
             normalized_result = (result[0] / norm, result[1] / norm)
         else:
             normalized_result = (0, 0)
-            
-        print(f"vet bola {other}")
-
-        print(f"vet robo->bola {dirVet}")
-
-        print(f"vet final {normalized_result}")
         return normalized_result
+    
     def perpendicularVector(directionalVector: 'tuple[float, float]'):
         return (directionalVector[1], -directionalVector[0])
+    
