@@ -1,5 +1,6 @@
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import SubprocVecEnv
+from stable_baselines3.common.monitor import Monitor
 
 from lib.domain.behavior_callback import BehaviorCallback
 from lib.environment.attacker.environment import Environment
@@ -37,9 +38,14 @@ log_interval = total_timesteps // 10
 number_robot_blue = 3
 number_robot_yellow = 3
 
-def create_env(first_task_function):
+def create_env(
+    save_path,
+    index,
+    first_task_function
+):
     def _init():
-        return Environment(first_task_function(), render_mode)
+        env = Environment(first_task_function(), render_mode)
+        return Monitor(env, f"{save_path}/monitor_log/env_{index}")
     return _init
 
 def create_folder_if_not_exists(folder_path):
@@ -72,7 +78,14 @@ def main():
 
     create_folder_if_not_exists(save_path)
 
-    env = SubprocVecEnv([create_env(get_first_task) for _ in range(num_threads)])
+    env = SubprocVecEnv([
+        create_env(
+            save_path,
+            i,
+            get_first_task
+        )
+        for i in range(num_threads)
+    ])
 
     model = PPO(
         policy=policy,
