@@ -47,11 +47,12 @@ class Environment(BaseCurriculumEnvironment):
         return super().reset(seed=seed, options=options)
     
     def _is_done(self):
-        if self._is_ball_inside_defensive_area():
+        if self._is_ball_inside_goal_area():
+            return True
+        elif not self._is_ball_inside_defensive_area() and\
+                self.last_robot_touched_ball == self._get_agent():
             return True
         elif self._has_episode_time_exceeded():
-            return True
-        elif self.last_robot_touched_ball == self._get_agent():
             return True
         return False
     
@@ -254,17 +255,31 @@ class Environment(BaseCurriculumEnvironment):
 
         if self._is_agent_inside_defensive_area() and\
                 self._is_ball_inside_defensive_area():
+            # _move_reward + _ball_gradient_reward com relação a (xdefesa, ybola)
             pass
         elif self._is_agent_inside_defensive_area() and\
-                not self._is_agent_inside_defensive_area():
+                not self._is_ball_inside_defensive_area():
+            # _move_reward com relação a ybola
             pass
         elif not self._is_agent_inside_defensive_area() and\
-                self._is_agent_inside_defensive_area():
+                self._is_ball_inside_defensive_area():
+            # reward (_move_reward + _ball_gradient_reward com relação a (xdefesa, ybola)) - 3,001
             pass
-        else:
+        elif not self._is_agent_inside_defensive_area() and\
+                not self._is_ball_inside_defensive_area():
+            # _move_reward com relação a (xdefesa, ybola) - 1
             pass
             
         is_done = self._is_done()
+
+        if is_done:
+            if self._is_ball_inside_goal_area():
+                # -10
+                pass
+            elif not self._is_ball_inside_defensive_area() and\
+                    self.last_robot_touched_ball == self._get_agent():
+                # +10
+                pass
 
         return reward, is_done
     

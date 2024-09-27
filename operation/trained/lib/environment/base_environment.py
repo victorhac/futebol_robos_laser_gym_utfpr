@@ -341,7 +341,7 @@ class BaseEnvironment(gym.Env):
         ball = self.get_ball()
         return abs(ball.x) > (self.get_field_length() / 2)
     
-    def _has_received_goal(self):        
+    def _has_received_goal(self):
         ball = self.get_ball()
         return ball.x < -self.get_field_length() / 2
 

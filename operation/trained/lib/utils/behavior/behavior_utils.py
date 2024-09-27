@@ -127,6 +127,7 @@ class BehaviorUtils:
             behaviors,
             ball_behavior,
             update_count=update_count,
+            updates_per_task=updates_per_task,
             games_count=games_count,
             default_threshold=default_threshold)
     
@@ -159,6 +160,7 @@ class BehaviorUtils:
             behaviors,
             ball_behavior,
             update_count=update_count,
+            updates_per_task=updates_per_task,
             games_count=games_count,
             default_threshold=default_threshold)
     
@@ -189,6 +191,7 @@ class BehaviorUtils:
             behaviors,
             ball_behavior,
             update_count=update_count,
+            updates_per_task=updates_per_task,
             games_count=games_count,
             default_threshold=default_threshold)
     
@@ -229,6 +232,7 @@ class BehaviorUtils:
             behaviors,
             ball_behavior,
             update_count=update_count,
+            updates_per_task=updates_per_task,
             games_count=games_count,
             default_threshold=default_threshold,
             threshold_intervals=[
@@ -282,6 +286,7 @@ class BehaviorUtils:
             behaviors,
             ball_behavior,
             update_count=update_count,
+            updates_per_task=updates_per_task,
             default_threshold=default_threshold,
             games_count=games_count,
             threshold_intervals=[
@@ -337,6 +342,7 @@ class BehaviorUtils:
             behaviors,
             ball_behavior,
             update_count=update_count,
+            updates_per_task=updates_per_task,
             default_threshold=default_threshold,
             games_count=games_count,
             threshold_intervals=[(14, .3)])
@@ -345,7 +351,7 @@ class BehaviorUtils:
     def get_task_7(
         update_count: int = 0,
         updates_per_task: int = 100,
-        default_threshold: float = .3,
+        default_threshold: float = .2,
         games_count: int = 300
     ):
         behaviors = [
@@ -387,5 +393,6 @@ class BehaviorUtils:
             behaviors,
             ball_behavior,
             update_count=update_count,
+            updates_per_task=updates_per_task,
             default_threshold=default_threshold,
             games_count=games_count)

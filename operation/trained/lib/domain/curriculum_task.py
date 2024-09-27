@@ -12,6 +12,7 @@ class CurriculumTask:
         behaviors: 'list[RobotCurriculumBehavior]',
         ball_behavior: BallCurriculumBehavior,
         update_count: int=0,
+        updates_per_task: int=100,
         games_count: int=100,
         threshold_intervals: 'list[tuple[int, float]]'=[],
         default_threshold: float=.7
@@ -20,6 +21,7 @@ class CurriculumTask:
         self.behaviors = behaviors
         self.ball_behavior = ball_behavior
         self.update_count = 0
+        self.updates_per_task = updates_per_task
 
         self.default_threshold=default_threshold
         self.threshold_intervals = threshold_intervals
@@ -90,4 +92,4 @@ class CurriculumTask:
         return next((item for item in self.get_blue_behaviors() if item.robot_id == robot_id), None)
 
     def all_over_behavior(self):
-        return all(item.is_over() for item in self.behaviors)
+        return self.update_count >= self.updates_per_task
