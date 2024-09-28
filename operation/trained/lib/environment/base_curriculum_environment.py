@@ -78,7 +78,7 @@ class BaseCurriculumEnvironment(BaseEnvironment):
 
         velocities = MotionUtils.go_to_point(robot, point, self.error, self.max_motor_speed)
 
-        #verificar se salvo o erro para cada robô
+        #TODO: verificar se salvo o erro para cada robô
         (left_speed, right_speed, self.error) = velocities
 
         return left_speed, right_speed
@@ -99,9 +99,7 @@ class BaseCurriculumEnvironment(BaseEnvironment):
                 v_wheel_0,
                 v_wheel_1)
 
-        if robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.STOPPED:
-            return create_robot(0, 0)
-        elif robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.BALL_FOLLOWING:
+        if robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.BALL_FOLLOWING:
             left_speed, right_speed = self._go_to_point_v_wheels(
                 robot_id,
                 is_yellow,
@@ -110,10 +108,25 @@ class BaseCurriculumEnvironment(BaseEnvironment):
             velocity_alpha = behavior.get_velocity_alpha()
 
             return create_robot(left_speed * velocity_alpha, right_speed * velocity_alpha)
+        elif robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.GOALKEEPER_BALL_FOLLOWING:
+            if self._is_inside_own_goal_area((ball.x, ball.y), is_yellow):
+                position = (ball.x, ball.y)
+            else:
+                max_y = self.get_penalty_width() / 2
+                position = robot.x, np.clip(ball.y, -max_y, max_y)
+
+            left_speed, right_speed = self._go_to_point_v_wheels(
+                robot_id,
+                is_yellow,
+                position)
+            
+            velocity_alpha = behavior.get_velocity_alpha()
+            
+            return create_robot(left_speed * velocity_alpha, right_speed * velocity_alpha)
         elif robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.FROM_MODEL:
             actions = self._get_opponent_actions(behavior)
 
-            left_speed, right_speed = self._actions_to_v_wheels(actions[0])
+            left_speed, right_speed = self._actions_to_v_wheels(actions)
             velocity_alpha = behavior.get_velocity_alpha()
 
             return create_robot(left_speed * velocity_alpha, right_speed * velocity_alpha)
@@ -126,7 +139,7 @@ class BaseCurriculumEnvironment(BaseEnvironment):
         if model is None:
             return (0, 0)
         
-        return model.predict(self._frame_to_opponent_observations(behavior.robot_id))
+        return model.predict(self._frame_to_opponent_observations(behavior.robot_id))[0]
     
     def _frame_to_opponent_observations(self, robot_id: int):
         raise NotImplementedError
@@ -199,7 +212,7 @@ class BaseCurriculumEnvironment(BaseEnvironment):
     def get_position_function_by_behavior(
         self,
         behavior: 'RobotCurriculumBehavior | BallCurriculumBehavior',
-        relative_position: 'tuple[float, float]' = None
+        relative_position: 'tuple[float, float] | None' = None
     ):
         position_enum = behavior.position_enum
 
@@ -288,7 +301,10 @@ class BaseCurriculumEnvironment(BaseEnvironment):
                 position_function = self.get_position_function_by_behavior(behavior, ball_position)
                 position = get_position(position_function)
             
-            frame.robots_blue[i] = Robot(x=position[0], y=position[1], theta=theta())
+            frame.robots_blue[i] = Robot(
+                x=position[0],
+                y=position[1],
+                theta=theta())
 
         for i in range(self.n_robots_yellow):
             behavior = self.task.get_yellow_behaviors_by_robot_id(i)
@@ -299,7 +315,10 @@ class BaseCurriculumEnvironment(BaseEnvironment):
                 position_function = self.get_position_function_by_behavior(behavior, ball_position)
                 position = get_position(position_function)
 
-            frame.robots_yellow[i] = Robot(x=position[0], y=position[1], theta=theta())
+            frame.robots_yellow[i] = Robot(
+                x=position[0],
+                y=position[1],
+                theta=theta())
 
         return frame
     

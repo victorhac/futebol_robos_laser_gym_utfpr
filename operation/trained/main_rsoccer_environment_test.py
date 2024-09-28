@@ -1,6 +1,4 @@
-from lib.domain.robot_curriculum_behavior import RobotCurriculumBehavior
-from lib.enums.position_enum import PositionEnum
-from lib.enums.robot_curriculum_behavior_enum import RobotCurriculumBehaviorEnum
+from stable_baselines3 import PPO
 from lib.utils.behavior.behavior_utils import BehaviorUtils
 from lib.utils.configuration_utils import ConfigurationUtils
 from lib.environment.attacker.environment import Environment
@@ -10,22 +8,27 @@ FIELD_LENGTH = ConfigurationUtils.get_field_length()
 IS_LEFT_TEAM = ConfigurationUtils.get_rsoccer_is_left_team()
 ROBOT_SPEED_BASE = ConfigurationUtils.get_rsoccer_robot_speed_max_radians_seconds()
 
-env = Environment("human")
+task = BehaviorUtils.get_task_8(97)
 
-behaviors = BehaviorUtils.get_task_1(10)
+env = Environment(task, "human")
 
-env.set_task(behaviors)
+model = PPO.load("models/attacker/PPO/2024_9_24_14_48_13/PPO_model_task_6_update_117_13999986_steps.zip")
+
+env.opponent_model = model
 
 try:
     for i in range(100):
         obs = env.reset()
         reward = 0
         done = False
+        action = (0, 0)
 
         try:
             while done is False:
-                next_state, reward, done, _, _ = env.step((0, 0))
+                next_state, reward, done, _, _ = env.step(action)
                 env.render()
+
+                action, _ = model.predict(next_state)
         except KeyboardInterrupt:
             env.reset()
 

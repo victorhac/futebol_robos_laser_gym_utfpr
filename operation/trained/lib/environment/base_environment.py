@@ -324,6 +324,18 @@ class BaseEnvironment(gym.Env):
             self.get_field_length(),
             self.get_field_width())
     
+    def _is_inside_own_goal_area(
+        self,
+        position: 'tuple[float, float]',
+        is_yellow_team: bool
+    ):
+        return FieldUtils.is_inside_own_goal_area(
+            position,
+            self.get_field_length(),
+            self.get_penalty_length(),
+            self.get_penalty_width(),
+            not is_yellow_team)
+    
     def _get_max_distance(self):
         max_x = self.get_max_x() - self.get_goal_depth()
         max_y = self.get_max_y()

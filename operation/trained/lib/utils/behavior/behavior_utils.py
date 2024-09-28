@@ -13,10 +13,11 @@ class BehaviorUtils:
         updates_per_task: int
     ):
         return RobotCurriculumBehavior(
-            RobotCurriculumBehaviorEnum.STOPPED,
+            RobotCurriculumBehaviorEnum.BALL_FOLLOWING,
             robot_id,
             is_yellow,
             position_enum,
+            velocity_alpha_range=[0,0],
             updates_per_task=updates_per_task)
     
     @staticmethod
@@ -57,9 +58,9 @@ class BehaviorUtils:
         is_yellow: bool,
         position_enum: PositionEnum,
         is_positive_distance_beta: bool,
-        distance_range: 'tuple[float, float]',
+        distance_range: 'tuple[float, float] | None',
         is_positive_velocity_beta: bool,
-        velocity_alpha_range: 'tuple[float, float]',
+        velocity_alpha_range: 'tuple[float, float] | None',
         updates_per_task: int
     ):
         return RobotCurriculumBehavior(
@@ -89,11 +90,25 @@ class BehaviorUtils:
             updates_per_task=updates_per_task)
     
     @staticmethod
+    def get_goalkeeper_ball_following_behavior(
+        robot_id: int,
+        is_yellow: bool,
+        updates_per_task: int
+    ):
+        return RobotCurriculumBehavior(
+            RobotCurriculumBehaviorEnum.GOALKEEPER_BALL_FOLLOWING,
+            robot_id,
+            is_yellow,
+            position_enum=PositionEnum.GOAL_AREA,
+            velocity_alpha_range=[.2, .2],
+            updates_per_task=updates_per_task)
+    
+    @staticmethod
     def get_ball_behavior(
         position_enum: PositionEnum,
         updates_per_task: int = 10,
         is_positive_distance_beta: bool = True,
-        distance_range: 'tuple[float, float]' = None
+        distance_range: 'tuple[float, float] | None' = None
     ):
         return BallCurriculumBehavior(
             position_enum=position_enum,
@@ -380,6 +395,58 @@ class BehaviorUtils:
                 2,
                 True,
                 PositionEnum.GOAL_AREA,
+                updates_per_task)
+        ]
+    
+        ball_behavior = BehaviorUtils.get_ball_behavior(
+            PositionEnum.OWN_AREA,
+            updates_per_task
+        )
+
+        return CurriculumTask(
+            "7",
+            behaviors,
+            ball_behavior,
+            update_count=update_count,
+            updates_per_task=updates_per_task,
+            default_threshold=default_threshold,
+            games_count=games_count)
+    
+    @staticmethod
+    def get_task_8(
+        update_count: int = 0,
+        updates_per_task: int = 100,
+        default_threshold: float = .1,
+        games_count: int = 300
+    ):
+        behaviors = [
+            BehaviorUtils.get_from_model_behavior(
+                0,
+                PositionEnum.RELATIVE_TO_BALL,
+                updates_per_task),
+            BehaviorUtils.get_ball_following_behavior(
+                1,
+                False,
+                PositionEnum.OWN_AREA_EXCEPT_GOAL_AREA,
+                True,
+                None,
+                True,
+                [.2, .2],
+                updates_per_task=updates_per_task),
+            BehaviorUtils.get_goalkeeper_ball_following_behavior(
+                2,
+                False,
+                updates_per_task),
+            BehaviorUtils.get_opponent_from_model_behavior(
+                0,
+                PositionEnum.RELATIVE_TO_BALL,
+                updates_per_task),
+            BehaviorUtils.get_default_opponent_ball_following_behavior(
+                1,
+                updates_per_task),
+            BehaviorUtils.get_goalkeeper_ball_following_behavior(
+                2,
+                True,
                 updates_per_task)
         ]
     

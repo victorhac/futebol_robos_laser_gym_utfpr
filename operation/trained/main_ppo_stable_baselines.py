@@ -28,7 +28,7 @@ batch_size = 128
 device = "cpu"
 
 load_model = True
-loaded_model_path = "models/attacker/PPO/2024_9_24_14_48_13/PPO_model_task_6_update_871_200000010_steps"
+loaded_model_path = "models/attacker/PPO/2024_9_24_14_48_13/PPO_model_task_6_update_117_13999986_steps"
 
 check_count = 100
 starting_update = 0
@@ -68,10 +68,12 @@ def get_task_models_path():
     return f"models/{task_training_name}/{algorithm_name}/{get_datetime_folder_name()}"
 
 def main():
-    get_first_task = lambda: BehaviorUtils.get_task_7(starting_update)
+    get_first_task = lambda: BehaviorUtils.get_task_6(starting_update)
 
     tasks = [
-        get_first_task()
+        get_first_task(),
+        BehaviorUtils.get_task_7(),
+        BehaviorUtils.get_task_8()
     ]
 
     save_path = get_task_models_path()

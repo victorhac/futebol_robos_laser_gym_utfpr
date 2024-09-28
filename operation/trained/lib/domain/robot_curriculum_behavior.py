@@ -1,5 +1,6 @@
 from lib.enums.position_enum import PositionEnum
 from lib.enums.robot_curriculum_behavior_enum import RobotCurriculumBehaviorEnum
+import numpy as np
 
 class RobotCurriculumBehavior:
     def __init__(
@@ -10,9 +11,9 @@ class RobotCurriculumBehavior:
         position_enum: PositionEnum,
         updates_per_task: int,
         is_positive_distance_beta: bool = True,
-        distance_range: 'tuple[float, float]' = None,
+        distance_range: 'tuple[float, float] | None' = None,
         is_positive_velocity_beta: bool = True,
-        velocity_alpha_range: 'tuple[float, float]' = None
+        velocity_alpha_range: 'tuple[float, float] | None' = None
     ):
         self.robot_curriculum_behavior_enum = robot_curriculum_behavior_enum
         self.robot_id = robot_id
@@ -30,56 +31,55 @@ class RobotCurriculumBehavior:
         self.velocity_alpha_range = velocity_alpha_range
         self.velocity_beta = None
 
-        if distance_range is not None:
-            self.distance = RobotCurriculumBehavior._get_start_value(
-                is_positive_distance_beta,
-                distance_range
-            )
-            self.distance_beta = RobotCurriculumBehavior._get_beta(
-                updates_per_task,
-                distance_range,
-                is_positive_distance_beta)
-
-        if velocity_alpha_range is not None:
-            self.velocity_alpha = RobotCurriculumBehavior._get_start_value(
-                is_positive_velocity_beta,
-                velocity_alpha_range
-            )
-            self.velocity_beta = RobotCurriculumBehavior._get_beta(
-                updates_per_task,
-                velocity_alpha_range,
-                is_positive_velocity_beta)
+        self._try_set_distance()
+        self._try_set_velocity_alpha()
 
         self.model_path = None
+
+    def _try_set_distance(self):
+        if self.distance_range is not None:
+            self.distance = RobotCurriculumBehavior._get_start_value(
+                self.is_positive_distance_beta,
+                self.distance_range)
+            
+            self.distance_beta = RobotCurriculumBehavior._get_beta(
+                self.updates_per_task,
+                self.distance_range,
+                self.is_positive_distance_beta)
+            
+    def _try_set_velocity_alpha(self):
+        if self.velocity_alpha_range is not None:
+            self.velocity_alpha = RobotCurriculumBehavior._get_start_value(
+                self.is_positive_velocity_beta,
+                self.velocity_alpha_range)
+
+            self.velocity_beta = RobotCurriculumBehavior._get_beta(
+                self.updates_per_task,
+                self.velocity_alpha_range,
+                self.is_positive_velocity_beta)
 
     def set_model_path(self, model_path):
         self.model_path = model_path
 
     def update(self, times: int = 1):
-        def trucate(value: float, range: 'tuple[float, float]'):
-            return RobotCurriculumBehavior._truncate(value, range)
-
-        if self.robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.BALL_FOLLOWING:
-            self.velocity_alpha = trucate(
+        def clip(value: float, range: 'tuple[float, float]'):
+            return np.clip(value, range[0], range[1])
+        
+        if self.distance_range is not None:
+            self.distance = clip(
+                self.distance + self.distance_beta * times,
+                self.distance_range)
+            
+        if self.velocity_alpha_range is not None:
+            self.velocity_alpha = clip(
                 self.velocity_alpha + self.velocity_beta * times,
-                self.velocity_alpha_range
-            )
-            self.distance = trucate(
-                self.distance + self.distance_beta * times,
-                self.distance_range
-            )
-        elif self.robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.FROM_MODEL:
-            self.distance = trucate(
-                self.distance + self.distance_beta * times,
-                self.distance_range
-            )
+                self.velocity_alpha_range)
 
     def reset(self):
         if self.velocity_alpha_range is not None:
             self.velocity_alpha = RobotCurriculumBehavior._get_start_value(
                 self.is_positive_velocity_beta,
-                self.velocity_alpha_range
-            )
+                self.velocity_alpha_range)
         else:
             self.velocity_alpha = None
 
@@ -111,11 +111,7 @@ class RobotCurriculumBehavior:
         return True
 
     def is_over(self):
-        if self.robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.BALL_FOLLOWING:
-            return self._is_distance_in_limit() and self._is_velocity_alpha_in_limit()
-        elif self.robot_curriculum_behavior_enum == RobotCurriculumBehaviorEnum.FROM_MODEL:
-            return self._is_distance_in_limit() and self._is_velocity_alpha_in_limit()
-        return True
+        return self._is_distance_in_limit() and self._is_velocity_alpha_in_limit()
     
     def has_behavior(self, robot_curriculum_behavior_enum: RobotCurriculumBehaviorEnum):
         return self.robot_curriculum_behavior_enum == robot_curriculum_behavior_enum
@@ -124,10 +120,6 @@ class RobotCurriculumBehavior:
         if self.velocity_alpha_range is None:
             return 1
         return self.velocity_alpha
-    
-    @staticmethod
-    def _truncate(value: float, range: 'tuple[float, float]'):
-        return max(range[0], min(value, range[1]))
     
     @staticmethod
     def _get_beta(
