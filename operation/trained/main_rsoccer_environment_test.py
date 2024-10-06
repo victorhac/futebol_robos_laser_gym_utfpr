@@ -1,14 +1,8 @@
 from stable_baselines3 import PPO
 from lib.utils.behavior.behavior_utils import BehaviorUtils
-from lib.utils.configuration_utils import ConfigurationUtils
-from lib.environment.attacker.environment import Environment
+from lib.environment.defensor.environment import Environment
 
-IS_YELLOW_TEAM = ConfigurationUtils.get_rsoccer_team_is_yellow_team()
-FIELD_LENGTH = ConfigurationUtils.get_field_length()
-IS_LEFT_TEAM = ConfigurationUtils.get_rsoccer_is_left_team()
-ROBOT_SPEED_BASE = ConfigurationUtils.get_rsoccer_robot_speed_max_radians_seconds()
-
-task = BehaviorUtils.get_task_8(97)
+task = BehaviorUtils.get_task_1(97)
 
 env = Environment(task, "human")
 
