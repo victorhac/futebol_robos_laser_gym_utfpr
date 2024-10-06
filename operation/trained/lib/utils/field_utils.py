@@ -36,6 +36,21 @@ class FieldUtils:
             return (-field_length / 2, 0)
         else:
             return (field_length / 2, 0)
+        
+    @staticmethod
+    def get_inside_own_goal_position(
+        field_length: float,
+        goal_depth: float,
+        is_left_team: bool
+    ):
+        x, y = FieldUtils.get_own_goal_position(
+            field_length,
+            is_left_team)
+        
+        if x > 0:
+            return x + goal_depth, y
+        else:
+            return x - goal_depth, y
     
     @staticmethod
     def is_inside_own_goal_area(

@@ -237,6 +237,12 @@ class BaseEnvironment(gym.Env):
     def get_goal_depth(self):
         return self.field.goal_depth
     
+    def get_inside_own_goal_position(self, is_yellow_team: bool):
+        return FieldUtils.get_inside_own_goal_position(
+            self.get_field_length(),
+            self.get_goal_depth(),
+            not is_yellow_team)
+    
     def get_ball(self):
         return self.frame.ball
     

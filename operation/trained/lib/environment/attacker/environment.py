@@ -198,10 +198,10 @@ class Environment(BaseCurriculumEnvironment):
         convert_m_to_cm = lambda x: x * 100
 
         length_cm = convert_m_to_cm(field_length)
-        half_lenght = (field_length / 2) + goal_depth
+        half_length = (field_length / 2) + goal_depth
 
-        dx_d = convert_m_to_cm((half_lenght + ball.x))
-        dx_a = convert_m_to_cm((half_lenght - ball.x))
+        dx_d = convert_m_to_cm((half_length + ball.x))
+        dx_a = convert_m_to_cm((half_length - ball.x))
         dy = convert_m_to_cm(ball.y)
 
         dist_1 = math.sqrt(dx_a ** 2 + 2 * dy ** 2)
@@ -237,6 +237,7 @@ class Environment(BaseCurriculumEnvironment):
     
     def _calculate_reward_and_done(self):
         reward = 0
+
         w_move = 0.2
         w_ball_grad = 0.8
         w_energy = 2e-4

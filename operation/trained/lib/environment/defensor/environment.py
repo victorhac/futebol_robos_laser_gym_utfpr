@@ -213,10 +213,10 @@ class Environment(BaseCurriculumEnvironment):
         convert_m_to_cm = lambda x: x * 100
 
         length_cm = convert_m_to_cm(field_length)
-        half_lenght = (field_length / 2) + goal_depth
+        half_length = (field_length / 2) + goal_depth
 
-        dx_d = convert_m_to_cm((half_lenght + ball.x))
-        dx_a = convert_m_to_cm((half_lenght - ball.x))
+        dx_d = convert_m_to_cm((half_length + ball.x))
+        dx_a = convert_m_to_cm((half_length - ball.x))
         dy = convert_m_to_cm(ball.y)
 
         dist_1 = math.sqrt(dx_a ** 2 + 2 * dy ** 2)
@@ -234,16 +234,45 @@ class Environment(BaseCurriculumEnvironment):
             reward = 0
         
         return reward, ball_potential
-        
-    def _move_reward(self):
+    
+    def _ball_gradient_reward_by_positions(
+        self,
+        previous_ball_potential: 'float | None',
+        desired_position: float,
+        undesired_position: float
+    ):
+        field_length = self.get_field_length()
         ball = self.get_ball()
-        robot = self._get_agent()
 
-        ball_position = np.array([ball.x, ball.y])
+        distance_to_desired = GeometryUtils.distance((ball.x, ball.y), desired_position)
+        distance_to_undesired = GeometryUtils.distance((ball.x, ball.y), undesired_position)
+
+        ball_potential = ((distance_to_desired - distance_to_undesired) / field_length - 1) / 2
+
+        if previous_ball_potential is not None:
+            ball_potential_difference = ball_potential - previous_ball_potential
+            reward = np.clip(
+                ball_potential_difference * 3 / self.time_step,
+                -5.0,
+                5.0)
+        else:
+            reward = 0
+        
+        return reward, ball_potential
+        
+    def _move_towards_ball_reward(self):
+        ball = self.get_ball()
+        return self._move_reward((ball.x, ball.y))
+    
+    def _move_reward(
+        self,
+        position: 'tuple[float, float]'
+    ):
+        robot = self._get_agent()
         robot_position = np.array([robot.x, robot.y])
         
         robot_velocities = np.array([robot.v_x, robot.v_y])
-        robot_ball_vector = ball_position - robot_position
+        robot_ball_vector = np.array(position) - robot_position
         robot_ball_vector = robot_ball_vector / np.linalg.norm(robot_ball_vector)
 
         move_reward = np.dot(robot_ball_vector, robot_velocities)
@@ -252,34 +281,66 @@ class Environment(BaseCurriculumEnvironment):
     
     def _calculate_reward_and_done(self):
         reward = 0
+        
+        w_move = 0.2
+        w_ball_grad = 0.8
+        w_energy = 2e-4
 
-        if self._is_agent_inside_defensive_area() and\
-                self._is_ball_inside_defensive_area():
-            # _move_reward + _ball_gradient_reward com relação a (xdefesa, ybola)
-            pass
-        elif self._is_agent_inside_defensive_area() and\
-                not self._is_ball_inside_defensive_area():
-            # _move_reward com relação a ybola
-            pass
-        elif not self._is_agent_inside_defensive_area() and\
-                self._is_ball_inside_defensive_area():
-            # reward (_move_reward + _ball_gradient_reward com relação a (xdefesa, ybola)) - 3,001
-            pass
-        elif not self._is_agent_inside_defensive_area() and\
-                not self._is_ball_inside_defensive_area():
-            # _move_reward com relação a (xdefesa, ybola) - 1
-            pass
+        robot = self._get_agent()
+        ball = self.get_ball()
+
+        energy_penalty = self._energy_penalty()
+
+        if self._is_ball_inside_defensive_area():
+            grad_ball_potential, ball_gradient = \
+                self._ball_gradient_reward_by_positions(
+                    self.previous_ball_potential,
+                    self.get_inside_own_goal_position(False),
+                    (self.defensive_line_x, ball.y))
             
+            self.previous_ball_potential = ball_gradient
+            move_reward = self._move_towards_ball_reward()
+
+            if self._is_agent_inside_defensive_area():
+                # _move_reward + _ball_gradient_reward com relação a (xdefesa, ybola)
+                reward = w_move * move_reward + \
+                    w_ball_grad * grad_ball_potential + \
+                    w_energy * energy_penalty
+            else:
+                # reward (_move_reward + _ball_gradient_reward com relação a (xdefesa, ybola)) - 3,001
+                base_penalty = 3.001
+
+                reward = w_move * move_reward + \
+                    w_ball_grad * grad_ball_potential + \
+                    w_energy * energy_penalty - \
+                    base_penalty
+        else:
+            move_reward = self._move_reward((robot.x, ball.y))
+
+            if self._is_agent_inside_defensive_area():
+                # _move_reward com relação a ybola
+                move_reward = self._move_reward((robot.x, ball.y))
+
+                reward = w_move * move_reward + \
+                    w_energy * energy_penalty
+            else:
+                # _move_reward com relação a (xdefesa, ybola) - 1
+                base_penalty = -1
+
+                move_reward = self._move_reward((robot.x, ball.y))
+
+                reward = w_move * move_reward + \
+                    w_energy * energy_penalty - \
+                    base_penalty
+                
         is_done = self._is_done()
 
         if is_done:
             if self._is_ball_inside_goal_area():
-                # -10
-                pass
+                reward = -10
             elif not self._is_ball_inside_defensive_area() and\
-                    self.last_robot_touched_ball == self._get_agent():
-                # +10
-                pass
+                    self.last_robot_touched_ball == robot:
+                reward = 10
 
         return reward, is_done
     
