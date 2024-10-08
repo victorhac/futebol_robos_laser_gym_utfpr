@@ -20,7 +20,7 @@ class MotionUtils:
     @staticmethod
     def goToPoint(
         robot: Robot, 
-        targetPosition: tuple[float, float],
+        targetPosition:'tuple[float, float]',
         lastError: float = 0
     ):
         positionX, positionY = robot.get_position_tuple()
@@ -83,8 +83,8 @@ class MotionUtils:
         robotId: int,
         fieldData: FieldData,
         opponentFieldData: FieldData,
-        targetPosition: tuple[float, float]
-    ) -> list[Robot] | None:
+        targetPosition:'tuple[float, float]'
+    ) -> 'list[Robot]' | None:
         robot = fieldData.robots[robotId]
         obstacles = []
 
@@ -121,7 +121,7 @@ class MotionUtils:
         robotId: int,
         fieldData: FieldData,
         opponentFieldData: FieldData,
-        targetPosition: tuple[float, float]
+        targetPosition:'tuple[float, float]'
     ) -> Robot | None:
         obstacles = MotionUtils.findObstacles(robotId, fieldData, opponentFieldData, targetPosition)
 
@@ -151,7 +151,7 @@ class MotionUtils:
         robotId: int,
         fieldData: FieldData,
         opponentFieldData: FieldData,
-        targetPosition: tuple[float, float]
+        targetPosition:'tuple[float, float]'
     ):
         obstacleRobot = MotionUtils.findClosestObstacle(
             robotId,

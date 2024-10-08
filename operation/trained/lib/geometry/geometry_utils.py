@@ -34,7 +34,7 @@ class GeometryUtils:
         return GeometryUtils.normalizeAngle(radians, 0, PI)
 
     @staticmethod
-    def distance(position1: tuple[float, float], position2: tuple[float, float]):
+    def distance(position1:'tuple[float, float]', position2:'tuple[float, float]'):
         position1x, position1y = position1
         position2x, position2y = position2
 
@@ -42,8 +42,8 @@ class GeometryUtils:
 
     @staticmethod
     def isClose(
-        position1: tuple[float, float], 
-        position2: tuple[float, float],
+        position1:'tuple[float, float]', 
+        position2:'tuple[float, float]',
         tolerance: float):
 
         return GeometryUtils.distance(position1, position2) < tolerance
@@ -67,7 +67,7 @@ class GeometryUtils:
         return x, y
     
     @staticmethod
-    def lineEquation(point1: tuple[float, float], point2: tuple[float, float]):
+    def lineEquation(point1:'tuple[float, float]', point2:'tuple[float, float]'):
         """
         Return the equation of the line passing through two points in the form (a, b, c): (ax + by = c).
         """
@@ -84,7 +84,7 @@ class GeometryUtils:
         return -m, 1, b
     
     @staticmethod
-    def lineEquationByPointAndAngle(point: tuple[float, float], angle: float):
+    def lineEquationByPointAndAngle(point:'tuple[float, float]', angle: float):
         """
         Return the equation of the line passing through a point with a given angle in the form (a, b, c): (ax + by = c).
         """
@@ -95,7 +95,7 @@ class GeometryUtils:
         return -m, 1, b
     
     @staticmethod
-    def getMidpoint(point1: tuple[float, float], point2: tuple[float, float]):
+    def getMidpoint(point1:'tuple[float, float]', point2:'tuple[float, float]'):
         """
         Return the midpoint of two points.
         """
@@ -162,7 +162,7 @@ class GeometryUtils:
         return poly1.contains(poly2)
     
     @staticmethod
-    def getTangentPoints(center: tuple[float, float], radius: float, point: tuple[float, float]):
+    def getTangentPoints(center:'tuple[float, float]', radius: float, point:'tuple[float, float]'):
         """
         Calculate the tangent points on a circle to a given point.
 
@@ -232,8 +232,8 @@ class GeometryUtils:
     
     @staticmethod
     def angleBetweenVectors(
-        v1: list[float],
-        v2: list[float]
+        v1: 'list[float]',
+        v2: 'list[float]'
     ):
         dot_prod = GeometryUtils.dotProduct(v1, v2)
 
@@ -246,13 +246,13 @@ class GeometryUtils:
     
     @staticmethod
     def dotProduct(
-        v1: list[float],
-        v2: list[float]
+        v1: 'list[float]',
+        v2: 'list[float]'
     ):
         return sum((a * b) for a, b in zip(v1, v2))
 
     @staticmethod
-    def vectorMagnitude(v: list[float]):
+    def vectorMagnitude(v: 'list[float]'):
         return math.sqrt(sum(a**2 for a in v))
     
     @staticmethod

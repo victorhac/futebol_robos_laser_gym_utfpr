@@ -2,7 +2,7 @@
 class Rectangle:
     def __init__(
         self,
-        center: tuple[float, float],
+        center:'tuple[float, float]',
         width: float,
         height: float,
         angle: float

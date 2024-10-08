@@ -47,7 +47,7 @@ class FieldHelper:
     
     @staticmethod
     def getMaxDistanceToPoint(
-        position: tuple[float, float],
+        position:'tuple[float, float]',
         fieldLength: float,
         fieldWidth: float
     ):

@@ -9,7 +9,7 @@ import math
 class Motion:
     @staticmethod
     def goToPoint(robot: EntityData, 
-            targetPosition: tuple[float, float],
+            targetPosition:'tuple[float, float]',
             isLeftTeam: bool,
             lastError: float = 0):
         configuration = ConfigurationHelper.getConfiguration()

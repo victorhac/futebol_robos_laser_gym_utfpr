@@ -37,7 +37,7 @@ GOALKEEPER_ROBOT_ID = 2
 def placeRobot(
     id: int,
     fieldData: FieldData,
-    targetPosition: tuple[float, float],
+    targetPosition:'tuple[float, float]',
     vision: ProtoVision,
     teamControl: ProtoControl
 ):
