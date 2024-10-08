@@ -13,4 +13,7 @@ class Robot():
         return msg
 
     def __repr__(self):
-        return f'EntityData({self})'
+        return f'Robot({self})'
+    
+    def get_position_tuple(self):
+        return (self.position.x, self.position.y)

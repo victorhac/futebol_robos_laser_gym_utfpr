@@ -11,7 +11,7 @@
     },
     "team": {
         "is-yellow-left-team": true,
-        "is-yellow-team": false,
+        "is-yellow-team": true,
         "blue": {
             "number-robots": 1
         },
@@ -34,7 +34,7 @@
     "FIRASim": {
         "control": {
             "ip": "127.0.0.1",
-            "port": 20011
+            "port": 20027
         },
         "vision": {
             "ip": "224.0.0.1",
@@ -47,11 +47,17 @@
         "goal": {
             "width": 0.4
         },
+        "goal-area": {
+            "length": 0.2,
+            "width": 0.6
+        },
         "ball": {
             "radius": 0.0215
         }
     },
-    "execucao": {
-        "step-time": 1
+    "training": {
+        "time-step": 0.025,
+        "episode-duration": 5,
+        "velocity-clip-value": 1.2
     }
 }

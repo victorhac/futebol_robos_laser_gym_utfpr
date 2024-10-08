@@ -2,6 +2,10 @@ Projeto para treinamento da estratégia para a equipe de Futebol de Robôs da UT
 
 Ele está dividido em dois diretórios principais: operation (contém as classes utilizadas para realizar os movimentos da equipe de robôs) e training (na qual estão as classes para treinamento dos agentes).
 
+```
+sudo docker run -it --rm --net=host --env="DISPLAY" --volume="$HOME/.Xauthority:/root/.Xauthority:rw" futebol_robos_utfpr
+```
+
 O padrão para o uso do git é o GitFlow (https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow).
 
 Algumas considerações sobre o git:
