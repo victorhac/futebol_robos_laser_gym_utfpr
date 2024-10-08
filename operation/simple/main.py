@@ -1,7 +1,8 @@
 import time
 import threading
 
-from lib.comm.vision import ProtoVision
+# from lib.comm.vision import ProtoVision
+from communication.receiver.vision import SSLVisionReceiver as ProtoVision
 from lib.core.data import EntityData, FieldData
 from lib.comm.control import ProtoControl
 from lib.geometry.geometry import Geometry
@@ -258,8 +259,11 @@ def visionPlayerThread(
     visioTest: Receiver
 ):
     dataTest = visioTest.dataFinal(visioTest)
-    while(True):
-        print(dataTest)
+    cont = 0
+    while(cont < 10):
+        # print(f'Receiver: {dataTest}')
+        # print(f'FieldData: {fieldData}')
+        cont+=1
 
 def atackerPlayerThread(
     fieldData: FieldData,

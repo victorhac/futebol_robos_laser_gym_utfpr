@@ -60,10 +60,11 @@ class SSLVisionReceiver(Receiver):
 
     def _entity_from_dict(
         self,
-        entity_data: EntityData,
         data_dict,
         isLeftTeam=False
     ):
+        entity_data = EntityData()
+
         sum_to_angle = 0 if not isLeftTeam else np.pi
 
         entity_data.position.x, entity_data.position.y = \
@@ -84,30 +85,50 @@ class SSLVisionReceiver(Receiver):
 
         entity_data.velocity.theta = data_dict.get('vorientation', 0)
 
+        return entity_data
+
     def _field_data_from_dict(self, field_data: FieldData, raw_data_dict):
         isYellowLeftTeam = self.configuration['team']['is-yellow-left-team']
         isLeftTeam = FieldHelper.isLeftTeam(self.team_color_yellow, isYellowLeftTeam)
 
         rotate_field = isLeftTeam
         
-        if self.team_color_yellow == True:
-            team_list_of_dicts = raw_data_dict.get('robots_yellow')
-            foes_list_of_dicts = raw_data_dict.get('robots_blue')
+        if self.team_color_yellow:
+            team_list_of_dicts = raw_data_dict.get('robotsYellow')
+            foes_list_of_dicts = raw_data_dict.get('robotsBlue')
         else:
-            team_list_of_dicts = raw_data_dict.get('robots_blue')
-            foes_list_of_dicts = raw_data_dict.get('robots_yellow')
+            team_list_of_dicts = raw_data_dict.get('robotsBlue')
+            foes_list_of_dicts = raw_data_dict.get('robotsYellow')
+
+        if team_list_of_dicts is None:
+            team_list_of_dicts = []
+
+        if foes_list_of_dicts is None:
+            foes_list_of_dicts = []
 
         # TODO: determine how to choose the correct ball
         ball_index = 0
-        ball = raw_data_dict['balls'][ball_index]
 
-        self._entity_from_dict(field_data.ball, ball, True)
+        fake_ball = {
+            "confidence": 0.99282587,
+            "area": 52,
+            "x": 369.55273,
+            "y": -838.1288,
+            "pixelX": 389.59616,
+            "pixelY": 453.98077
+        }
+
+        balls = raw_data_dict.get('balls')
+
+        ball = balls[ball_index] if balls is not None else fake_ball
+
+        field_data.ball = self._entity_from_dict(ball, True)
 
         for i in range(len(team_list_of_dicts)):
-            self._entity_from_dict(field_data.robots[i], team_list_of_dicts[i], rotate_field)
+            field_data.robots[i] = self._entity_from_dict(team_list_of_dicts[i], rotate_field)
 
         for i in range(len(foes_list_of_dicts)):
-            self._entity_from_dict(field_data.foes[i], foes_list_of_dicts[i], rotate_field)
+            field_data.foes[i] = self._entity_from_dict(foes_list_of_dicts[i], rotate_field)
 
 class ProtoVisionThread(Job):
     def __init__(
