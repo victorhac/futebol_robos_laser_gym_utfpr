@@ -35,12 +35,12 @@ class Receiver:
         
         if(packet.HasField('detection')):
             detection = packet.detection
-            # print(f"tenho detection: {detection}\n ")
+            print(f"tenho detection: {detection}\n ")
             return detection
             
         else:
             detection = packet.detection
-            #print(f"Pacotes não recebidos de forma adequada: {detection}\n ")
+            print(f"Pacotes não recebidos de forma adequada: {detection}\n ")
             return detection
         
     def dataFinal(self):
