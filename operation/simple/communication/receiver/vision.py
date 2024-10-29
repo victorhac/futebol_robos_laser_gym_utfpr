@@ -37,6 +37,9 @@ class SSLVisionReceiver(Receiver):
         self.field_data = field_data
         self.configuration = ConfigurationHelper.getConfiguration()
 
+        self.team_robot_id_mapping = self.configuration["SSLVision"]["team"]["robot-id-mapping"]
+        self.foe_robot_id_mapping = self.configuration["SSLVision"]["foe-team"]["robot-id-mapping"]
+
     def receive(self):
         return super().receive()
 
@@ -95,6 +98,18 @@ class SSLVisionReceiver(Receiver):
         entity_data.velocity.theta = data_dict.get('vorientation', 0)
 
         return entity_data
+    
+    def team_list_of_dicts(self, raw_data_dict, key: str):
+        team_list_of_dicts = raw_data_dict.get(key)
+
+        if team_list_of_dicts is None:
+            return []
+        
+        return team_list_of_dicts
+    
+    def get_index(self, received_robot):
+        robot_id = str(received_robot.get("robotId")).lower()
+        return self.foe_robot_id_mapping.get(robot_id)
 
     def _field_data_from_dict(self, field_data: FieldData, raw_data_dict):
         isYellowLeftTeam = self.configuration['team']['is-yellow-left-team']
@@ -103,17 +118,11 @@ class SSLVisionReceiver(Receiver):
         rotate_field = isLeftTeam
         
         if self.team_color_yellow:
-            team_list_of_dicts = raw_data_dict.get('robotsYellow')
-            foes_list_of_dicts = raw_data_dict.get('robotsBlue')
+            team_list_of_dicts = self.team_list_of_dicts(raw_data_dict, 'robotsYellow')
+            foes_list_of_dicts = self.team_list_of_dicts(raw_data_dict, 'robotsBlue')
         else:
-            team_list_of_dicts = raw_data_dict.get('robotsBlue')
-            foes_list_of_dicts = raw_data_dict.get('robotsYellow')
-
-        if team_list_of_dicts is None:
-            team_list_of_dicts = []
-
-        if foes_list_of_dicts is None:
-            foes_list_of_dicts = []
+            team_list_of_dicts = self.team_list_of_dicts(raw_data_dict, 'robotsBlue')
+            foes_list_of_dicts = self.team_list_of_dicts(raw_data_dict, 'robotsYellow')
 
         # TODO: determine how to choose the correct ball
         ball_index = 0
@@ -134,19 +143,26 @@ class SSLVisionReceiver(Receiver):
         field_data.ball = self._entity_from_dict(ball, True)
         field_data.ball.position.x *= 0.0012
         field_data.ball.position.y *= 0.00173
-        #print(field_data.ball.position)
 
-        for i in range(len(team_list_of_dicts)):
-            field_data.robots[i] = self._entity_from_dict(team_list_of_dicts[i], rotate_field)
-            field_data.robots[i].position.x *= 0.0012
-            field_data.robots[i].position.y *= 0.00173
+        for received_robot in team_list_of_dicts:
+            robot = self._entity_from_dict(received_robot, rotate_field)
+            robot.x *= 0.0012
+            robot.y *= 0.00173
 
-            
+            index = self.get_index(received_robot)
 
-        for i in range(len(foes_list_of_dicts)):
-            field_data.foes[i] = self._entity_from_dict(foes_list_of_dicts[i], rotate_field)
-            field_data.foes[i].position.x *= 0.0012
-            field_data.foes[i].position.y *= 0.00173
+            if index is not None:
+                field_data.robots[index] = robot
+
+        for received_robot in foes_list_of_dicts:
+            robot = self._entity_from_dict(received_robot, rotate_field)
+            robot.x *= 0.0012
+            robot.y *= 0.00173
+
+            index = self.get_index(received_robot)
+
+            if index is not None:
+                field_data.foes[index] = robot
 
 class ProtoVisionThread(Job):
     def __init__(
