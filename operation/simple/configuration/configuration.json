@@ -1,7 +1,7 @@
 {
     "robot": {
         "wheel": {
-            "radius": 0.03
+            "radius": 0.034
         },
         "speed": {
             "base": 30

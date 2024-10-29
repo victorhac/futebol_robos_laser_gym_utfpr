@@ -260,13 +260,10 @@ class Motion:
             else:
                 orientation = 1
             leftMotorSpeed, rightMotorSpeed, error = Motion.goToOrbitPoint(robot, desired_position, isLeftTeam, -orientation, lastError, -math.pi / 5, 0.075)
-
-            
-            
-            
-            
             
             teamControl.transmit_robot(id, leftMotorSpeed, rightMotorSpeed)
+            print(robot.position)
+
             theta += 0.0614
             lastError = error
 

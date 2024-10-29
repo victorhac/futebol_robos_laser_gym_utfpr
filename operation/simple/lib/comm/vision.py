@@ -60,6 +60,8 @@ class ProtoVision(Receiver):
             vision_data_dict = self.receive_dict()
 
             self._field_data_from_dict(self.field_data, vision_data_dict)
+            
+        print(self.field_data)
 
 
     def _entity_from_dict(self, entity_data: EntityData, data_dict, isLeftTeam=False):
@@ -103,6 +105,7 @@ class ProtoVision(Receiver):
             self._entity_from_dict(field_data.ball, raw_data_dict['ball'], True)
 
         for i in range(len(team_list_of_dicts)):
+            print(field_data.robots[i])
             self._entity_from_dict(field_data.robots[i], team_list_of_dicts[i], rotate_field)
 
         for i in range(len(foes_list_of_dicts)):

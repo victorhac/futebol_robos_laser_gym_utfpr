@@ -28,7 +28,6 @@ class Receiver(ABC):
         """
 
         data = self.receiver_socket.recv(1024)
-
         return data
 
 

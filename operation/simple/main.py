@@ -12,7 +12,6 @@ from lib.motion.motion import Motion
 from lib.helpers.field_helper import FieldHelper
 from lib.helpers.firasim_helper import FIRASimHelper
 
-from communication.receiver.receiver import Receiver
 
 CONFIGURATION = ConfigurationHelper.getConfiguration()
     
@@ -39,7 +38,7 @@ SWAP = 0
 ORIGIN = [-FIELD_WIDTH, 0]
 
 GOALKEEPER_ROBOT_ID = 2
-    
+
 def spinIfCloseToBall(
     id: int,
     ):
@@ -127,59 +126,81 @@ def atackerPlayerThread(
     global fsimcontroler
 
     ball = fieldData.ball
-    atacker = fieldData.robots[ATAKER_ID]
+    atacker = fieldData.robots[0]
     ballPosition = ball.position.x, ball.position.y
     atackerPosition = atacker.position.x, atacker.position.y
     
     while True:
         vision.update()
-        """ballPosition = ball.position.x, ball.position.y
+
+        ball = fieldData.ball
+        atacker = fieldData.robots
+        ballPosition = ball.position.x, ball.position.y
         atackerPosition = atacker.position.x, atacker.position.y
-        
-        if between(ballPosition[0],0.4, 0.7) and between(ballPosition[1], -0.3, 0.3) and between(atackerPosition[1], -0.3, 0.3) :
+        ballDirection = Geometry.directionalVector(atackerPosition, ballPosition)
+
+        (leftSpeed, rightSpeed, error) = Motion.GoOnDirection(ballDirection, atacker)
+        teamControl.transmit_robot(0, leftSpeed, rightSpeed)   
+  
+ 
+        """ if between(ballPosition[0],0.4, 0.7) and between(ballPosition[1], -0.3, 0.3) and between(atackerPosition[1], -0.3, 0.3) :
             
             ballDirection = Geometry.directionalVector(atackerPosition, ballPosition)
-            (leftSpeed, rightSpeed, error) = Motion.goOnDirection(ballDirection, atacker)
-            teamControl.transmit_robot(ATAKER_ID, leftSpeed, rightSpeed)
+            (leftSpeed, rightSpeed, error) = Motion.GoOnDirection(ballDirection, atacker)
+            teamControl.transmit_robot(0, leftSpeed, rightSpeed)
             
         elif ball.position.x < 0:
-            followBallY(ATAKER_ID,(0,1, ballPosition[1]))
+            followBallY(0,(0,1, ballPosition[1]))
 
-            (leftSpeed, rightSpeed, error) = Motion.faceDirection(atacker, ballPosition, IS_LEFT_TEAM)
-            teamControl.transmit_robot(ATAKER_ID, leftSpeed, rightSpeed)   
-        else: 
-            Motion.AtkOrbit(fsimcontroler, ATAKER_ID, IS_LEFT_TEAM)"""
- 
+            (leftSpeed, rightSpeed, error) = Motion.FaceDirection(atacker, ballPosition, IS_LEFT_TEAM)
+            teamControl.transmit_robot(0, leftSpeed, rightSpeed)   
+        #else:
+            #Motion.AtkOrbit(fsimcontroler, 0, IS_LEFT_TEAM)"""
+
 def defensePlayerThread(
     fieldData: FieldData,
     vision: ProtoVision,
     teamControl: ProtoControl
 ):
     ball = fieldData.ball
-    Defenser = fieldData.robots[DEFENSER_ID]
+    Defenser = fieldData.robots[1]
     global fsimcontroler
 
-    vision.update()
+    '''vision.update()
     while True:
         vision.update()
+        ball = fieldData.ball
+        Defenser = fieldData.robots[1]
+        ballPosition = ball.position.x, ball.position.y
+        DefenserPosition = Defenser.position.x, Defenser.position.y
+        ballDirection = Geometry.directionalVector(DefenserPosition, ballPosition)
+
+        (leftSpeed, rightSpeed, error) = Motion.GoOnDirection(ballDirection, Defenser)
+        teamControl.transmit_robot(1, leftSpeed, rightSpeed) 
+
+
+        vision.update()
+        
+        ball = fieldData.ball
+        Defenser = fieldData.robots[1]
+        
         ballPosition = ball.position.x, ball.position.y
         defenserPosition = Defenser.position.x, Defenser.position.y
-
+        
         if(ball.position.x > 0):
             
-            followBallY(DEFENSER_ID,(-DEFENSE_LINE_DISTANCE_TO_GOAL, ballPosition[1]))
+            #followBallY(1,(-DEFENSE_LINE_DISTANCE_TO_GOAL, ballPosition[1]))
 
-            (leftSpeed, rightSpeed, error) = Motion.faceDirection(Defenser, ballPosition, IS_LEFT_TEAM)
-            teamControl.transmit_robot(DEFENSER_ID, leftSpeed, rightSpeed)      
+            (leftSpeed, rightSpeed, error) = Motion.FaceDirection(Defenser, ballPosition, IS_LEFT_TEAM)
+            teamControl.transmit_robot(1, leftSpeed, rightSpeed)      
         elif ball.position.x > Defenser.position.x:
             #arrancar a bola do campo de defesa
             ballDirection = Geometry.directionalVector(defenserPosition, ballPosition)
-            (leftSpeed, rightSpeed, error) = Motion.goOnDirection(ballDirection, Defenser)
-            teamControl.transmit_robot(DEFENSER_ID, leftSpeed, rightSpeed)
+            (leftSpeed, rightSpeed, error) = Motion.GoOnDirection(ballDirection, Defenser)
+            teamControl.transmit_robot(1, leftSpeed, rightSpeed)    '''
+        # else:
+            #spinIfCloseToBall(1)
             
-        else:
-            
-            spinIfCloseToBall(DEFENSER_ID)
 
 def yGoalValue():
     global fsimcontroler
@@ -197,7 +218,7 @@ def goalkeeperPlayerThread(
     teamControl: ProtoControl
 ):
     ball = fieldData.ball
-    goalkeeper = fieldData.robots[GOALKEEPER_ROBOT_ID]
+    goalkeeper = fieldData.robots[2]
 
     if IS_LEFT_TEAM:
         xCoordinateGoalkeeper = -GOAL_LINE_DISTANCE_TO_CENTER
@@ -206,13 +227,29 @@ def goalkeeperPlayerThread(
     
     targetPosition = (xCoordinateGoalkeeper, 0.0)
    
-    #placeRobot( GOALKEEPER_ROBOT_ID, targetPosition)
+    #placeRobot( 2, targetPosition)
 
     raio = 0.175
     
     while True:
-        vision.update()
-        """origem = [-GOAL_LINE_DISTANCE_TO_CENTER, yGoalValue()]
+        
+        '''vision.update()
+        ball = fieldData.ball
+        goalkeeper = fieldData.robots[2]
+        ballPosition = ball.position.x, ball.position.y
+        goalkeeperPosition = goalkeeper.position.x, goalkeeper.position.y
+        ballDirection = Geometry.directionalVector(goalkeeperPosition, ballPosition)
+
+        (leftSpeed, rightSpeed, error) = Motion.GoOnDirection(ballDirection, goalkeeper)
+        teamControl.transmit_robot(2, leftSpeed, rightSpeed)   '''
+
+        """vision.update()
+        ball = fieldData.ball
+        goalkeeper = fieldData.robots[1]
+        ballPosition = ball.position.x, ball.position.y
+        goalkeeperPosition = goalkeeper.position.x, goalkeeper.position.y
+        
+        origem = [-GOAL_LINE_DISTANCE_TO_CENTER, yGoalValue()]
         goalkeeperPosition = (goalkeeper.position.x, goalkeeper.position.y)
         
         ballPosition = [ball.position.x, ball.position.y]
@@ -221,12 +258,12 @@ def goalkeeperPlayerThread(
 
         if(Geometry.isClose(goalkeeperPosition, ballPosition, 0.15) and goalkeeperPosition[1] < yGoalValue()*1.25 ):
             targetPosition = Geometry.PointOnDirection(origem, ballDirection, 1.5 * raio)
-            placeRobot(GOALKEEPER_ROBOT_ID, targetPosition)         
+            placeRobot(2, targetPosition)         
         else:
             targetPosition = Geometry.PointOnDirection(origem, ballDirection, raio)
-            placeRobot(GOALKEEPER_ROBOT_ID, targetPosition)
-            (leftSpeed, rightSpeed, error) = Motion.faceDirection(goalkeeper, ballPosition, IS_LEFT_TEAM)
-            teamControl.transmit_robot(GOALKEEPER_ROBOT_ID, leftSpeed, rightSpeed)"""
+            #placeRobot(2, targetPosition)
+            (leftSpeed, rightSpeed, error) = Motion.FaceDirection(goalkeeper, ballPosition, IS_LEFT_TEAM)
+            teamControl.transmit_robot(2, leftSpeed, rightSpeed)"""
     
 def createTeam(isYellowTeam, threads):
     global fsimcontroler

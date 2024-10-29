@@ -1,18 +1,27 @@
 import logging
 
-import communication.receiver.messages_robocup_ssl_wrapper_pb2 as wrapper
+import sys
+import os
+
+from lib.comm.receiver import Receiver
+sys.path.append(os.path.abspath("/home/argenton/Documentos/Futebol_Robos/futebol_robos_laser_gym_utfpr/operation/simple/communication/receiver"))
+sys.path.append(os.path.abspath("/home/argenton/Documentos/Futebol_Robos/futebol_robos_laser_gym_utfpr/operation/simple/lib/comm"))
+sys.path.append(os.path.abspath("/home/argenton/Documentos/Futebol_Robos/futebol_robos_laser_gym_utfpr/operation/simple/lib/core"))
+sys.path.append(os.path.abspath("/home/argenton/Documentos/Futebol_Robos/futebol_robos_laser_gym_utfpr/operation/simple/lib/helpers"))
+
+import messages_robocup_ssl_wrapper_pb2 as wrapper
 
 import json
 
 from google.protobuf.json_format import MessageToJson
 import numpy as np
 
-from lib.comm.receiver import Receiver
-from lib.comm.thread_job import Job
-from lib.core.data import EntityData, FieldData
-from lib.helpers.configuration_helper import ConfigurationHelper
-from lib.helpers.field_helper import FieldHelper
-from lib.helpers.firasim_helper import FIRASimHelper
+from thread_job import Job
+from data import EntityData, FieldData
+from configuration_helper import ConfigurationHelper
+from field_helper import FieldHelper
+
+from firasim_helper import FIRASimHelper
 
 class SSLVisionReceiver(Receiver):
     def __init__(
@@ -123,12 +132,21 @@ class SSLVisionReceiver(Receiver):
         ball = balls[ball_index] if balls is not None else fake_ball
 
         field_data.ball = self._entity_from_dict(ball, True)
+        field_data.ball.position.x *= 0.0012
+        field_data.ball.position.y *= 0.00173
+        #print(field_data.ball.position)
 
         for i in range(len(team_list_of_dicts)):
             field_data.robots[i] = self._entity_from_dict(team_list_of_dicts[i], rotate_field)
+            field_data.robots[i].position.x *= 0.0012
+            field_data.robots[i].position.y *= 0.00173
+
+            
 
         for i in range(len(foes_list_of_dicts)):
             field_data.foes[i] = self._entity_from_dict(foes_list_of_dicts[i], rotate_field)
+            field_data.foes[i].position.x *= 0.0012
+            field_data.foes[i].position.y *= 0.00173
 
 class ProtoVisionThread(Job):
     def __init__(

@@ -113,12 +113,6 @@ class Geometry:
             normalized_result = (result[0] / norm, result[1] / norm)
         else:
             normalized_result = (0, 0)
-            
-        print(f"vet bola {other}")
-
-        print(f"vet robo->bola {dirVet}")
-
-        print(f"vet final {normalized_result}")
         return normalized_result
     def perpendicularVector(directionalVector: 'tuple[float, float]'):
         return (directionalVector[1], -directionalVector[0])
