@@ -463,3 +463,152 @@ class BehaviorUtils:
             updates_per_task=updates_per_task,
             default_threshold=default_threshold,
             games_count=games_count)
+    
+    @staticmethod
+    def get_defensor_task_1(
+        update_count: int = 0,
+        updates_per_task: int = 100,
+        games_count: int = 100,
+        default_threshold: float = .7
+    ):
+        behaviors = [
+            BehaviorUtils.get_from_model_behavior(
+                0,
+                PositionEnum.RELATIVE_TO_BALL,
+                updates_per_task)
+        ]
+
+        ball_behavior = BehaviorUtils.get_ball_behavior(
+            PositionEnum.OWN_AREA,
+            updates_per_task,
+            is_positive_distance_beta=True,
+            distance_range=(.2, .75)
+        )
+
+        return CurriculumTask(
+            "1",
+            behaviors,
+            ball_behavior,
+            update_count=update_count,
+            updates_per_task=updates_per_task,
+            games_count=games_count,
+            default_threshold=default_threshold)
+    
+    @staticmethod
+    def get_defensor_task_2(
+        update_count: int = 0,
+        updates_per_task: int = 100,
+        games_count: int = 100,
+        default_threshold: float = .7
+    ):
+        behaviors = [
+            BehaviorUtils.get_from_model_behavior(
+                0,
+                PositionEnum.RELATIVE_TO_BALL,
+                updates_per_task),
+            BehaviorUtils.get_default_opponent_ball_following_behavior(
+                0,
+                updates_per_task)
+        ]
+    
+        ball_behavior = BehaviorUtils.get_ball_behavior(
+            PositionEnum.OWN_AREA,
+            updates_per_task
+        )
+
+        return CurriculumTask(
+            "3",
+            behaviors,
+            ball_behavior,
+            update_count=update_count,
+            updates_per_task=updates_per_task,
+            games_count=games_count,
+            default_threshold=default_threshold)
+    
+    @staticmethod
+    def get_defensor_task_3(
+        update_count: int = 0,
+        updates_per_task: int = 100,
+        games_count: int = 100,
+        default_threshold: float = .7
+    ):
+        behaviors = [
+            BehaviorUtils.get_from_model_behavior(
+                0,
+                PositionEnum.RELATIVE_TO_BALL,
+                updates_per_task),
+            BehaviorUtils.get_stopped_behavior(
+                1,
+                False,
+                PositionEnum.OWN_AREA,
+                updates_per_task),
+            BehaviorUtils.get_default_opponent_ball_following_behavior(
+                0,
+                updates_per_task),
+            BehaviorUtils.get_default_opponent_ball_following_behavior(
+                1,
+                updates_per_task)
+        ]
+    
+        ball_behavior = BehaviorUtils.get_ball_behavior(
+            PositionEnum.OWN_AREA,
+            updates_per_task
+        )
+
+        return CurriculumTask(
+            "3",
+            behaviors,
+            ball_behavior,
+            update_count=update_count,
+            updates_per_task=updates_per_task,
+            games_count=games_count,
+            default_threshold=default_threshold)
+    
+    @staticmethod
+    def get_defensor_task_4(
+        update_count: int = 0,
+        updates_per_task: int = 100,
+        games_count: int = 100,
+        default_threshold: float = .7
+    ):
+        behaviors = [
+            BehaviorUtils.get_from_model_behavior(
+                0,
+                PositionEnum.RELATIVE_TO_BALL,
+                updates_per_task),
+            BehaviorUtils.get_stopped_behavior(
+                1,
+                False,
+                PositionEnum.OWN_AREA,
+                updates_per_task),
+            BehaviorUtils.get_stopped_behavior(
+                2,
+                False,
+                PositionEnum.GOAL_AREA,
+                updates_per_task),
+            BehaviorUtils.get_default_opponent_ball_following_behavior(
+                0,
+                updates_per_task),
+            BehaviorUtils.get_default_opponent_ball_following_behavior(
+                1,
+                updates_per_task),
+            BehaviorUtils.get_stopped_behavior(
+                2,
+                True,
+                PositionEnum.GOAL_AREA,
+                updates_per_task),
+        ]
+    
+        ball_behavior = BehaviorUtils.get_ball_behavior(
+            PositionEnum.OWN_AREA,
+            updates_per_task
+        )
+
+        return CurriculumTask(
+            "4",
+            behaviors,
+            ball_behavior,
+            update_count=update_count,
+            updates_per_task=updates_per_task,
+            games_count=games_count,
+            default_threshold=default_threshold)

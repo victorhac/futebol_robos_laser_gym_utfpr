@@ -1,8 +1,8 @@
 from stable_baselines3 import PPO
 from lib.utils.behavior.behavior_utils import BehaviorUtils
-from lib.environment.defensor.environment import Environment
+from lib.environment.attacker.environment import Environment
 
-task = BehaviorUtils.get_task_1(97)
+task = BehaviorUtils.get_task_6(97)
 
 env = Environment(task, "human")
 
