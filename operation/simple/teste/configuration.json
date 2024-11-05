@@ -1,0 +1,70 @@
+{
+    "robot": {
+        "wheel": {
+            "radius": 0.034
+        },
+        "speed": {
+            "base": 30
+        }
+    },
+    "team": {
+        "is-yellow-left-team": true,
+        "is-yellow-team": true,
+        "blue": {
+            "number-robots": 1
+        },
+        "yellow": {
+            "number-robots": 1
+        }
+    },
+    "motion": {
+        "pid": {
+            "constants": {
+                "Kp": 20,
+                "Ki": 0,
+                "Kd": 0.1
+            }
+        }
+    },
+    "FIRASim": {
+        "control": {
+            "ip": "127.0.0.1",
+            "port": 20011
+        },
+        "vision": {
+            "ip": "224.0.0.1",
+            "port": 10002
+        }
+    },
+    "SSLVision": {
+        "team": {
+            "robot-id-mapping": {
+                "1": 0,
+                "2": 1,
+                "d": 2
+            }
+        },
+        "foe-team": {
+            "robot-id-mapping": {
+                "1": 0,
+                "2": 1,
+                "d": 2
+            }
+        },
+        "ip": "",
+        "port": 0
+    },
+    "field": {
+        "length": 1.5,
+        "width": 1.3,
+        "goal": {
+            "width": 0.4
+        },
+        "ball": {
+            "radius": 0.0215
+        }
+    },
+    "execucao": {
+        "step-time": 1
+    }
+}
