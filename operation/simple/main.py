@@ -2,7 +2,7 @@ import time
 import threading
 
 # from lib.comm.vision import ProtoVision
-from communication.receiver.vision import SSLVisionReceiver as ProtoVision
+from communication.receiver.ssl_vision_receiver import SSLVisionReceiver as ProtoVision
 from lib.core.data import EntityData, FieldData
 from lib.comm.control import ProtoControl
 from lib.geometry.geometry import Geometry
