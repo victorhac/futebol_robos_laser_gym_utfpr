@@ -4,8 +4,6 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from google.protobuf.duration_pb2 import Duration
 import copy
 
-# Protobuf enums, classes, and fields (mocked for this example)
-# In practice, these should be generated from a .proto file
 class RefereeStage:
     NORMAL_FIRST_HALF_PRE = 0
 
@@ -37,7 +35,6 @@ class MatchType:
 class GameEventType:
     TYPE_UNKNOWN = -1
 
-# TeamInfo and GameEvent classes are placeholders and should be generated from .proto
 class TeamInfo:
     def __init__(self):
         self.Name = ""
@@ -50,7 +47,6 @@ class GameEvent:
     def ByTeam(self):
         return Team.UNKNOWN
 
-# State class
 class State:
     def __init__(self):
         self.Stage = RefereeStage.NORMAL_FIRST_HALF_PRE
@@ -77,7 +73,6 @@ class State:
         return TeamInfo()
 
     def clone(self):
-        # Creates a deep copy of the State object
         return copy.deepcopy(self)
 
     def team_info(self, team: Team):

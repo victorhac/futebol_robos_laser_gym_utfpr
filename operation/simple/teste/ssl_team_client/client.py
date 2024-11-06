@@ -9,7 +9,6 @@ from cryptography.hazmat.primitives import serialization
 
 logging.basicConfig(level=logging.INFO)
 
-# DetectHost reads the network address from a multicast message by joining the given multicast group and waiting for data
 def detect_host(address: str) -> str:
     multicast_ip, port = address.split(':')
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -19,17 +18,15 @@ def detect_host(address: str) -> str:
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, group)
     
     try:
-        data, addr = sock.recvfrom(1024)  # Wait for some data to be received
-        return addr[0]  # Returns the IP address of the sender
+        data, addr = sock.recvfrom(1024)
+        return addr[0]
     finally:
         sock.close()
 
-# GetConnectionString extracts the port from the given address and constructs a new connection string with the host
 def get_connection_string(address: str, host: str) -> str:
     _, port = address.split(':')
     return f"{host}:{port}"
 
-# LoadPrivateKey loads a private RSA key from the given location
 def load_private_key(private_key_location: str) -> rsa.RSAPrivateKey:
     if private_key_location:
         private_key = read_private_key(private_key_location)
@@ -40,7 +37,6 @@ def load_private_key(private_key_location: str) -> rsa.RSAPrivateKey:
             logging.warning("No private key available")
     return None
 
-# ReadPrivateKey reads a private RSA key from the given location, exiting on errors
 def read_private_key(private_key_location: str) -> rsa.RSAPrivateKey:
     try:
         with open(private_key_location, "rb") as key_file:
@@ -55,9 +51,8 @@ def read_private_key(private_key_location: str) -> rsa.RSAPrivateKey:
         logging.error(f"Could not read private key at {private_key_location}: {e}")
         raise
 
-# Sign creates a signature of the given message with the given key
 def sign(private_key: rsa.RSAPrivateKey, message_proto: message.Message) -> bytes:
-    message_bytes = message_proto.SerializeToString()  # Serialize protobuf message
+    message_bytes = message_proto.SerializeToString()
     hash_value = hashlib.sha256(message_bytes).digest()
     
     signature = private_key.sign(
