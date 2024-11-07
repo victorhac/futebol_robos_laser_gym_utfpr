@@ -19,7 +19,7 @@ from ssl_team_client.state import Team
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--address", default="localhost:10008", help="Address to connect to")
-parser.add_argument("--privateKey", default="/home/victor/Documentos/Projetos/futebol_robos_laser_gym_utfpr/operation/simple/teste/ssl_team_client/Test Team.key.pem", help="Path to the private key used for signing messages")
+parser.add_argument("--privateKey", default="/home/victor/repos/futebol_robos_laser_gym_utfpr/operation/simple/teste/ssl_team_client/Test Team.key.pem", help="Path to the private key used for signing messages")
 parser.add_argument("--teamName", default="Test Team", help="The name of the team")
 parser.add_argument("--teamColor", default="YELLOW", help="The color of the team (YELLOW or BLUE)")
 parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
@@ -50,15 +50,20 @@ class Client:
             logging.error("Failed receiving controller reply.")
             return False
 
-        registration = TeamRegistration(team_name=args.teamName)
+        registration = TeamRegistration()
+        registration.team_name=args.teamName
 
-        if team_color in Team:
-            registration.team = Team[team_color]
+        if team_color == "YELLOW":
+            registration.team = Team.YELLOW
+        elif team_color == "BLUE":
+            registration.team = Team.BLUE
+        else:
+            registration.team = Team.UNKNOWN
 
         if private_key:
             signature = Signature(token=reply.controller_reply.next_token)
-            signature.pkcs1_v15 = sign_data(private_key, registration)
-            registration.signature = signature
+            signature.pkcs1v15 = sign_data(private_key, registration)
+            registration.signature.CopyFrom(signature)
 
         if args.verbose:
             logging.info(f"Sending registration: {registration}")
@@ -90,7 +95,7 @@ class Client:
 
     def send_request(self, request):
         if private_key:
-            request.signature = Signature(token=self.token, pkcs1_v15=sign_data(private_key, request))
+            request.signature = Signature(token=self.token, pkcs1v15=sign_data(private_key, request))
 
         if args.verbose:
             logging.info(f"Sending {request}")
