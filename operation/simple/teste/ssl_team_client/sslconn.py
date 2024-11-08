@@ -11,8 +11,7 @@ def read_data_length(reader: BufferedReader) -> int:
     length_bytes = reader.read(4)
     if len(length_bytes) < 4:
         raise ValueError("Failed to read 4 bytes for data length header")
-    length = struct.unpack(">I", length_bytes)[0]  # '>I' is for big-endian uint32
-    return length
+    return  _DecodeVarint32(length_bytes, 0)[0]
 
 def send_message(conn: socket.socket, message_proto: message.Message) -> None:
     size = message_proto.ByteSize()
@@ -20,12 +19,8 @@ def send_message(conn: socket.socket, message_proto: message.Message) -> None:
     conn.sendall(message_proto.SerializeToString())
 
 def receive(reader: BufferedReader) -> bytes:
-    buf = reader.read(50)
-    if not buf:
-        raise ValueError("Failed to read data from reader")
-
+    buf = reader.read1()
     msg_len, new_pos = _DecodeVarint32(buf, 0)
-
     return buf[new_pos:new_pos+msg_len]
 
 def unmarshal(data: bytes, message_proto: message.Message) -> None:
@@ -37,4 +32,4 @@ def unmarshal(data: bytes, message_proto: message.Message) -> None:
 
 def receive_message(reader: BufferedReader, message_proto: message.Message) -> None:
     data = receive(reader)
-    return unmarshal(data, message_proto)
+    unmarshal(data, message_proto)

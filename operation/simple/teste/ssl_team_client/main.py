@@ -46,9 +46,7 @@ class Client:
 
     def register(self):
         reply = ControllerToTeam()
-        if not receive_message(self.reader, reply):
-            logging.error("Failed receiving controller reply.")
-            return False
+        receive_message(self.reader, reply)
 
         registration = TeamRegistration()
         registration.team_name=args.teamName
@@ -68,14 +66,11 @@ class Client:
         if args.verbose:
             logging.info(f"Sending registration: {registration}")
 
-        if not send_message(self.conn, registration):
-            logging.error("Failed sending registration.")
-            return False
+        send_message(self.conn, registration)
 
         reply = ControllerToTeam()
-        if not receive_message(self.reader, reply):
-            logging.error("Failed receiving controller reply.")
-            return False
+
+        receive_message(self.reader, reply)
 
         if reply.controller_reply.status_code != ControllerReply.StatusCode.OK:
             logging.error(f"Registration rejected: {reply.controller_reply.reason}")
@@ -105,9 +100,8 @@ class Client:
             return False, True
 
         reply = ControllerToTeam()
-        if not receive_message(self.reader, reply):
-            logging.error("Failed receiving controller reply.")
-            return False, True
+
+        receive_message(self.reader, reply)
 
         if args.verbose:
             logging.info(f"Received reply: {reply}")
