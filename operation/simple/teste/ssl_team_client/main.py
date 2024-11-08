@@ -19,8 +19,8 @@ from ssl_team_client.state import Team
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--address", default="localhost:10008", help="Address to connect to")
-parser.add_argument("--privateKey", default="./ssl_team_client/Test Team.key.pem", help="Path to the private key used for signing messages")
-parser.add_argument("--teamName", default="Test Team", help="The name of the team")
+parser.add_argument("--privateKey", default="./ssl_team_client/UTBots.key.pem", help="Path to the private key used for signing messages")
+parser.add_argument("--teamName", default="UTBots", help="The name of the team")
 parser.add_argument("--teamColor", default="YELLOW", help="The color of the team (YELLOW or BLUE)")
 parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
 args = parser.parse_args()

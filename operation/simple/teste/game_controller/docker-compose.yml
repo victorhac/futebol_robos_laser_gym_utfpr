@@ -15,7 +15,7 @@ services:
       - "-address"
       - ":8081"
     volumes:
-      - "ssl-game-controller:/config:rw"
+      - "./config:/config:rw"
     ports:
       - "8081:8081/tcp"
 
@@ -81,6 +81,3 @@ services:
       - "./autoref-tests/:/data"
     profiles:
       - autoref-tests
-
-volumes:
-  ssl-game-controller:
