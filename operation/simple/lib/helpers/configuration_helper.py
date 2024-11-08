@@ -21,4 +21,9 @@ class ConfigurationHelper:
 
         ConfigurationHelper.configuration = configuration
 
-        return configuration
+        return configuration   
+     
+    @staticmethod 
+    def getBaseSpeed():
+        return 30
+    

@@ -37,8 +37,17 @@ class SSLVisionReceiver(Receiver):
         self.field_data = field_data
         self.configuration = ConfigurationHelper.getConfiguration()
 
-        self.team_robot_id_mapping = self.configuration["SSLVision"]["team"]["robot-id-mapping"]
-        self.foe_robot_id_mapping = self.configuration["SSLVision"]["foe-team"]["robot-id-mapping"]
+        self.team_robot_id_mapping ={
+                "1": 1,
+                "2": 2,
+                "0": 0
+            }
+        self.foe_robot_id_mapping = {
+                                     
+                "1": 1,
+                "2": 2,
+                "0": 0
+            }
 
     def receive(self):
         return super().receive()
@@ -146,8 +155,8 @@ class SSLVisionReceiver(Receiver):
 
         for received_robot in team_list_of_dicts:
             robot = self._entity_from_dict(received_robot, rotate_field)
-            robot.x *= 0.0012
-            robot.y *= 0.00173
+            robot.position.x  *= 0.0012
+            robot.position.y *= 0.00173
 
             index = self.get_index(received_robot)
 
@@ -156,8 +165,8 @@ class SSLVisionReceiver(Receiver):
 
         for received_robot in foes_list_of_dicts:
             robot = self._entity_from_dict(received_robot, rotate_field)
-            robot.x *= 0.0012
-            robot.y *= 0.00173
+            robot.position.x *= 0.0012
+            robot.position.y *= 0.00173
 
             index = self.get_index(received_robot)
 

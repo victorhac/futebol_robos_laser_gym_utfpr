@@ -8,14 +8,14 @@ import math
 
 class Motion:
     @staticmethod
-    def goToPoint(robot: EntityData, 
+    def goToPoint(robot, 
             targetPosition: 'tuple[float, float]',
             isLeftTeam: bool,
             lastError: float = 0):
+        
         configuration = ConfigurationHelper.getConfiguration()
-
+        
         position = robot.position
-
         positionX = position.x
         positionY = position.y
         robotAngle = position.theta
@@ -24,7 +24,7 @@ class Motion:
 
         angleToTarget = math.atan2(yTarget - positionY, xTarget - positionX)
 
-        error = Geometry.smallestAngleDiff(angleToTarget, robotAngle)
+        error = Geometry.smallestAngleDiff(angleToTarget, robotAngle)   
 
         if abs(error) > math.pi / 2.0 + math.pi / 20.0:
             reversed = True
@@ -38,7 +38,7 @@ class Motion:
 
         motorSpeed = (kP * error) + (kD * (error - lastError))
 
-        baseSpeed = configuration["robot"]["speed"]["base"]
+        baseSpeed = ConfigurationHelper.getBaseSpeed()
 
         motorSpeed = RobotHelper.truncateMotorSpeed(motorSpeed, baseSpeed)
 
@@ -100,7 +100,7 @@ class Motion:
 
         motorSpeed = (kP * error) + (kD * (error))
 
-        baseSpeed = configuration["robot"]["speed"]["base"]
+        baseSpeed = ConfigurationHelper.getBaseSpeed()
 
         motorSpeed = RobotHelper.truncateMotorSpeed(motorSpeed, baseSpeed)
 
@@ -113,11 +113,10 @@ class Motion:
         return leftMotorSpeed, rightMotorSpeed, error
             
 
-    def GoOnDirection(direction, robot, lastError: float = 0):
+    def GoOnDirection(direction, id, fieldData, lastError: float = 0):
         configuration = ConfigurationHelper.getConfiguration()
 
-        position = robot.position
-
+        position =  fieldData.robots[id].position
         positionX = position.x
         positionY = position.y
         robotAngle = position.theta
@@ -141,7 +140,7 @@ class Motion:
 
         motorSpeed = (kP * error) + (kD * (error - lastError))
 
-        baseSpeed = configuration["robot"]["speed"]["base"]
+        baseSpeed = ConfigurationHelper.getBaseSpeed()
 
         motorSpeed = RobotHelper.truncateMotorSpeed(motorSpeed, baseSpeed)
 
@@ -185,7 +184,7 @@ class Motion:
 
             motorSpeed = (kP * error) + (kD * (error - lastError))
 
-            baseSpeed = configuration["robot"]["speed"]["base"]
+            baseSpeed = ConfigurationHelper.getBaseSpeed()
 
             motorSpeed = RobotHelper.truncateMotorSpeed(motorSpeed, baseSpeed)
 

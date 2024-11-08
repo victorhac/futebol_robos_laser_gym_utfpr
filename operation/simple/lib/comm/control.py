@@ -1,7 +1,7 @@
 import logging
 
-#import rospy
-#from geometry_msgs.msg import Twist
+import rospy
+from geometry_msgs.msg import Twist
 
 from .transmitter import Transmitter
 from .protocols import packet_pb2
@@ -10,23 +10,33 @@ from ..core.command import TeamCommand
 
 from .thread_job import Job
 
-# Inicializar o nó ROS
-#rospy.init_node('keyboard_control')
-"""
-# Cria publishers para enviar os comandos de velocidade a cada robô
-pub_robot1 = rospy.Publisher('/bob1/cmd_vel', Twist, queue_size=10)
+#Inicializar o nó ROS
+rospy.init_node('bob_joga_bola')
 
-def send_cmd(rightSpeed, leftSpeed, id:float):
+# Cria publishers para enviar os comandos de velocidade a cada robô
+pub_robot3 = rospy.Publisher('/bob3/cmd_vel', Twist, queue_size=10)
+pub_robot1 = rospy.Publisher('/bob1/cmd_vel', Twist, queue_size=10)
+pub_robot2 = rospy.Publisher('/bob2/cmd_vel', Twist, queue_size=10)
+
+
+def send_cmd(rightSpeed, leftSpeed, id):
     #Função para enviar o comando de velocidade a todos os robôs
     twist = Twist()
-    twist.linear.x = rightSpeed
-    twist.linear.y = leftSpeed
-    twist.linear.z = id
+    twist.linear.x = -leftSpeed 
+    twist.linear.y = -rightSpeed
 
-    # Publica o comando para cada robô
-    pub_robot1.publish(twist)
-"""
+    pub_map = {
+        1: pub_robot3,
+        2: pub_robot1,
+        0: pub_robot2
+    }
+    #print(f"publicado {id}")
 
+
+    pub_map[id].publish(twist)
+
+
+    
 class ProtoControl(Transmitter):
     def __init__(self, team_color_yellow: bool, team_command: TeamCommand = None, control_ip='127.0.0.1', control_port=20011):
         super(ProtoControl, self).__init__(control_ip, control_port)
@@ -45,7 +55,7 @@ class ProtoControl(Transmitter):
         """
 
        # packet = self._fill_robot_command_packet(robot_id, left_speed, right_speed)
-        #send_cmd(right_speed, left_speed, float(robot_id))
+        send_cmd(1.5 * right_speed, 1.5 * left_speed, robot_id)
         
         #self.transmit(packet)
 
