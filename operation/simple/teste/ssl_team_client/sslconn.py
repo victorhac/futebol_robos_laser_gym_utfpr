@@ -5,6 +5,7 @@ from google.protobuf.internal.encoder import _VarintBytes
 from google.protobuf import text_format
 from io import BufferedReader
 import socket
+from google.protobuf.internal.decoder import _DecodeVarint32
 
 def read_data_length(reader: BufferedReader) -> int:
     length_bytes = reader.read(4)
@@ -14,16 +15,18 @@ def read_data_length(reader: BufferedReader) -> int:
     return length
 
 def send_message(conn: socket.socket, message_proto: message.Message) -> None:
-    data = message_proto.SerializeToString()
-    size = len(data)
-    conn.sendall(struct.pack(">I", size) + data)
+    size = message_proto.ByteSize()
+    conn.sendall(_VarintBytes(size))
+    conn.sendall(message_proto.SerializeToString())
 
 def receive(reader: BufferedReader) -> bytes:
-    data_length = read_data_length(reader)
-    data = reader.read(data_length)
-    if len(data) < data_length:
-        raise ValueError("Failed to read the full data length")
-    return data
+    buf = reader.read(50)
+    if not buf:
+        raise ValueError("Failed to read data from reader")
+
+    msg_len, new_pos = _DecodeVarint32(buf, 0)
+
+    return buf[new_pos:new_pos+msg_len]
 
 def unmarshal(data: bytes, message_proto: message.Message) -> None:
     try:
