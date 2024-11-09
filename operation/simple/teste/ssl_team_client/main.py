@@ -17,10 +17,12 @@ from cryptography.hazmat.primitives import serialization, hashes
 from ssl_team_client.sslconn import send_message, receive_message
 from ssl_team_client.state import Team
 
+default_team_name = "UTBots"
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--address", default="localhost:10008", help="Address to connect to")
-parser.add_argument("--privateKey", default="./ssl_team_client/UTBots.key.pem", help="Path to the private key used for signing messages")
-parser.add_argument("--teamName", default="UTBots", help="The name of the team")
+parser.add_argument("--privateKey", default=f"./ssl_team_client/{default_team_name}.key.pem", help="Path to the private key used for signing messages")
+parser.add_argument("--teamName", default=default_team_name, help="The name of the team")
 parser.add_argument("--teamColor", default="YELLOW", help="The color of the team (YELLOW or BLUE)")
 parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
 args = parser.parse_args()
@@ -59,8 +61,15 @@ class Client:
             registration.team = Team.UNKNOWN
 
         if private_key:
-            signature = Signature(token=reply.controller_reply.next_token)
+            signature = Signature(
+                token=reply.controller_reply.next_token,
+                pkcs1v15=bytes()
+            )
+
+            registration.signature.CopyFrom(signature)
+
             signature.pkcs1v15 = sign_data(private_key, registration)
+            
             registration.signature.CopyFrom(signature)
 
         if args.verbose:
@@ -90,14 +99,20 @@ class Client:
 
     def send_request(self, request):
         if private_key:
-            request.signature = Signature(token=self.token, pkcs1v15=sign_data(private_key, request))
+            signature = Signature(
+                token=self.token,
+                pkcs1v15=bytes())
+            
+            request.signature.CopyFrom(signature)
+            
+            signature.pkcs1v15 = sign_data(private_key, request)
+
+            request.signature.CopyFrom(signature)
 
         if args.verbose:
             logging.info(f"Sending {request}")
 
-        if not send_message(self.conn, request):
-            logging.error(f"Failed sending request: {request}")
-            return False, True
+        send_message(self.conn, request)
 
         reply = ControllerToTeam()
 
@@ -129,6 +144,7 @@ def load_private_key(path):
 
 def main():
     global private_key
+
     private_key = load_private_key(args.privateKey)
 
     client = Client()
