@@ -5,29 +5,51 @@ from communication.protobuf.game_controller.ssl_gc_rcon_team_pb2 import (
     AdvantageChoice
 )
 
-from communication.protobuf.game_controller.ssl_gc_rcon_pb2 import Signature, ControllerReply
+from communication.protobuf.game_controller.ssl_gc_rcon_pb2 import ControllerReply
+
+from communication.protobuf.game_controller.ssl_gc_common_pb2 import Team
 
 import argparse
 import logging
 import random
 import socket
 import time
-from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives import serialization, hashes
-from ssl_team_client.sslconn import send_message, receive_message
-from ssl_team_client.state import Team
+from communication.utils.game_controller.sslconn import send_message, receive_message
+from communication.utils.game_controller.client import insert_signature, load_private_key
 
 default_team_name = "UTBots"
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--address", default="localhost:10008", help="Address to connect to")
-parser.add_argument("--privateKey", default=f"./ssl_team_client/{default_team_name}.key.pem", help="Path to the private key used for signing messages")
-parser.add_argument("--teamName", default=default_team_name, help="The name of the team")
-parser.add_argument("--teamColor", default="YELLOW", help="The color of the team (YELLOW or BLUE)")
-parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
+
+parser.add_argument(
+    "--address",
+    default="localhost:10008",
+    help="Address to connect to"
+)
+parser.add_argument(
+    "--privateKey",
+    default=f"./communication/keys/{default_team_name}.key.pem",
+    help="Path to the private key used for signing messages"
+)
+parser.add_argument(
+    "--teamName",
+    default=default_team_name,
+    help="The name of the team"
+)
+parser.add_argument(
+    "--teamColor",
+    default="YELLOW",
+    help="The color of the team (YELLOW or BLUE)"
+)
+parser.add_argument(
+    "--verbose",
+    default=True,
+    action="store_true",
+    help="Enable verbose logging"
+)
+
 args = parser.parse_args()
 
-private_key = None
 team_color = args.teamColor
 
 class Client:
@@ -35,6 +57,7 @@ class Client:
         self.conn = None
         self.reader = None
         self.token = ""
+        self.private_key = None
 
     def connect(self, address: str):
         try:
@@ -60,17 +83,12 @@ class Client:
         else:
             registration.team = Team.UNKNOWN
 
-        if private_key:
-            signature = Signature(
-                token=reply.controller_reply.next_token,
-                pkcs1v15=bytes()
+        if self.private_key:
+            insert_signature(
+                registration,
+                reply.controller_reply.next_token,
+                self.private_key
             )
-
-            registration.signature.CopyFrom(signature)
-
-            signature.pkcs1v15 = sign_data(private_key, registration)
-            
-            registration.signature.CopyFrom(signature)
 
         if args.verbose:
             logging.info(f"Sending registration: {registration}")
@@ -98,16 +116,12 @@ class Client:
         return self.send_request(request)
 
     def send_request(self, request):
-        if private_key:
-            signature = Signature(
-                token=self.token,
-                pkcs1v15=bytes())
-            
-            request.signature.CopyFrom(signature)
-            
-            signature.pkcs1v15 = sign_data(private_key, request)
-
-            request.signature.CopyFrom(signature)
+        if self.private_key:            
+            insert_signature(
+                request,
+                self.token,
+                self.private_key
+            )
 
         if args.verbose:
             logging.info(f"Sending {request}")
@@ -128,26 +142,10 @@ class Client:
         self.token = reply.controller_reply.next_token or ""
         return True, False
 
-def sign_data(private_key, data):
-    data_bytes = data.SerializeToString()
-    return private_key.sign(
-        data_bytes,
-        padding.PKCS1v15(),
-        hashes.SHA256()
-    )
-
-def load_private_key(path):
-    if not path:
-        return None
-    with open(path, "rb") as key_file:
-        return serialization.load_pem_private_key(key_file.read(), password=None)
-
 def main():
-    global private_key
-
-    private_key = load_private_key(args.privateKey)
-
     client = Client()
+
+    client.private_key = load_private_key(args.privateKey)
 
     while True:
         if client.connect(args.address):

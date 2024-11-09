@@ -7,6 +7,8 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import serialization
 
+from communication.protobuf.game_controller.ssl_gc_rcon_pb2 import Signature, ControllerReply
+
 logging.basicConfig(level=logging.INFO)
 
 def detect_host(address: str) -> str:
@@ -61,3 +63,31 @@ def sign(private_key: rsa.RSAPrivateKey, message_proto: message.Message) -> byte
         hashes.SHA256()
     )
     return signature
+
+def insert_signature(
+    request,
+    token,
+    private_key
+):
+    signature = Signature(
+        token=token,
+        pkcs1v15=bytes()
+    )
+    
+    request.signature.CopyFrom(signature)
+    signature.pkcs1v15 = sign_data(private_key, request)
+    request.signature.CopyFrom(signature)
+
+def sign_data(private_key, data):
+    data_bytes = data.SerializeToString()
+    return private_key.sign(
+        data_bytes,
+        padding.PKCS1v15(),
+        hashes.SHA256()
+    )
+
+def load_private_key(path):
+    if not path:
+        return None
+    with open(path, "rb") as key_file:
+        return serialization.load_pem_private_key(key_file.read(), password=None)
