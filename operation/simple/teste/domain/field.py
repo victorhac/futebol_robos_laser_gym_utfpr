@@ -2,8 +2,16 @@ from domain.entity import Entity
 
 class Field:
     def __init__(self):
-        self.robots = [Entity() for i in range(3)]
-        self.foes = [Entity() for i in range(3)]
+        self.robots = {
+            0: Entity(),
+            1: Entity(),
+            2: Entity()
+        }
+        self.foes = {
+            0: Entity(),
+            1: Entity(),
+            2: Entity()
+        }
         self.ball = Entity()
 
     def __str__(self):

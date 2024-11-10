@@ -12,22 +12,22 @@ from communication.utils.game_controller.client import (
 
 from communication.utils.game_controller.sslconn import send_message, receive_message
 
-from communication.protobuf.game_controller.ssl_gc_rcon_pb2 import ControllerReply
-from communication.protobuf.game_controller.ssl_gc_rcon_autoref_pb2 import (
+from communication.protobuf.ssl_gc_rcon_pb2 import ControllerReply
+from communication.protobuf.ssl_gc_rcon_autoref_pb2 import (
     AutoRefToController,
     ControllerToAutoRef,
     AutoRefRegistration
 )
 
-from communication.protobuf.game_controller.ssl_gc_game_event_pb2 import (
+from communication.protobuf.ssl_gc_game_event_pb2 import (
     GameEvent
 )
 
-from communication.protobuf.game_controller.ssl_gc_common_pb2 import (
+from communication.protobuf.ssl_gc_common_pb2 import (
     Team
 )
 
-from communication.protobuf.game_controller.ssl_gc_geometry_pb2 import Vector2
+from communication.protobuf.ssl_gc_geometry_pb2 import Vector2
 
 default_team_name = "UTBots"
 

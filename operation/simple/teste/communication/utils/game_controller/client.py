@@ -7,7 +7,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import serialization
 
-from communication.protobuf.game_controller.ssl_gc_rcon_pb2 import Signature, ControllerReply
+from communication.protobuf.ssl_gc_rcon_pb2 import Signature, ControllerReply
 
 logging.basicConfig(level=logging.INFO)
 

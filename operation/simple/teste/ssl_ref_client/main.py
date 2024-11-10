@@ -8,7 +8,7 @@ from google.protobuf import json_format
 from google.protobuf import text_format
 from google.protobuf.message import DecodeError
 
-from communication.protobuf.game_controller.ssl_gc_referee_message_pb2 import Referee
+from communication.protobuf.ssl_gc_referee_message_pb2 import Referee
 
 history = []
 referee_address = "224.5.23.1"

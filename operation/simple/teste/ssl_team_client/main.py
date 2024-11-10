@@ -1,13 +1,13 @@
-from communication.protobuf.game_controller.ssl_gc_rcon_team_pb2 import (
+from communication.protobuf.ssl_gc_rcon_team_pb2 import (
     ControllerToTeam,
     TeamRegistration,
     TeamToController,
     AdvantageChoice
 )
 
-from communication.protobuf.game_controller.ssl_gc_rcon_pb2 import ControllerReply
+from communication.protobuf.ssl_gc_rcon_pb2 import ControllerReply
 
-from communication.protobuf.game_controller.ssl_gc_common_pb2 import Team
+from communication.protobuf.ssl_gc_common_pb2 import Team
 
 import argparse
 import logging

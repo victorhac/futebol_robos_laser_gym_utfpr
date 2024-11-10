@@ -2,14 +2,14 @@ import logging
 import json
 
 from .receiver import Receiver
-import communication.protobuf.SSL_vision.messages_robocup_ssl_wrapper_pb2 as wrapper
+import communication.protobuf.ssl_vision_wrapper_pb2 as wrapper
 
 from google.protobuf.json_format import MessageToJson
 
 from domain.field import Field
 from configuration.configuration import Configuration
 from domain.entity import Entity
-from threading.job import Job
+from threads.job import Job
 
 class SSLVisionReceiver(Receiver):
     def __init__(
@@ -105,23 +105,12 @@ class SSLVisionReceiver(Receiver):
             team_list_of_dicts = self.team_list_of_dicts(raw_data_dict, 'robotsBlue')
             foes_list_of_dicts = self.team_list_of_dicts(raw_data_dict, 'robotsYellow')
 
-        # TODO: determine how to choose the correct ball
-        ball_index = 0
-
-        fake_ball = {
-            "confidence": 0.99282587,
-            "area": 52,
-            "x": 369.55273,
-            "y": -838.1288,
-            "pixelX": 389.59616,
-            "pixelY": 453.98077
-        }
-
         balls = raw_data_dict.get('balls')
 
-        ball = balls[ball_index] if balls is not None else fake_ball
+        ball = None if balls is None else balls[0]
 
-        self._entity_from_dict(ball, self.field.ball)
+        if ball:
+            self._entity_from_dict(ball, self.field.ball)
 
         for received_robot in team_list_of_dicts:
             index = self.get_index(received_robot)

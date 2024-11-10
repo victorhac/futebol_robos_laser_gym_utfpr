@@ -21,7 +21,7 @@ class GrSimUtils:
         return -x, -y
     
     @staticmethod
-    def normalizeSpeed(
+    def normalize_speed(
         x: float,
         y: float,
         isLeftTeam: bool):

@@ -1,11 +1,11 @@
 import logging
 
-from teste.communication.protobuf.grsim.packet_pb2 import Environment
-from teste.configuration.configuration import Configuration
-from teste.domain.entity import Entity
-from teste.domain.field import Field
-from teste.threading.job import Job
-from teste.utils.grsim_utils import GrSimUtils
+from utils import GrSimUtils
+from communication.protobuf.ssl_vision_wrapper_pb2 import SSL_WrapperPacket
+from configuration.configuration import Configuration
+from domain.entity import Entity
+from domain.field import Field
+from threads.job import Job
 
 from .receiver import Receiver
 
@@ -20,7 +20,7 @@ class GrSimReceiver(Receiver):
     ):
         self.configuration = Configuration.get_object()
 
-        super(Receiver, self).__init__(
+        super(GrSimReceiver, self).__init__(
             self.configuration.grsim_vision_ip,
             self.configuration.grsim_vision_port
         )
@@ -32,8 +32,8 @@ class GrSimReceiver(Receiver):
 
     def receive_dict(self):
         data = self.receive()
-        decoded_data = Environment().FromString(data) # pylint: disable=no-member
-        vision_frame = decoded_data.frame
+        decoded_data = SSL_WrapperPacket().FromString(data)
+        vision_frame = decoded_data.detection
         return json.loads(MessageToJson(vision_frame))
 
     def receive_field_data(self):
@@ -50,6 +50,9 @@ class GrSimReceiver(Receiver):
             logging.error('FieldData not instantiated', exc_info=True)
         else:
             vision_data_dict = self.receive_dict()
+
+            if vision_data_dict.get('robotsYellow'):
+                pass
 
             self._field_data_from_dict(self.field, vision_data_dict)
 
@@ -78,7 +81,7 @@ class GrSimReceiver(Receiver):
                     self._assert_angle(data_dict.get('orientation', 0)))
 
         entity_data.velocity.x, entity_data.velocity.y = \
-            GrSimUtils.normalizeSpeed(
+            GrSimUtils.normalize_speed(
                 data_dict.get('vx', 0),
                 data_dict.get('vy', 0),
                 is_left_team)
@@ -94,20 +97,32 @@ class GrSimReceiver(Receiver):
         rotate_field = isLeftTeam
         
         if self.configuration.team_is_yellow_team:
-            team_list_of_dicts = raw_data_dict.get('robotsYellow')
-            foes_list_of_dicts = raw_data_dict.get('robotsBlue')
+            team_list_of_dicts = raw_data_dict.get('robotsYellow', [])
+            foes_list_of_dicts = raw_data_dict.get('robotsBlue', [])
         else:
-            team_list_of_dicts = raw_data_dict.get('robotsBlue')
-            foes_list_of_dicts = raw_data_dict.get('robotsYellow')
+            team_list_of_dicts = raw_data_dict.get('robotsBlue', [])
+            foes_list_of_dicts = raw_data_dict.get('robotsYellow', [])
 
-        if 'ball' in raw_data_dict:
-            self._entity_from_dict(field.ball, raw_data_dict['ball'], rotate_field)
+        balls = raw_data_dict.get('balls')
 
-        for i in range(len(team_list_of_dicts)):
-            self._entity_from_dict(field.robots[i], team_list_of_dicts[i], rotate_field)
+        ball = None if balls is None else balls[0]
 
-        for i in range(len(foes_list_of_dicts)):
-            self._entity_from_dict(field.foes[i], foes_list_of_dicts[i], rotate_field, True)
+        if ball:
+            self._entity_from_dict(field.ball, ball, rotate_field)
+
+        for received_robot in team_list_of_dicts:
+            robot_id = received_robot.get('robotId')
+            robot = field.robots.get(robot_id)
+
+            if robot:
+                self._entity_from_dict(robot, received_robot, rotate_field)
+
+        for received_robot in foes_list_of_dicts:
+            robot_id = received_robot.get('robotId')
+            foe = field.foes.get(robot_id)
+
+            if foe:
+                self._entity_from_dict(foe, received_robot, rotate_field, True)
 
     def _assert_angle(self, angle):
         angle = angle % (2 * np.pi)

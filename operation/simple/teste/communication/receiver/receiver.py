@@ -10,7 +10,7 @@ class Receiver(ABC):
 
     @abstractmethod
     def receive(self):
-        return self.receiver_socket.recv(1024)
+        return self.receiver_socket.recv(100000)
 
     def _create_socket(self):
         sock = socket.socket(
