@@ -1,0 +1,120 @@
+{
+    "mode": "MANUAL",
+    "environment-mode": "SIMULATION",
+    "keys": {
+        "private-key": {
+            "path": "./communication/keys/UTBots.key.pem"
+        },
+        "public-key": {
+            "path": "./communication/keys/UTBots.pub.pem"
+        }
+    },
+    "sslvision": {
+        "team": {
+            "robot-id-mapping": {
+                "0": 1,
+                "1": 2,
+                "2": 14
+            }
+        },
+        "foe-team": {
+            "robot-id-mapping": {
+                "0": 1,
+                "1": 2,
+                "2": 14
+            }
+        },
+        "ip": "224.5.23.2",
+        "port": 10006
+    },
+    "grsim": {
+        "control": {
+            "ip": "127.0.0.1",
+            "port": 20011
+        },
+        "vision": {
+            "ip": "224.0.0.1",
+            "port": 10002
+        }
+    },
+    "firasim": {
+        "control": {
+            "ip": "127.0.0.1",
+            "port": 20011
+        },
+        "vision": {
+            "ip": "224.0.0.1",
+            "port": 10002
+        }
+    },
+    "game-controller": {
+        "address": "127.0.0.1",
+        "port": 10008
+    },
+    "referee": {
+        "address": "224.5.23.1",
+        "port": 11003
+    },
+    "motion": {
+        "pid": {
+            "constants": {
+                "kp": 20,
+                "ki": 0,
+                "kd": 0.1
+            }
+        }
+    },
+    "rsoccer": {
+        "training": {
+            "time-step": 0.025,
+            "episode-duration": 20
+        }
+    },
+    "field": {
+        "length": 1.5,
+        "width": 1.3,
+        "goal": {
+            "width": 0.4,
+            "depth": 0.1
+        },
+        "penalty": {
+            "length": 0.15,
+            "width": 0.7
+        },
+        "ball": {
+            "radius": 0.0215
+        }
+    },
+    "robot": {
+        "wheel": {
+            "radius": 0.0325
+        },
+        "speed": {
+            "max-radians-seconds": 30
+        },
+        "width": 0.075,
+        "length": 0.075
+    },
+    "team": {
+        "name": "UTBots",
+        "is-yellow-left-team": true,
+        "is-yellow-team": false,
+        "blue": {
+            "number-robots": 1
+        },
+        "yellow": {
+            "number-robots": 1
+        },
+        "roles": {
+            "attacker": {
+                "id": 0
+            },
+            "defensor": {
+                "id": 1
+            },
+            "goalkeeper": {
+                "id": 2
+            }
+        }
+    }
+}
