@@ -1,19 +1,17 @@
-
-from communication.receiver.ssl_vision_receiver import SSLVisionReceiver
 from configuration.configuration import Configuration
-from communication.receiver.grsim_receiver import GrSimReceiver
-from communication.sender.grsim_sender import GrSimSender
-from domain.field import Field
+from game_controller import GameController
 # from communication.sender.ros_sender import RosSender
-import time
+import threading
+
+from executor import Executor
 
 configuration = Configuration.get_object()
 
 def main():
-    field = Field()
+    # field = Field()
 
-    receiver = GrSimReceiver(field)
-    sender = GrSimSender()
+    # receiver = GrSimReceiver(field)
+    # sender = GrSimSender()
 
     # if configuration.mode == "MANUAL":
     #     receiver = GrSimReceiver(field)
@@ -22,11 +20,21 @@ def main():
     #     receiver = SSLVisionReceiver(field)
     #     sender = RosSender()
 
-    while True:
-        # sender.transmit_robot(0, 0, 0)
-        receiver.update()
+    threads = []
 
-        sender.transmit_robot(0, 10, 10)
+    executor = Executor()
+    game_controller = GameController()
+
+    game_controller_thread = threading.Thread(target=game_controller.main)
+    threads.append(game_controller_thread)
+    game_controller_thread.start()
+
+    executor_thread = threading.Thread(target=executor.main)
+    threads.append(executor_thread)
+    executor_thread.start()
+
+    for item in threads:
+        item.join()
 
 if __name__ == "__main__":
     main()

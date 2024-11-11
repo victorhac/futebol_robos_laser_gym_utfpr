@@ -9,6 +9,7 @@ from google.protobuf import text_format
 from google.protobuf.message import DecodeError
 
 from communication.protobuf.ssl_gc_referee_message_pb2 import Referee
+from threads.thread_common_objects import ThreadCommonObjects
 
 history = []
 referee_address = "224.5.23.1"
@@ -71,6 +72,7 @@ def consume(data):
     ref_msg = Referee()
     try:
         ref_msg.ParseFromString(data)
+        ThreadCommonObjects.set_gc_to_executor_message(ref_msg)
     except DecodeError:
         logging.error("Could not unmarshal referee message")
         return
@@ -90,7 +92,6 @@ def consume(data):
     else:
         json_msg = json_format.MessageToJson(ref_msg)
         print(json_msg)
-
 
 if __name__ == "__main__":
     main()
