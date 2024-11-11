@@ -54,6 +54,7 @@ class Configuration:
         self.team_roles_attacker_id = None
         self.team_roles_defensor_id = None
         self.team_roles_goalkeeper_id = None
+        self.stop_distance_to_ball = None
 
     def get_object():
         if Configuration._instance is None:
@@ -111,6 +112,7 @@ class Configuration:
             instance.team_roles_attacker_id = data["team"]["roles"]["attacker"]["id"]
             instance.team_roles_defensor_id = data["team"]["roles"]["defensor"]["id"]
             instance.team_roles_goalkeeper_id = data["team"]["roles"]["goalkeeper"]["id"]
+            instance.stop_distance_to_ball = data["stop"]["distance-to-ball"]
 
         return Configuration._instance
     

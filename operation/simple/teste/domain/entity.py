@@ -14,3 +14,6 @@ class Entity:
 
     def __repr__(self):
         return f'EntityData({self})'
+    
+    def get_position_tuple(self):
+        return (self.position.x, self.position.y)
