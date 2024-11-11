@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  ssl-game-controller:
+    image: robocupssl/ssl-game-controller:latest
+    container_name: ssl-game-controller
+    network_mode: "${NETWORK_MODE}"
+    command:
+      - "-visionAddress"
+      - "224.5.23.2:10006"
+      - "-trackerAddress"
+      - "224.5.23.2:11010"
+      - "-publishAddress"
+      - "224.5.23.1:11003"
+      - "-address"
+      - ":8081"
+    volumes:
+      - "./config:/config:rw"
+    ports:
+      - "8081:8081/tcp"
+
+  ssl-vision-client:
+    image: robocupssl/ssl-vision-client:latest
+    container_name: ssl-vision-client
+    network_mode: "${NETWORK_MODE}"
+    ports:
+      - "8082:8082/tcp"
+
+  ssl-status-board:
+    image: "robocupssl/ssl-status-board:2.10.4"
+    container_name: ssl-status-board
+    command:
+      - "-address"
+      - ":8083"
+      - "-refereeAddress"
+      - "224.5.23.1:11003"
+    network_mode: "${NETWORK_MODE}"
+    ports:
+      - "8083:8083/tcp"
+
+  ssl-simulation-controller:
+    image: "robocupssl/ssl-simulation-controller:0.12.1"
+    command:
+      - "-refereeAddress"
+      - "224.5.23.1:11003"
+      - "-visionAddress"
+      - "224.5.23.2:10020"
+      - "-trackerAddress"
+      - "224.5.23.2:11010"
+      - "-simControlPort"
+      - "10300"
+    network_mode: "${NETWORK_MODE}"
+    profiles:
+      - sim
+
+  autoref-erforce:
+    image: "roboticserlangen/autoref:latest"
+    container_name: autoref-erforce
+    command:
+      - "--vision-port"
+      - "10020"
+      - "--tracker-port"
+      - "11010"
+      - "--gc-port"
+      - "11003"
+    network_mode: "${NETWORK_MODE}"
+
+  ssl-log-player:
+    image: "robocupssl/ssl-log-player:1.5.2"
+    command:
+      - "-file"
+      - "/data/BOT_KICKED_BALL_TOO_FAST/linear-kick.log"
+      - "-vision-address"
+      - "224.5.23.2:10020"
+      - "-referee-enabled"
+      - "false"
+      - "-vision-tracker-enabled"
+      - "false"
+    network_mode: "${NETWORK_MODE}"
+    volumes:
+      - "./autoref-tests/:/data"
+    profiles:
+      - autoref-tests
