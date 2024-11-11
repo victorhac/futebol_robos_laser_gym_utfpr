@@ -1,7 +1,7 @@
 {
     "robot": {
         "wheel": {
-            "radius": 0.03
+            "radius": 0.034
         },
         "speed": {
             "base": 30
@@ -35,6 +35,24 @@
             "ip": "224.0.0.1",
             "port": 10002
         }
+    },
+    "SSLVision": {
+        "team": {
+            "robot-id-mapping": {
+                "1": 0,
+                "2": 1,
+                "d": 2
+            }
+        },
+        "foe-team": {
+            "robot-id-mapping": {
+                "1": 0,
+                "2": 1,
+                "d": 2
+            }
+        },
+        "ip": "",
+        "port": 0
     },
     "field": {
         "length": 1.5,

@@ -1,11 +1,31 @@
 import logging
 
+#import rospy
+#from geometry_msgs.msg import Twist
+
 from .transmitter import Transmitter
 from .protocols import packet_pb2
 from .protocols import command_pb2
 from ..core.command import TeamCommand
 
 from .thread_job import Job
+
+# Inicializar o nó ROS
+#rospy.init_node('keyboard_control')
+"""
+# Cria publishers para enviar os comandos de velocidade a cada robô
+pub_robot1 = rospy.Publisher('/bob1/cmd_vel', Twist, queue_size=10)
+
+def send_cmd(rightSpeed, leftSpeed, id:float):
+    #Função para enviar o comando de velocidade a todos os robôs
+    twist = Twist()
+    twist.linear.x = rightSpeed
+    twist.linear.y = leftSpeed
+    twist.linear.z = id
+
+    # Publica o comando para cada robô
+    pub_robot1.publish(twist)
+"""
 
 class ProtoControl(Transmitter):
     def __init__(self, team_color_yellow: bool, team_command: TeamCommand = None, control_ip='127.0.0.1', control_port=20011):
@@ -24,9 +44,10 @@ class ProtoControl(Transmitter):
         Encode package and transmit.
         """
 
-        packet = self._fill_robot_command_packet(robot_id, left_speed, right_speed)
-
-        self.transmit(packet)
+       # packet = self._fill_robot_command_packet(robot_id, left_speed, right_speed)
+        #send_cmd(right_speed, left_speed, float(robot_id))
+        
+        #self.transmit(packet)
 
 
     def _fill_robot_command_packet(self, robot_id, left_speed, right_speed):

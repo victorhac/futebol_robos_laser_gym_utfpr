@@ -3,34 +3,14 @@ import struct
 from abc import ABC, abstractmethod
 
 class Receiver(ABC):
-    def __init__(self, receiver_ip='224.0.0.1', receiver_port=10002):
-        """
-        Init Client object.
-        Extended description of function.
-        Parameters
-        ----------
-        ip : str
-            Multicast IP in format '255.255.255.255'.
-        port : int
-            Port up to 1024.
-        """
-
+    def __init__(self, receiver_ip, receiver_port):
         self.receiver_ip = receiver_ip
         self.receiver_port = receiver_port
-
-        # Create socket
         self.receiver_socket = self._create_socket()
 
     @abstractmethod
     def receive(self):
-        """
-        Receive packet.
-        """
-
-        data = self.receiver_socket.recv(1024)
-
-        return data
-
+        return self.receiver_socket.recv(1024)
 
     def _create_socket(self):
         sock = socket.socket(

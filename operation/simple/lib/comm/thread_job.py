@@ -1,6 +1,5 @@
 import threading
 
-
 class Job(threading.Thread):
     def __init__(self, job_function):
         super(Job, self).__init__()
