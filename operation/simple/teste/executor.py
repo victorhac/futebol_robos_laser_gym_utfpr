@@ -1,7 +1,6 @@
 from communication.receiver.grsim_receiver import GrSimReceiver
 from communication.receiver.ssl_vision_receiver import SSLVisionReceiver
 from communication.sender.grsim_sender import GrSimSender
-from communication.sender.ros_sender import RosSender
 from configuration.configuration import Configuration
 from domain.field import Field
 from threads.thread_common_objects import ThreadCommonObjects
@@ -9,17 +8,18 @@ from communication.protobuf.ssl_gc_referee_message_pb2 import Referee
 import time
 from utils.geometry_utils import GeometryUtils
 from utils.motion_utils import MotionUtils
+
 class Executor:
     def __init__(self):
         self.configuration = Configuration.get_object()
         self.field = Field()
 
-        if self.configuration.environment_mode == "REAL":
-            self.receiver = SSLVisionReceiver(self.field)
-            self.sender = RosSender()
-        else:
-            self.receiver = GrSimReceiver(self.field)
-            self.sender = GrSimSender()
+        # if self.configuration.environment_mode == "REAL":
+        #     self.receiver = SSLVisionReceiver(self.field)
+        #     self.sender = RosSender()
+        # else:
+        self.receiver = GrSimReceiver(self.field)
+        self.sender = GrSimSender()
 
     def stop_robot(self, robot, ball_position, is_left_team):
         robotPosition = robot.get_position_tuple() 
