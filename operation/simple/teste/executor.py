@@ -41,34 +41,51 @@ class Executor:
     def main(self):
         while True:
             is_left_team = self.configuration.team_is_yellow_left_team == self.configuration.team_is_yellow_team
-            #message = ThreadCommonObjects.get_gc_to_executor_message()
-            
+
+            message = ThreadCommonObjects.get_gc_to_executor_message()
+            self.receiver.update()
 
             atacker_id = self.configuration.team_roles_attacker_id
-            defender_id = self.configuration.team_roles_defensor_id
+            defensor_id = self.configuration.team_roles_defensor_id
             goalkeeper_id = self.configuration.team_roles_goalkeeper_id
 
             atacker = self.field.robots[atacker_id]
-            defender = self.field.robots[defender_id]
+            defensor = self.field.robots[defensor_id]
             goleiro = self.field.robots[goalkeeper_id]
             ball = self.field.ball
             
-            # if message.command == Referee.Command.HALT:
-            #     self.sender.transmit_robot(0, 0, atacker_id)
-            #     self.sender.transmit_robot(0, 0, defender_id)
-            #     self.sender.transmit_robot(0, 0, goalkeeper_id)
-            # elif message.command == Referee.Command.STOP:
-            ball_position = ball.get_position_tuple()
-            leftMotorSpeed, rightMotorSpeed, error =self.stop_robot(atacker, ball_position, is_left_team)
-            self.sender.transmit_robot(atacker_id, leftMotorSpeed, rightMotorSpeed)      
+            if message.command == Referee.Command.HALT:
 
-            leftMotorSpeed, rightMotorSpeed, error = self.stop_robot(defender, ball_position, is_left_team)
-            self.sender.transmit_robot(defender_id, leftMotorSpeed, rightMotorSpeed)      
+                self.sender.transmit_robot(0, 0, atacker_id)
+                self.sender.transmit_robot(0, 0, defensor_id)
+                self.sender.transmit_robot(0, 0, goalkeeper_id)
+            elif message.command == Referee.Command.STOP:
+                
+                ball_position = ball.get_position_tuple()
+                leftMotorSpeed, rightMotorSpeed, error =self.stop_robot(atacker, ball_position, is_left_team)
+                self.sender.transmit_robot(atacker_id, leftMotorSpeed, rightMotorSpeed)      
 
-            self.sender.transmit_robot(goalkeeper_id, 0, 0)      
-            #elif message.command == Referee.Command.NORMAL_START:
+                leftMotorSpeed, rightMotorSpeed, error = self.stop_robot(defensor, ball_position, is_left_team)
+                self.sender.transmit_robot(defensor_id, leftMotorSpeed, rightMotorSpeed)      
 
-            self.receiver.update()
+                self.sender.transmit_robot(goalkeeper_id, 0, 0)      
+            elif message.command == Referee.Command.NORMAL_START:
+                pass
+            elif message.command == Referee.Command.PREPARE_KICKOFF_YELLOW:
+                atk_target_position = self.configuration.kickoff_position_left_team_atacker_position_x, self.configuration.kickoff_position_left_team_atacker_position_y
+                leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(atacker, (atk_target_position), is_left_team)
+                self.sender.transmit_robot(atacker_id, leftMotorSpeed, rightMotorSpeed)
+
+                def_target_position = self.configuration.kickoff_position_left_team_defensor_position_x, self.configuration.kickoff_position_left_team_defensor_position_y
+                leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(atacker, (def_target_position), is_left_team)
+                self.sender.transmit_robot(defensor_id, leftMotorSpeed, rightMotorSpeed)
+
+                gk_target_position = self.configuration.kickoff_position_left_team_goalkeeper_position_x, self.configuration.kickoff_position_left_team_goalkeeper_position_y
+                leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(atacker, (gk_target_position), is_left_team)
+                self.sender.transmit_robot(goalkeeper_id, leftMotorSpeed, rightMotorSpeed)
+
+
+
 
 def main():
     executor = Executor()
