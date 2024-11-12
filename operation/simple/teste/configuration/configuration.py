@@ -114,9 +114,6 @@ class Configuration:
     
     def get_is_left_team(self):
         return self.team_is_yellow_left_team == self.team_is_yellow_team
-    
-    def get_is_left_team(self):
-        return self.team_is_yellow_left_team == self.team_is_yellow_team
 
     def get_kickoff_defensor_position(self):
         return self.kickoff_position_left_team_defensor_x, self.kickoff_position_left_team_defensor_y
