@@ -23,11 +23,11 @@ def main():
     threads = []
 
     executor = Executor()
-    game_controller = GameController()
+    #game_controller = GameController()
 
-    game_controller_thread = threading.Thread(target=game_controller.main)
-    threads.append(game_controller_thread)
-    game_controller_thread.start()
+    # game_controller_thread = threading.Thread(target=game_controller.main)
+    # threads.append(game_controller_thread)
+    # game_controller_thread.start()
 
     executor_thread = threading.Thread(target=executor.main)
     threads.append(executor_thread)

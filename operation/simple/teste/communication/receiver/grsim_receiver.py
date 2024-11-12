@@ -71,6 +71,9 @@ class GrSimReceiver(Receiver):
                 data_dict.get('y', 0),
                 is_left_team)
 
+        entity_data.position.x /= 1000
+        entity_data.position.y /= 1000
+
         if not foes:
             entity_data.position.theta = \
                 GrSimUtils.normalize_angle(
