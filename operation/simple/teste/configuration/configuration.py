@@ -62,6 +62,46 @@ class Configuration:
         self.kickoff_position_left_team_goalkeeper_y = None
         self.kickoff_position_left_team_goalkeeper_x = None
 
+    def _get_team_robot_id_to_internal_mapping(self):
+        return {
+            self.sslvision_team_robot_id_mapping_0: 0,
+            self.sslvision_team_robot_id_mapping_1: 1,
+            self.sslvision_team_robot_id_mapping_2: 2
+        }
+    
+    def _get_foe_team_robot_id_to_internal_mapping(self):
+        return {
+            self.sslvision_foe_team_robot_id_mapping_0: 0,
+            self.sslvision_foe_team_robot_id_mapping_1: 1,
+            self.sslvision_foe_team_robot_id_mapping_2: 2
+        }
+    
+    def _get_team_robot_id_to_external_mapping(self):
+        return {
+            0: self.sslvision_team_robot_id_mapping_0,
+            1: self.sslvision_team_robot_id_mapping_1,
+            2: self.sslvision_team_robot_id_mapping_2
+        }
+    
+    def _get_foe_team_robot_id_to_external_mapping(self):
+        return {
+            0: self.sslvision_foe_team_robot_id_mapping_0,
+            1: self.sslvision_foe_team_robot_id_mapping_1,
+            2: self.sslvision_foe_team_robot_id_mapping_2
+        }
+
+    def get_robot_id_to_internal_mapped(self, robot_id):
+        return self._get_team_robot_id_to_internal_mapping().get(robot_id)
+    
+    def get_foe_robot_id_to_internal_mapped(self, robot_id):
+        return self._get_foe_team_robot_id_to_internal_mapping().get(robot_id)
+    
+    def get_robot_id_to_external_mapped(self, robot_id):
+        return self._get_team_robot_id_to_external_mapping().get(robot_id)
+    
+    def get_foe_robot_id_to_external_mapped(self, robot_id):
+        return self._get_foe_team_robot_id_to_external_mapping().get(robot_id)
+
     def get_object():
         if Configuration._instance is None:
             Configuration._instance = Configuration()
