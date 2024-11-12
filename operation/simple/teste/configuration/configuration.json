@@ -34,7 +34,7 @@
         },
         "vision": {
             "ip": "224.5.23.5",
-            "port": 10025
+            "port": 10020
         }
     },
     "firasim": {
@@ -98,12 +98,12 @@
     "team": {
         "name": "UTBots",
         "is-yellow-left-team": true,
-        "is-yellow-team": true,
+        "is-yellow-team": false,
         "blue": {
-            "number-robots": 1
+            "number-robots": 3
         },
         "yellow": {
-            "number-robots": 1
+            "number-robots": 3
         },
         "roles": {
             "attacker": {
