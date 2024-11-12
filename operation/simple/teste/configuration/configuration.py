@@ -63,6 +63,7 @@ class Configuration:
         self.kickoff_position_left_team_goalkeeper_first_x = None
         self.kickoff_position_left_team_goalkeeper_second_y = None
         self.kickoff_position_left_team_goalkeeper_second_x = None
+        self.time_to_run = None
 
 
     def _get_team_robot_id_to_internal_mapping(self):
@@ -185,6 +186,7 @@ class Configuration:
             instance.kickoff_position_left_team_goalkeeper_first_x = data["kickoff"]["position"]["left-team"]["goalkeeper-first"]["x"]
             instance.kickoff_position_left_team_goalkeeper_second_x = data["kickoff"]["position"]["left-team"]["goalkeeper-second"]["x"]
             instance.kickoff_position_left_team_goalkeeper_second_y = data["kickoff"]["position"]["left-team"]["goalkeeper-second"]["y"]
+            instance.time_to_run = data["time"]["to-run"]
 
 
 

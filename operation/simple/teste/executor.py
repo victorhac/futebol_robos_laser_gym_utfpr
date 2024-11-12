@@ -22,6 +22,8 @@ class Executor:
         self.sender = GrSimSender()
         self.last_state = Referee.Command.PREPARE_KICKOFF_YELLOW
         self.goalkeeper_penalty_flag = True
+        self.time_saved = False
+        self.last_ball_pos_saved = False
 
     def stop_robot(self, robot, ball_position, is_left_team):
         robotPosition = robot.get_position_tuple() 
@@ -39,6 +41,16 @@ class Executor:
             return MotionUtils.goToPoint(robot, targetPosition, is_left_team)
         else:
             return 0, 0, 0
+        
+    def get_ball_moved(self, position1, position2):
+        return (GeometryUtils.distance(position1, position2)) > 0.05
+    
+    def get_time_passed(self, initial_time):
+        return time.time() - initial_time 
+
+    def can_run_after_normal_start(self, initial_time):
+        return self.get_time_passed(initial_time) > 10 
+
 
     def main(self):
         while True:
@@ -46,8 +58,10 @@ class Executor:
 
             #message = ThreadCommonObjects.get_gc_to_executor_message()
             message = Referee()
-            message.command = Referee.Command.PREPARE_PENALTY_YELLOW
+            message.command = Referee.Command.NORMAL_START
+            #PREPARE_PENALTY_BLUE
             #NORMAL_START
+            #PREPARE_KICKOFF_BLUE
             self.receiver.update()
 
             atacker_id = self.configuration.team_roles_attacker_id
@@ -80,17 +94,28 @@ class Executor:
                 print(f"bola --> {ball.position}")  
             
             elif message.command == Referee.Command.NORMAL_START:
-                if (self.configuration.team_is_yellow_team and self.last_state == Referee.Command.PREPARE_KICKOFF_YELLOW) or \
-                    (not self.configuration.team_is_yellow_team and self.last_state == Referee.Command.PREPARE_KICKOFF_BLUE):
-                    
-                    target_position = 0.0, 0.0  
 
-                    if(not GeometryUtils.isClose(atacker.get_position_tuple(), target_position, 0.2)):
-                        leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(atacker, target_position, is_left_team)
-                        self.sender.transmit_robot(atacker_id, leftMotorSpeed, rightMotorSpeed)
-                    else:
-                        self.sender.transmit_robot(atacker_id, 0, 0)
+                if(not self.last_ball_pos_saved):
+                    last_ball_position = ball.get_position_tuple()
+                    self.last_ball_pos_saved = True
+                if(not self.time_saved):
+                    timmer = time.time()
+                    self.time_saved = True
+            
+                if self.can_run_after_normal_start(timmer) or \
+                    ((self.last_state == Referee.Command.PREPARE_KICKOFF_YELLOW or self.last_state == Referee.Command.PREPARE_KICKOFF_BLUE) and \
+                        self.get_ball_moved(ball.get_position_tuple(), last_ball_position)):
+                #############################################------ESTRATEGIA------####################################################
+                    pass
 
+                else:
+                    pass
+
+
+
+
+                            
+            
             elif message.command == Referee.Command.PREPARE_KICKOFF_YELLOW:
 
                 self.last_state = Referee.Command.PREPARE_KICKOFF_YELLOW
@@ -134,7 +159,7 @@ class Executor:
                 else:
                     self.sender.transmit_robot(defensor_id, 0, 0)
 
-                if(GeometryUtils.isClose(goalkeeper.get_position_tuple(), gk_target_position, 0.3)):
+                if(not GeometryUtils.isClose(goalkeeper.get_position_tuple(), gk_target_position, 0.3)):
                     leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(goalkeeper, (gk_target_position), is_left_team)
                     self.sender.transmit_robot(goalkeeper_id, leftMotorSpeed, rightMotorSpeed)
                 
@@ -142,6 +167,7 @@ class Executor:
                     self.sender.transmit_robot(goalkeeper_id, 0, 0)
 
             elif message.command == Referee.Command.PREPARE_PENALTY_BLUE or message.command == Referee.Command.PREPARE_PENALTY_YELLOW:
+
 
                 self.last_state = message.command
                 
@@ -186,35 +212,59 @@ class Executor:
                 else:
                     self.sender.transmit_robot(defensor_id, 0, 0)
 
- 
-      
-    
-        # // The blue team may move into penalty position.
-        # PREPARE_PENALTY_BLUE = 7;
-        # // The yellow team may take a direct free kick.
-        # DIRECT_FREE_YELLOW = 8;
-        # // The blue team may take a direct free kick.
-        # DIRECT_FREE_BLUE = 9;
-        # // The yellow team may take an indirect free kick.
-        # INDIRECT_FREE_YELLOW = 10 [deprecated = true];
-        # // The blue team may take an indirect free kick.
-        # INDIRECT_FREE_BLUE = 11 [deprecated = true];
-        # // The yellow team is currently in a timeout.
-        # TIMEOUT_YELLOW = 12;
-        # // The blue team is currently in a timeout.
-        # TIMEOUT_BLUE = 13;
-        # // The yellow team just scored a goal.
-        # // For information only.
-        # // Deprecated: Use the score field from the team infos instead. That way, you can also detect revoked goals.
-        # GOAL_YELLOW = 14 [deprecated = true];
-        # // The blue team just scored a goal. See also GOAL_YELLOW.
-        # GOAL_BLUE = 15 [deprecated = true];
-        # // Equivalent to STOP, but the yellow team must pick up the ball and
-        # // drop it in the Designated Position.
-        # BALL_PLACEMENT_YELLOW = 16;
-        # // Equivalent to STOP, but the blue team must pick up the ball and drop
-        # // it in the Designated Position.
-        # BALL_PLACEMENT_BLUE = 17;
+
+
+
+
+
+    def strategy(self, is_left_team):
+        atacker_id = self.configuration.team_roles_attacker_id
+        defensor_id = self.configuration.team_roles_defensor_id
+        goalkeeper_id = self.configuration.team_roles_goalkeeper_i
+        atacker = self.field.robots[atacker_id]
+        defensor = self.field.robots[defensor_id]
+        goalkeeper = self.field.robots[goalkeeper_id]
+        ball = self.field.ball
+        if(ball.position.x > 0):
+            """--------------------------------------------------------ATACANTE CHUTA BOLA AO GOL--------------------------------------------------------"""
+            if MotionUtils.between(ball.position.x, 1.0, -self.configuration.kickoff_position_left_team_goalkeeper_first_x) and \
+                  MotionUtils.between(ball.position.y, self.configuration.field_goal_width,  -self.configuration.field_goal_width) and \
+                    MotionUtils.between(atacker.position.y, self.configuration.field_goal_width,  -self.configuration.field_goal_width):
+                
+                #go on direction
+                position = atacker.position
+                robotAngle = position.theta
+                targetPosition = (ball.position.x, ball.position.y + 0.15)
+
+                MotionUtils.goToPoint(atacker, targetPosition, is_left_team)
+
+
+        
+
+            # // The yellow team may take a direct free kick.
+            # DIRECT_FREE_YELLOW = 8;
+            # // The blue team may take a direct free kick.
+            # DIRECT_FREE_BLUE = 9;
+            # // The yellow team may take an indirect free kick.
+            # INDIRECT_FREE_YELLOW = 10 [deprecated = true];
+            # // The blue team may take an indirect free kick.
+            # INDIRECT_FREE_BLUE = 11 [deprecated = true];
+            # // The yellow team is currently in a timeout.
+            # TIMEOUT_YELLOW = 12;
+            # // The blue team is currently in a timeout.
+            # TIMEOUT_BLUE = 13;
+            # // The yellow team just scored a goal.
+            # // For information only.
+            # // Deprecated: Use the score field from the team infos instead. That way, you can also detect revoked goals.
+            # GOAL_YELLOW = 14 [deprecated = true];
+            # // The blue team just scored a goal. See also GOAL_YELLOW.
+            # GOAL_BLUE = 15 [deprecated = true];
+            # // Equivalent to STOP, but the yellow team must pick up the ball and
+            # // drop it in the Designated Position.
+            # BALL_PLACEMENT_YELLOW = 16;
+            # // Equivalent to STOP, but the blue team must pick up the ball and drop
+            # // it in the Designated Position.
+            # BALL_PLACEMENT_BLUE = 17;
 
 
 

@@ -13,6 +13,9 @@ class GeometryUtils:
         return angle
 
     @staticmethod
+    def between(value, lower, upper):
+        return lower <= value <= upper
+    @staticmethod
     def normalizeAngle(
         value: float,
         center: float,
