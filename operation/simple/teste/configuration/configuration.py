@@ -55,12 +55,12 @@ class Configuration:
         self.team_roles_defensor_id = None
         self.team_roles_goalkeeper_id = None
         self.stop_distance_to_ball = None
-        self.kickoff_position_left_team_atacker_position_y = None
-        self.kickoff_position_left_team_atacker_position_x = None
-        self.kickoff_position_left_team_defensor_position_y = None
-        self.kickoff_position_left_team_defensor_position_x = None
-        self.kickoff_position_left_team_goalkeeper_position_y = None
-        self.kickoff_position_left_team_goalkeeper_position_x = None
+        self.kickoff_position_left_team_attacker_y = None
+        self.kickoff_position_left_team_attacker_x = None
+        self.kickoff_position_left_team_defensor_y = None
+        self.kickoff_position_left_team_defensor_x = None
+        self.kickoff_position_left_team_goalkeeper_y = None
+        self.kickoff_position_left_team_goalkeeper_x = None
 
     def get_object():
         if Configuration._instance is None:
@@ -119,12 +119,12 @@ class Configuration:
             instance.team_roles_defensor_id = data["team"]["roles"]["defensor"]["id"]
             instance.team_roles_goalkeeper_id = data["team"]["roles"]["goalkeeper"]["id"]
             instance.stop_distance_to_ball = data["stop"]["distance-to-ball"]
-            instance.kickoff_position_left_team_atacker_position_y = data["kickoff"]["position"]["left-team"]["atacker-position"]["y"]
-            instance.kickoff_position_left_team_atacker_position_x = data["kickoff"]["position"]["left-team"]["atacker-position"]["x"]
-            instance.kickoff_position_left_team_defensor_position_y = data["kickoff"]["position"]["left-team"]["defensor-position"]["y"]
-            instance.kickoff_position_left_team_defensor_position_x = data["kickoff"]["position"]["left-team"]["defensor-position"]["x"]
-            instance.kickoff_position_left_team_goalkeeper_position_y = data["kickoff"]["position"]["left-team"]["goalkeeper-position"]["y"]
-            instance.kickoff_position_left_team_goalkeeper_position_x = data["kickoff"]["position"]["left-team"]["goalkeeper-position"]["x"]
+            instance.kickoff_position_left_team_attacker_y = data["kickoff"]["position"]["left-team"]["attacker"]["y"]
+            instance.kickoff_position_left_team_attacker_x = data["kickoff"]["position"]["left-team"]["attacker"]["x"]
+            instance.kickoff_position_left_team_defensor_y = data["kickoff"]["position"]["left-team"]["defensor"]["y"]
+            instance.kickoff_position_left_team_defensor_x = data["kickoff"]["position"]["left-team"]["defensor"]["x"]
+            instance.kickoff_position_left_team_goalkeeper_y = data["kickoff"]["position"]["left-team"]["goalkeeper"]["y"]
+            instance.kickoff_position_left_team_goalkeeper_x = data["kickoff"]["position"]["left-team"]["goalkeeper"]["x"]
 
         return Configuration._instance
     

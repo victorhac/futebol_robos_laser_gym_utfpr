@@ -72,15 +72,15 @@ class Executor:
             elif message.command == Referee.Command.NORMAL_START:
                 pass
             elif message.command == Referee.Command.PREPARE_KICKOFF_YELLOW:
-                atk_target_position = self.configuration.kickoff_position_left_team_atacker_position_x, self.configuration.kickoff_position_left_team_atacker_position_y
+                atk_target_position = self.configuration.kickoff_position_left_team_attacker_x, self.configuration.kickoff_position_left_team_attacker_y
                 leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(atacker, (atk_target_position), is_left_team)
                 self.sender.transmit_robot(atacker_id, leftMotorSpeed, rightMotorSpeed)
 
-                def_target_position = self.configuration.kickoff_position_left_team_defensor_position_x, self.configuration.kickoff_position_left_team_defensor_position_y
+                def_target_position = self.configuration.kickoff_position_left_team_defensor_x, self.configuration.kickoff_position_left_team_defensor_y
                 leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(atacker, (def_target_position), is_left_team)
                 self.sender.transmit_robot(defensor_id, leftMotorSpeed, rightMotorSpeed)
 
-                gk_target_position = self.configuration.kickoff_position_left_team_goalkeeper_position_x, self.configuration.kickoff_position_left_team_goalkeeper_position_y
+                gk_target_position = self.configuration.kickoff_position_left_team_goalkeeper_x, self.configuration.kickoff_position_left_team_goalkeeper_y
                 leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(atacker, (gk_target_position), is_left_team)
                 self.sender.transmit_robot(goalkeeper_id, leftMotorSpeed, rightMotorSpeed)
 

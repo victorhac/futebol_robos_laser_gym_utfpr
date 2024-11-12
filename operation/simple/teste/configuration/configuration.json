@@ -33,7 +33,7 @@
             "port": 20011
         },
         "vision": {
-            "ip": "224.5.23.5",
+            "ip": "224.5.23.2",
             "port": 10020
         }
     },
@@ -97,7 +97,7 @@
     },
     "team": {
         "name": "UTBots",
-        "is-yellow-left-team": true,
+        "is-yellow-left-team": false,
         "is-yellow-team": false,
         "blue": {
             "number-robots": 3
@@ -123,15 +123,15 @@
     "kickoff":{
         "position": {
             "left-team":{
-                "attacker-position": {
+                "attacker": {
                     "x": -0.3,
                     "y": 0.3
                 },
-                "defensor-position":  {
+                "defensor":  {
                     "x": -0.3,
                     "y": -0.3
                 },
-                "goalkeeper-position":{
+                "goalkeeper":{
                     "x": -0.75,
                     "y": 0.0
                 }
