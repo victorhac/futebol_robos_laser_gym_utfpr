@@ -31,6 +31,7 @@ class Configuration:
         self.firasim_vision_port = None
         self.game_controller_address = None
         self.game_controller_port = None
+        self.game_controller_register_as_team = None
         self.referee_address = None
         self.referee_port = None
         self.motion_pid_constants_kp = None
@@ -157,6 +158,7 @@ class Configuration:
             instance.firasim_vision_port = data["firasim"]["vision"]["port"]
             instance.game_controller_address = data["game-controller"]["address"]
             instance.game_controller_port = data["game-controller"]["port"]
+            instance.game_controller_register_as_team = data["game-controller"]["register-as-team"]
             instance.referee_address = data["referee"]["address"]
             instance.referee_port = data["referee"]["port"]
             instance.motion_pid_constants_kp = data["motion"]["pid"]["constants"]["kp"]
