@@ -1,5 +1,8 @@
 import json
 
+from domain.enums.manual_command_enum import ManualCommandEnum
+from domain.enums.robot_behavior_enum import RobotBehaviorEnum
+
 CONFIGURATION_FILE_PATH = "./configuration/configuration.json"
 
 class Configuration:
@@ -62,6 +65,11 @@ class Configuration:
         self.kickoff_position_left_team_goalkeeper_y = None
         self.kickoff_position_left_team_goalkeeper_x = None
 
+        self.runtime_manual_command = ManualCommandEnum.NONE
+        self.runtime_behavior_robot_0 = RobotBehaviorEnum.NONE
+        self.runtime_behavior_robot_1 = RobotBehaviorEnum.NONE
+        self.runtime_behavior_robot_2 = RobotBehaviorEnum.NONE
+
     def _get_team_robot_id_to_internal_mapping(self):
         return {
             self.sslvision_team_robot_id_mapping_0: 0,
@@ -101,6 +109,9 @@ class Configuration:
     
     def get_foe_robot_id_to_external_mapped(self, robot_id):
         return self._get_foe_team_robot_id_to_external_mapping().get(robot_id)
+    
+    def get_is_left_team(self):
+        return self.team_is_yellow_left_team == self.team_is_yellow_team
 
     def get_object():
         if Configuration._instance is None:
