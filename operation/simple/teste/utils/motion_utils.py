@@ -124,10 +124,10 @@ class MotionUtils:
         return leftMotorSpeed, rightMotorSpeed, error
             
 
-    def GoOnDirection(direction, id, fieldData, lastError: float = 0):
+    def GoOnDirection(direction, robot, fieldData, lastError: float = 0):
         configuration = Configuration.get_object()
 
-        position =  fieldData.robots[id].position
+        position =  robot.position
         positionX = position.x
         positionY = position.y
         robotAngle = position.theta
