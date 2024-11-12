@@ -97,8 +97,8 @@
     },
     "team": {
         "name": "UTBots",
-        "is-yellow-left-team": false,
-        "is-yellow-team": false,
+        "is-yellow-left-team": false ,
+        "is-yellow-team": false       ,
         "blue": {
             "number-robots": 3
         },
@@ -131,8 +131,12 @@
                     "x": -0.6,
                     "y": -0.6
                 },
-                "goalkeeper":{
-                    "x": -2.2,
+                "goalkeeper-first":{
+                    "x": -1.5,
+                    "y": 0.0
+                },
+                "goalkeeper-second":{
+                    "x": -2.1,
                     "y": 0.0
                 }
             }

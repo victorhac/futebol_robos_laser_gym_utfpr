@@ -12,7 +12,7 @@ threads = []
 configuration = Configuration.get_object()
 
 executor = Executor()
-game_controller = GameController()
+#game_controller = GameController()
 
 def main():
     # field = Field()
@@ -27,9 +27,9 @@ def main():
     #     receiver = SSLVisionReceiver(field)
     #     sender = RosSender()
 
-    game_controller_thread = threading.Thread(target=game_controller.main)
-    threads.append(game_controller_thread)
-    game_controller_thread.start()
+    # game_controller_thread = threading.Thread(target=game_controller.main)
+    # threads.append(game_controller_thread)
+    # game_controller_thread.start()
 
     executor_thread = threading.Thread(target=executor.main)
     threads.append(executor_thread)

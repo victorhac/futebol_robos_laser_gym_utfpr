@@ -31,18 +31,18 @@ class MotionUtils:
         positionY = position.y
         robotAngle = position.theta
 
-        xTarget, yTarget = GrSimUtils.normalize_position(targetPosition[0], targetPosition[1], isLeftTeam)
+        xTarget, yTarget = targetPosition
 
         angleToTarget = math.atan2(yTarget - positionY, xTarget - positionX)
 
         error = GeometryUtils.smallestAngleDiff(angleToTarget, robotAngle)   
 
         if abs(error) > math.pi / 2.0 + math.pi / 20.0:
-            reversed = True
+            reversed = not isLeftTeam
             robotAngle = GeometryUtils.normalizeInPI(robotAngle + math.pi)
             error = GeometryUtils.smallestAngleDiff(angleToTarget, robotAngle)
         else:
-            reversed = False
+            reversed = isLeftTeam
 
         kP = configuration.motion_pid_constants_kp
         kD = configuration.motion_pid_constants_kd
@@ -93,7 +93,7 @@ class MotionUtils:
         positionY = position.y
         robotAngle = position.theta
 
-        xTarget, yTarget = GrSimUtils.normalize_position(targetPosition[0], targetPosition[1], isLeftTeam)
+        xTarget, yTarget = targetPosition
 
         angleToTarget = math.atan2(yTarget - positionY, xTarget - positionX)
 
@@ -176,7 +176,7 @@ class MotionUtils:
             positionY = position.y
             robotAngle = position.theta
 
-            xTarget, yTarget = GrSimUtils.normalize_position(targetPosition[0], targetPosition[1], isLeftTeam)
+            xTarget, yTarget = targetPosition
 
             # Add a phase shift to the angle calculation for orbital motion
             angleToTarget = math.atan2(yTarget - positionY, xTarget - positionX) + (orientation * phaseShift)
