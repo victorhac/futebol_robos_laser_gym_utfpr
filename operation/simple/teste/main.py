@@ -42,7 +42,7 @@ def main():
         item.join()
 
 def handle_signal(signum, frame):
-    game_controller.close_socket()
+    #game_controller.close_socket()
     os._exit(0)
 
 if __name__ == "__main__":

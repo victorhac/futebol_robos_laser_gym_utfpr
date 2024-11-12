@@ -49,7 +49,8 @@
     },
     "game-controller": {
         "address": "127.0.0.1",
-        "port": 10008
+        "port": 10008,
+        "register-as-team": false
     },
     "referee": {
         "address": "224.5.23.1",
@@ -97,8 +98,8 @@
     },
     "team": {
         "name": "UTBots",
-        "is-yellow-left-team": false ,
-        "is-yellow-team": false       ,
+        "is-yellow-left-team": false,
+        "is-yellow-team": false,
         "blue": {
             "number-robots": 3
         },

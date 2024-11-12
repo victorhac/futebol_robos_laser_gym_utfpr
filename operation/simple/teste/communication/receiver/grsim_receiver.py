@@ -91,7 +91,7 @@ class GrSimReceiver(Receiver):
         entity_data.velocity.theta = data_dict.get('vorientation', 0)
 
     def get_is_left_team(self):
-        return self.get_is_left_team()
+        return self.configuration.get_is_left_team()
 
     def _field_data_from_dict(self, field: Field, raw_data_dict: dict):        
         if self.configuration.team_is_yellow_team:

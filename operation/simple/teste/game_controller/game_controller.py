@@ -33,20 +33,26 @@ class GameController:
         self.ssl_team_client.send_advantage_choice(choice)
         time.sleep(random.uniform(1, 5))
 
+    def register_as_team(self):
+        self.ssl_team_client.send_desired_keeper()
+
+        self.send_advantage_choice_thread = threading.Thread(target=self.send_advantage_choice)
+        self.threads.append(self.send_advantage_choice_thread)
+        self.send_advantage_choice_thread.start()
+
     def main(self):
         while True:
-            if self.ssl_team_client.register():
-                self.ssl_team_client.send_desired_keeper()
+            if self.configuration.game_controller_register_as_team:
+                if self.ssl_team_client.register():
+                    self.register_as_team()
+                else:
+                    continue
 
-                self.send_advantage_choice_thread = threading.Thread(target=self.send_advantage_choice)
-                self.threads.append(self.send_advantage_choice_thread)
-                self.send_advantage_choice_thread.start()
+            while True:
+                message, error = self.ssl_referee_client.consume()
 
-                while True:
-                    message, error = self.ssl_referee_client.consume()
+                if len(self.history) == 0 or message.command != self.history[-1]:
+                    self.history.append(message.command)
+                    ThreadCommonObjects.set_gc_to_executor_message(message)
 
-                    if len(self.history) == 0 or message.command != self.history[-1]:
-                        self.history.append(message.command)
-                        ThreadCommonObjects.set_gc_to_executor_message(message)
-
-                    time.sleep(1)
+                time.sleep(1)
