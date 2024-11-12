@@ -107,7 +107,7 @@ class MotionUtils:
             reversed = False
             
         kP = configuration.motion_pid_constants_kp
-        kD = configuration["motion"]["pid"]["constants"]["Kd"]
+        kD = configuration.motion_pid_constants_kd
 
         motorSpeed = (kP * error) + (kD * (error))
 

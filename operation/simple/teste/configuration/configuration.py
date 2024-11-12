@@ -39,8 +39,8 @@ class Configuration:
         self.field_width = None
         self.field_goal_width = None
         self.field_goal_depth = None
-        self.field_penalty_length = None
-        self.field_penalty_width = None
+        self.field_goalkeeper_area_length =None
+        self.field_goalkeeper_area_width = None
         self.field_ball_radius = None
         self.robot_wheel_radius = None
         self.robot_speed_max_radians_seconds = None
@@ -55,6 +55,12 @@ class Configuration:
         self.team_roles_defensor_id = None
         self.team_roles_goalkeeper_id = None
         self.stop_distance_to_ball = None
+        self.kickoff_position_left_team_attacker_y = None
+        self.kickoff_position_left_team_attacker_x = None
+        self.kickoff_position_left_team_defensor_y = None
+        self.kickoff_position_left_team_defensor_x = None
+        self.kickoff_position_left_team_goalkeeper_y = None
+        self.kickoff_position_left_team_goalkeeper_x = None
 
     def _get_team_robot_id_to_internal_mapping(self):
         return {
@@ -137,8 +143,8 @@ class Configuration:
             instance.field_width = data["field"]["width"]
             instance.field_goal_width = data["field"]["goal"]["width"]
             instance.field_goal_depth = data["field"]["goal"]["depth"]
-            instance.field_penalty_length = data["field"]["penalty"]["length"]
-            instance.field_penalty_width = data["field"]["penalty"]["width"]
+            instance.field_goalkeeper_area_length = data["field"]["goalkeeper-area"]["length"]
+            instance.field_goalkeeper_area_width = data["field"]["goalkeeper-area"]["width"]
             instance.field_ball_radius = data["field"]["ball"]["radius"]
             instance.robot_wheel_radius = data["robot"]["wheel"]["radius"]
             instance.robot_speed_max_radians_seconds = data["robot"]["speed"]["max-radians-seconds"]
@@ -153,6 +159,12 @@ class Configuration:
             instance.team_roles_defensor_id = data["team"]["roles"]["defensor"]["id"]
             instance.team_roles_goalkeeper_id = data["team"]["roles"]["goalkeeper"]["id"]
             instance.stop_distance_to_ball = data["stop"]["distance-to-ball"]
+            instance.kickoff_position_left_team_attacker_y = data["kickoff"]["position"]["left-team"]["attacker"]["y"]
+            instance.kickoff_position_left_team_attacker_x = data["kickoff"]["position"]["left-team"]["attacker"]["x"]
+            instance.kickoff_position_left_team_defensor_y = data["kickoff"]["position"]["left-team"]["defensor"]["y"]
+            instance.kickoff_position_left_team_defensor_x = data["kickoff"]["position"]["left-team"]["defensor"]["x"]
+            instance.kickoff_position_left_team_goalkeeper_y = data["kickoff"]["position"]["left-team"]["goalkeeper"]["y"]
+            instance.kickoff_position_left_team_goalkeeper_x = data["kickoff"]["position"]["left-team"]["goalkeeper"]["x"]
 
         return Configuration._instance
     
