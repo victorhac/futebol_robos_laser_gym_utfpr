@@ -20,7 +20,8 @@ class Executor:
         # else:
         self.receiver = GrSimReceiver(self.field)
         self.sender = GrSimSender()
-        self.last_state = Referee.Command.PREPARE_KICKOFF_BLUE
+        self.last_state = Referee.Command.PREPARE_KICKOFF_YELLOW
+        self.goalkeeper_penalty_flag = True
 
     def stop_robot(self, robot, ball_position, is_left_team):
         robotPosition = robot.get_position_tuple() 
@@ -41,11 +42,11 @@ class Executor:
 
     def main(self):
         while True:
-            is_left_team = self.configuration.team_is_yellow_left_team == self.configuration.team_is_yellow_team
+            is_left_team = self.configuration.get_is_left_team()
 
             #message = ThreadCommonObjects.get_gc_to_executor_message()
             message = Referee()
-            message.command = Referee.Command.PREPARE_KICKOFF_BLUE
+            message.command = Referee.Command.PREPARE_PENALTY_YELLOW
             #NORMAL_START
             self.receiver.update()
 
@@ -94,7 +95,7 @@ class Executor:
 
                 self.last_state = Referee.Command.PREPARE_KICKOFF_YELLOW
                 atk_target_position = (self.configuration.kickoff_position_left_team_attacker_x, self.configuration.kickoff_position_left_team_attacker_y)
-                gk_target_position = self.configuration.kickoff_position_left_team_goalkeeper_x, self.configuration.kickoff_position_left_team_goalkeeper_y
+                gk_target_position = self.configuration.kickoff_position_left_team_goalkeeper_first_x, self.configuration.kickoff_position_left_team_goalkeeper_first_y
                 def_target_position = self.configuration.kickoff_position_left_team_defensor_x, self.configuration.kickoff_position_left_team_defensor_y
 
                 if(not GeometryUtils.isClose(atacker.get_position_tuple(), atk_target_position, 0.3)):
@@ -108,7 +109,7 @@ class Executor:
                     self.sender.transmit_robot(defensor_id, leftMotorSpeed, rightMotorSpeed)
                 else:
                     self.sender.transmit_robot(defensor_id, 0, 0)
-                if(not GeometryUtils.isClose(defensor.get_position_tuple(), def_target_position, 0.3)):
+                if(not GeometryUtils.isClose(goalkeeper.get_position_tuple(), gk_target_position, 0.3)):
 
                     leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(goalkeeper, (gk_target_position), is_left_team)
                     self.sender.transmit_robot(goalkeeper_id, leftMotorSpeed, rightMotorSpeed)
@@ -116,10 +117,9 @@ class Executor:
                     self.sender.transmit_robot(goalkeeper_id, 0, 0)
                     
             elif message.command == Referee.Command.PREPARE_KICKOFF_BLUE:
-
                 self.last_state = Referee.Command.PREPARE_KICKOFF_BLUE
                 atk_target_position = (self.configuration.kickoff_position_left_team_attacker_x, self.configuration.kickoff_position_left_team_attacker_y)
-                gk_target_position = self.configuration.kickoff_position_left_team_goalkeeper_x, self.configuration.kickoff_position_left_team_goalkeeper_y
+                gk_target_position = self.configuration.kickoff_position_left_team_goalkeeper_first_x, self.configuration.kickoff_position_left_team_goalkeeper_first_y
                 def_target_position = self.configuration.kickoff_position_left_team_defensor_x, self.configuration.kickoff_position_left_team_defensor_y
 
                 if(not GeometryUtils.isClose(atacker.get_position_tuple(), atk_target_position, 0.3)):
@@ -133,14 +133,88 @@ class Executor:
                     self.sender.transmit_robot(defensor_id, leftMotorSpeed, rightMotorSpeed)
                 else:
                     self.sender.transmit_robot(defensor_id, 0, 0)
-                if(not GeometryUtils.isClose(defensor.get_position_tuple(), def_target_position, 0.3)):
+
+                if(GeometryUtils.isClose(goalkeeper.get_position_tuple(), gk_target_position, 0.3)):
+                    leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(goalkeeper, (gk_target_position), is_left_team)
+                    self.sender.transmit_robot(goalkeeper_id, leftMotorSpeed, rightMotorSpeed)
+                
+                else:
+                    self.sender.transmit_robot(goalkeeper_id, 0, 0)
+
+            elif message.command == Referee.Command.PREPARE_PENALTY_BLUE or message.command == Referee.Command.PREPARE_PENALTY_YELLOW:
+
+                self.last_state = message.command
+                
+                gk_target_position = self.configuration.get_kickoff_goalkeeper_first_position()
+
+                if(message.command == Referee.Command.PREPARE_PENALTY_BLUE):
+                    if(not self.configuration.team_is_yellow_team):
+                        atk_target_position = (0.750, 0)
+                        def_target_position = self.configuration.get_kickoff_defensor_position()
+                    else:
+                        atk_target_position = (0.3, 0.5)
+                        def_target_position = (0.3, -0.5)
+
+
+                if(message.command == Referee.Command.PREPARE_PENALTY_YELLOW):
+                    if(self.configuration.team_is_yellow_team):
+                        atk_target_position = (0.750, 0)
+                        def_target_position = self.configuration.get_kickoff_defensor_position()
+                    else:
+                        atk_target_position = (0.3, 0.5)
+                        def_target_position = (0.3, -0.5)
+
+
+                if(not GeometryUtils.isClose(atacker.get_position_tuple(), atk_target_position, 0.3)):
+
+                    leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(atacker, atk_target_position, is_left_team)
+                    self.sender.transmit_robot(atacker_id, leftMotorSpeed, rightMotorSpeed)
+                else:
+                    self.sender.transmit_robot(atacker_id, 0, 0)
+
+                if(not GeometryUtils.isClose(goalkeeper.get_position_tuple(), gk_target_position, 0.3) and not self.goalkeeper_penalty_flag):
 
                     leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(goalkeeper, (gk_target_position), is_left_team)
                     self.sender.transmit_robot(goalkeeper_id, leftMotorSpeed, rightMotorSpeed)
                 else:
                     self.sender.transmit_robot(goalkeeper_id, 0, 0)
 
+                if(not GeometryUtils.isClose(defensor.get_position_tuple(), def_target_position, 0.3)):
 
+                    leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(defensor, (def_target_position), is_left_team)
+                    self.sender.transmit_robot(defensor_id, leftMotorSpeed, rightMotorSpeed)
+                else:
+                    self.sender.transmit_robot(defensor_id, 0, 0)
+
+ 
+      
+    
+        # // The blue team may move into penalty position.
+        # PREPARE_PENALTY_BLUE = 7;
+        # // The yellow team may take a direct free kick.
+        # DIRECT_FREE_YELLOW = 8;
+        # // The blue team may take a direct free kick.
+        # DIRECT_FREE_BLUE = 9;
+        # // The yellow team may take an indirect free kick.
+        # INDIRECT_FREE_YELLOW = 10 [deprecated = true];
+        # // The blue team may take an indirect free kick.
+        # INDIRECT_FREE_BLUE = 11 [deprecated = true];
+        # // The yellow team is currently in a timeout.
+        # TIMEOUT_YELLOW = 12;
+        # // The blue team is currently in a timeout.
+        # TIMEOUT_BLUE = 13;
+        # // The yellow team just scored a goal.
+        # // For information only.
+        # // Deprecated: Use the score field from the team infos instead. That way, you can also detect revoked goals.
+        # GOAL_YELLOW = 14 [deprecated = true];
+        # // The blue team just scored a goal. See also GOAL_YELLOW.
+        # GOAL_BLUE = 15 [deprecated = true];
+        # // Equivalent to STOP, but the yellow team must pick up the ball and
+        # // drop it in the Designated Position.
+        # BALL_PLACEMENT_YELLOW = 16;
+        # // Equivalent to STOP, but the blue team must pick up the ball and drop
+        # // it in the Designated Position.
+        # BALL_PLACEMENT_BLUE = 17;
 
 
 

@@ -62,8 +62,10 @@ class Configuration:
         self.kickoff_position_left_team_attacker_x = None
         self.kickoff_position_left_team_defensor_y = None
         self.kickoff_position_left_team_defensor_x = None
-        self.kickoff_position_left_team_goalkeeper_y = None
-        self.kickoff_position_left_team_goalkeeper_x = None
+        self.kickoff_position_left_team_goalkeeper_first_y = None
+        self.kickoff_position_left_team_goalkeeper_first_x = None
+        self.kickoff_position_left_team_goalkeeper_second_y = None
+        self.kickoff_position_left_team_goalkeeper_second_x = None
 
         self.runtime_manual_command = ManualCommandEnum.NONE
         self.runtime_behavior_robot_0 = RobotBehaviorEnum.NONE
@@ -112,6 +114,21 @@ class Configuration:
     
     def get_is_left_team(self):
         return self.team_is_yellow_left_team == self.team_is_yellow_team
+    
+    def get_is_left_team(self):
+        return self.team_is_yellow_left_team == self.team_is_yellow_team
+
+    def get_kickoff_defensor_position(self):
+        return self.kickoff_position_left_team_defensor_x, self.kickoff_position_left_team_defensor_y
+    
+    def get_kickoff_attacker_position(self):
+        return self.kickoff_position_left_team_attacker_x, self.kickoff_position_left_team_attacker_y
+    
+    def get_kickoff_goalkeeper_first_position(self):
+        return self.kickoff_position_left_team_goalkeeper_first_x, self.kickoff_position_left_team_goalkeeper_first_y
+    
+    def get_kickoff_goalkeeper_second_position(self):
+        return self.kickoff_position_left_team_goalkeeper_second_x, self.kickoff_position_left_team_goalkeeper_second_y
 
     def get_object():
         if Configuration._instance is None:
@@ -174,8 +191,12 @@ class Configuration:
             instance.kickoff_position_left_team_attacker_x = data["kickoff"]["position"]["left-team"]["attacker"]["x"]
             instance.kickoff_position_left_team_defensor_y = data["kickoff"]["position"]["left-team"]["defensor"]["y"]
             instance.kickoff_position_left_team_defensor_x = data["kickoff"]["position"]["left-team"]["defensor"]["x"]
-            instance.kickoff_position_left_team_goalkeeper_y = data["kickoff"]["position"]["left-team"]["goalkeeper"]["y"]
-            instance.kickoff_position_left_team_goalkeeper_x = data["kickoff"]["position"]["left-team"]["goalkeeper"]["x"]
+            instance.kickoff_position_left_team_goalkeeper_first_y = data["kickoff"]["position"]["left-team"]["goalkeeper-first"]["y"]
+            instance.kickoff_position_left_team_goalkeeper_first_x = data["kickoff"]["position"]["left-team"]["goalkeeper-first"]["x"]
+            instance.kickoff_position_left_team_goalkeeper_second_x = data["kickoff"]["position"]["left-team"]["goalkeeper-second"]["x"]
+            instance.kickoff_position_left_team_goalkeeper_second_y = data["kickoff"]["position"]["left-team"]["goalkeeper-second"]["y"]
+
+
 
         return Configuration._instance
     

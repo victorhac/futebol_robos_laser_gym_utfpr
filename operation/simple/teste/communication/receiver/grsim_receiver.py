@@ -59,10 +59,9 @@ class GrSimReceiver(Receiver):
     def _entity_from_dict(
         self,
         entity_data: Entity,
-        data_dict: dict,
-        is_left_team: bool,
-        foes=False
+        data_dict: dict
     ):
+        is_left_team = self.configuration.get_is_left_team()
         sum_to_angle = 0 if not is_left_team else np.pi
 
         entity_data.position.x, entity_data.position.y = \
@@ -74,7 +73,7 @@ class GrSimReceiver(Receiver):
         entity_data.position.x /= 1000
         entity_data.position.y /= 1000
 
-        if not foes:
+        if not is_left_team:
             entity_data.position.theta = \
                 GrSimUtils.normalize_angle(
                     self._assert_angle(data_dict.get('orientation', 0) + sum_to_angle))
@@ -92,13 +91,9 @@ class GrSimReceiver(Receiver):
         entity_data.velocity.theta = data_dict.get('vorientation', 0)
 
     def get_is_left_team(self):
-        return self.configuration.team_is_yellow_left_team == self.configuration.team_is_yellow_team
+        return self.configuration.get_is_left_team()
 
-    def _field_data_from_dict(self, field: Field, raw_data_dict: dict):
-        isLeftTeam = self.get_is_left_team()
-
-        rotate_field = isLeftTeam
-        
+    def _field_data_from_dict(self, field: Field, raw_data_dict: dict):        
         if self.configuration.team_is_yellow_team:
             team_list_of_dicts = raw_data_dict.get('robotsYellow', [])
             foes_list_of_dicts = raw_data_dict.get('robotsBlue', [])
@@ -111,21 +106,21 @@ class GrSimReceiver(Receiver):
         ball = None if balls is None else balls[0]
 
         if ball:
-            self._entity_from_dict(field.ball, ball, rotate_field)
+            self._entity_from_dict(field.ball, ball)
 
         for received_robot in team_list_of_dicts:
             robot_id = received_robot.get('robotId')
             robot = field.robots.get(robot_id)
 
             if robot:
-                self._entity_from_dict(robot, received_robot, rotate_field)
+                self._entity_from_dict(robot, received_robot)
 
         for received_robot in foes_list_of_dicts:
             robot_id = received_robot.get('robotId')
             foe = field.foes.get(robot_id)
 
             if foe:
-                self._entity_from_dict(foe, received_robot, rotate_field, True)
+                self._entity_from_dict(foe, received_robot)
 
     def _assert_angle(self, angle):
         angle = angle % (2 * np.pi)
