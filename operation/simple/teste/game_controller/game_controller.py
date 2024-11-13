@@ -7,6 +7,7 @@ from communication.protobuf.ssl_gc_rcon_team_pb2 import (
     AdvantageChoice
 )
 
+from communication.receiver.game_controller.game_controller_remote_receiver import GameControllerRemoteReceiver
 from configuration.configuration import Configuration
 from game_controller.clients.ssl_referee_client import SSLRefereeClient
 from game_controller.clients.ssl_team_client import SSLTeamClient
@@ -18,7 +19,14 @@ history = []
 class GameController:
     def __init__(self):
         self.configuration = Configuration.get_object()
-        self.ssl_referee_client = SSLRefereeClient()
+
+        if self.configuration.receive_data_from_remote:
+            self.ssl_referee_client = None
+            self.game_controller_remote_receiver = GameControllerRemoteReceiver()
+        else:
+            self.ssl_referee_client = SSLRefereeClient()
+            self.game_controller_remote_receiver = None
+
         self.ssl_team_client = SSLTeamClient()
         self.threads = []
         self.send_advantage_choice_thread = None
@@ -40,19 +48,30 @@ class GameController:
         self.threads.append(self.send_advantage_choice_thread)
         self.send_advantage_choice_thread.start()
 
+    def consume(self):
+        if self.configuration.receive_data_from_remote:
+            message = self.game_controller_remote_receiver.receive()
+        else:
+            message, error = self.ssl_referee_client.consume()
+
+        return message
+    
+    def try_register_as_team(self):
+        if self.configuration.game_controller_register_as_team:
+            if self.ssl_team_client.register():
+                self.register_as_team()
+            else:
+                return False
+        return True
+
     def main(self):
         while True:
-            if self.configuration.game_controller_register_as_team:
-                if self.ssl_team_client.register():
-                    self.register_as_team()
-                else:
-                    continue
+            if self.try_register_as_team():
+                continue
 
             while True:
-                message, error = self.ssl_referee_client.consume()
+                message = self.consume()
 
-                if len(self.history) == 0 or message.command != self.history[-1]:
+                if message and (len(self.history) == 0 or message.command != self.history[-1]):
                     self.history.append(message.command)
                     ThreadCommonObjects.set_gc_to_executor_message(message)
-
-                time.sleep(1)

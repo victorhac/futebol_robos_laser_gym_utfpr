@@ -1,21 +1,17 @@
 import socket
-
-from communication.receiver.receiver import Receiver
 import pickle
+from communication.protobuf.ssl_gc_referee_message_pb2 import Referee
 
 from configuration.configuration import Configuration
-from domain.field import Field
 
-class RemoteComputerReceiver(Receiver):
-    def __init__(self, field: Field):
+class GameControllerRemoteReceiver:
+    def __init__(self):
         self.configuration = Configuration.get_object()
 
         self.server: socket.socket = None
         self.client: socket.socket = None
 
         self.connect()
-
-        self.field = field
 
     def connect(self):
         self.server = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
@@ -24,10 +20,14 @@ class RemoteComputerReceiver(Receiver):
 
         self.client, addr = self.server.accept()
 
-    def update(self):
+    def receive(self):
         try:
-            data = self.client.recv(2048)        
-            field: Field = pickle.loads(data)
-            self.field.update(field)
+            message = Referee()
+
+            data = self.client.recv(2048)
+
+            message.ParseFromString(data)
+
+            return message
         except:
-            pass
+            return None

@@ -69,8 +69,8 @@ class SSLVisionReceiver(Receiver):
         data_dict: dict,
         entity_data: Entity
     ):
-        entity_data.position.x = data_dict.get('x', 0) * 0.0012
-        entity_data.position.y = data_dict.get('y', 0) * 0.00173
+        entity_data.position.x = data_dict.get('x', 0) / 1000
+        entity_data.position.y = data_dict.get('y', 0) / 1000
 
         entity_data.position.theta = data_dict.get('orientation', 0)
 

@@ -1,6 +1,7 @@
 {
     "mode": "MANUAL",
     "environment-mode": "SIMULATION",
+    "receive-data-from-remote": true,
     "keys": {
         "private-key": {
             "path": "./communication/keys/UTBots.key.pem"
@@ -12,7 +13,10 @@
     "remote-computer": {
         "bluetooth": {
             "address": "5C:CD:5B:40:9B:7D",
-            "channel": 4
+            "channel": 4,
+            "game-controller": {
+                "channel": 1
+            }
         }
     },
     "sslvision": {
