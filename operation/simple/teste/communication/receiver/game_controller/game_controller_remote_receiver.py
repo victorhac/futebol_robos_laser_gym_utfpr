@@ -11,6 +11,8 @@ class GameControllerRemoteReceiver:
         self.server: socket.socket = None
         self.client: socket.socket = None
 
+        self.buffer_size = self.configuration.remote_computer_game_controller_receiver_buffer_size
+
         self.connect()
 
     def connect(self):
@@ -29,7 +31,7 @@ class GameControllerRemoteReceiver:
         try:
             message = Referee()
 
-            data = self.client.recv(10000)
+            data = self.client.recv(self.buffer_size)
 
             message.ParseFromString(data)
 

@@ -20,7 +20,8 @@ class SSLVisionReceiver(Receiver):
 
         super(SSLVisionReceiver, self).__init__(
             self.configuration.sslvision_ip,
-            self.configuration.sslvision_port
+            self.configuration.sslvision_port,
+            self.configuration.sslvision_receiver_buffer_size
         )
 
         self.field = field

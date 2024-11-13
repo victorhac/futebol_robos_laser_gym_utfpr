@@ -12,6 +12,7 @@ class RemoteComputerReceiver(Receiver):
         self.configuration = Configuration.get_object()
         self.connect()
         self.field = field
+        self.buffer_size = self.configuration.remote_computer_game_controller_receiver_buffer_size
 
     def connect(self):
         self.server = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
@@ -34,7 +35,7 @@ class RemoteComputerReceiver(Receiver):
 
     def update(self):
         try:
-            data = self.client.recv(2048)
+            data = self.client.recv(self.buffer_size)
             if data:      
                 field: Field = pickle.loads(data)
                 self.field.update(field)

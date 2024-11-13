@@ -22,7 +22,8 @@ class GrSimReceiver(Receiver):
 
         super(GrSimReceiver, self).__init__(
             self.configuration.grsim_vision_ip,
-            self.configuration.grsim_vision_port
+            self.configuration.grsim_vision_port,
+            self.configuration.sslvision_receiver_buffer_size
         )
 
         self.field = field

@@ -17,6 +17,13 @@
             "game-controller": {
                 "channel": 1
             }
+        },
+        "game-controller": {
+            "receiver": {
+                "buffer": {
+                    "size": 2048
+                }
+            }
         }
     },
     "sslvision": {
@@ -35,7 +42,12 @@
             }
         },
         "ip": "224.5.23.2",
-        "port": 10006
+        "port": 10006,
+        "receiver": {
+            "buffer": {
+                "size": 2048
+            }
+        }
     },
     "grsim": {
         "control": {
@@ -43,7 +55,7 @@
             "port": 20011
         },
         "vision": {
-            "ip": "224.5.23.2",
+            "ip": "224.5.23.5",
             "port": 10020
         }
     },
@@ -64,7 +76,12 @@
     },
     "referee": {
         "address": "224.5.23.1",
-        "port": 10003
+        "port": 10003,
+        "receiver": {
+            "buffer": {
+                "size": 10000
+            }
+        }
     },
     "motion": {
         "pid": {

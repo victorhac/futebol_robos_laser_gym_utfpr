@@ -14,6 +14,7 @@ class SSLRefereeClient:
         self.address = self.configuration.referee_address
         self.port = self.configuration.referee_port
         self.sock = self.setup_multicast_socket()
+        self.buffer_size = self.configuration.referee_receiver_buffer_size
         self.history = []
 
     def close_socket(self):
@@ -28,7 +29,7 @@ class SSLRefereeClient:
         return sock
 
     def consume(self):
-        data, _ = self.sock.recvfrom(10000)
+        data, _ = self.sock.recvfrom(self.buffer_size)
         ref_msg = Referee()
         try:
             ref_msg.ParseFromString(data)

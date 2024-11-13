@@ -3,14 +3,15 @@ import struct
 from abc import ABC, abstractmethod
 
 class Receiver(ABC):
-    def __init__(self, receiver_ip, receiver_port):
+    def __init__(self, receiver_ip, receiver_port, buffer_size):
         self.receiver_ip = receiver_ip
         self.receiver_port = receiver_port
         self.receiver_socket = self._create_socket()
+        self.buffer_size = buffer_size
 
     @abstractmethod
     def receive(self):
-        return self.receiver_socket.recv(2048)
+        return self.receiver_socket.recv(self.buffer_size)
     
     @abstractmethod
     def update(self):
