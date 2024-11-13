@@ -71,8 +71,8 @@ class SSLVisionReceiver(Receiver):
         data_dict: dict,
         entity_data: Entity
     ):
-        entity_data.position.x = data_dict.get('x', 0) * 0.0012
-        entity_data.position.y = data_dict.get('y', 0) * 0.00173
+        entity_data.position.x = data_dict.get('x', 0) / 1000
+        entity_data.position.y = data_dict.get('y', 0) / 1000
 
         entity_data.position.theta = data_dict.get('orientation', 0)
 
@@ -117,13 +117,13 @@ class SSLVisionReceiver(Receiver):
         for received_robot in team_list_of_dicts:
             index = self.get_index(received_robot)
 
-            if index:
+            if index is not None:
                 self._entity_from_dict(received_robot, self.field.robots[index])
 
         for received_robot in foes_list_of_dicts:
             index = self.get_foe_index(received_robot)
 
-            if index:
+            if index is not None:
                 self._entity_from_dict(received_robot, self.field.foes[index])
 
 class ProtoVisionThread(Job):
