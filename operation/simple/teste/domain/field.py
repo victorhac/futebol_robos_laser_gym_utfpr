@@ -34,3 +34,9 @@ class Field:
         if 'foes' in data:
             for i in range(3):
                 self.foes[i] = data['foes'].get(i, Entity())
+
+    def update(self, field: 'Field'):
+        self.ball.update(field.ball)
+        for i in range(3):
+            self.robots[i].update(field.robots[i])
+            self.foes[i].update(field.foes[i])

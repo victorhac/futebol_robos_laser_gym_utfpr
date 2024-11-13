@@ -9,6 +9,12 @@
             "path": "./communication/keys/UTBots.pub.pem"
         }
     },
+    "remote-computer": {
+        "bluetooth": {
+            "address": "5C:CD:5B:40:9B:7D",
+            "channel": 4
+        }
+    },
     "sslvision": {
         "team": {
             "robot-id-mapping": {

@@ -17,3 +17,7 @@ class Entity:
     
     def get_position_tuple(self):
         return (self.position.x, self.position.y)
+    
+    def update(self, entity: 'Entity'):
+        self.position.update(entity.position)
+        self.velocity.update(entity.velocity)

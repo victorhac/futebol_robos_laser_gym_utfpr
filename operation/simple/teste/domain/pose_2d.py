@@ -9,3 +9,6 @@ class Pose2D:
 
     def __repr__(self):
         return f'Pose2D({self})'
+    
+    def update(self, pose: 'Pose2D'):
+        self.x, self.y, self.theta = pose.x, pose.y, pose.theta

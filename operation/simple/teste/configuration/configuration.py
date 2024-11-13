@@ -13,6 +13,8 @@ class Configuration:
         self.environment_mode = None
         self.keys_private_key_path = None
         self.keys_public_key_path = None
+        self.remote_computer_bluetooth_address = None
+        self.remote_computer_bluetooth_channel = None
         self.sslvision_team_robot_id_mapping_0 = None
         self.sslvision_team_robot_id_mapping_1 = None
         self.sslvision_team_robot_id_mapping_2 = None
@@ -141,6 +143,8 @@ class Configuration:
             instance.environment_mode = data["environment-mode"]
             instance.keys_private_key_path = data["keys"]["private-key"]["path"]
             instance.keys_public_key_path = data["keys"]["public-key"]["path"]
+            instance.remote_computer_bluetooth_address = data["remote-computer"]["bluetooth"]["address"]
+            instance.remote_computer_bluetooth_channel = data["remote-computer"]["bluetooth"]["channel"]
             instance.sslvision_team_robot_id_mapping_0 = data["sslvision"]["team"]["robot-id-mapping"]["0"]
             instance.sslvision_team_robot_id_mapping_1 = data["sslvision"]["team"]["robot-id-mapping"]["1"]
             instance.sslvision_team_robot_id_mapping_2 = data["sslvision"]["team"]["robot-id-mapping"]["2"]

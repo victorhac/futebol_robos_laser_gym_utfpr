@@ -11,6 +11,10 @@ class Receiver(ABC):
     @abstractmethod
     def receive(self):
         return self.receiver_socket.recv(2048)
+    
+    @abstractmethod
+    def update(self):
+        pass
 
     def _create_socket(self):
         sock = socket.socket(
