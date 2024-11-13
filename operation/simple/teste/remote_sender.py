@@ -15,10 +15,14 @@ class RemoteSender:
         self.threads.append(game_controller_remote_sender_thread)
         game_controller_remote_sender_thread.start()
 
-
         ssl_vision_remote_sender_thread = threading.Thread(target=self.ssl_vision_remote_sender.main)
         self.threads.append(ssl_vision_remote_sender_thread)
         ssl_vision_remote_sender_thread.start()
 
         for item in self.threads:
             item.join()
+
+        self.ssl_vision_remote_sender.main()
+
+if __name__ == '__main__':
+    RemoteSender().main()

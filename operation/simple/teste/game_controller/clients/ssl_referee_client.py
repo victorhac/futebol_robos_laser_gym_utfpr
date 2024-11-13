@@ -28,7 +28,7 @@ class SSLRefereeClient:
         return sock
 
     def consume(self):
-        data, _ = self.sock.recvfrom(2048)
+        data, _ = self.sock.recvfrom(10000)
         ref_msg = Referee()
         try:
             ref_msg.ParseFromString(data)

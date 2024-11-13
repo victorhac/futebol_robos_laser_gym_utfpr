@@ -55,11 +55,7 @@ class SSLVisionRemoteSender:
                     message = pickle.dumps(self.field)
 
                     self.client.send(message)
-
-                    print(self.field)
                 except Exception as e:
                     print(f"Unexpected error: {e}")
                     self.close_socket()
                     break
-
-            time.sleep(2)

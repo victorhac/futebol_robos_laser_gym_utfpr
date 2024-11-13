@@ -64,7 +64,7 @@
     },
     "referee": {
         "address": "224.5.23.1",
-        "port": 11003
+        "port": 10003
     },
     "motion": {
         "pid": {
@@ -108,7 +108,7 @@
     },
     "team": {
         "name": "UTBots",
-        "is-yellow-left-team": true,
+        "is-yellow-left-team": false,
         "is-yellow-team": false,
         "blue": {
             "number-robots": 3

@@ -31,7 +31,6 @@ class GameControllerRemoteSender:
                 game_controller_message, error = self.ssl_referee_client.consume()
 
                 if not error:
-                    print(game_controller_message)
                     message = game_controller_message.SerializeToString()
                     self.client.sendall(message)
             except Exception as e:
