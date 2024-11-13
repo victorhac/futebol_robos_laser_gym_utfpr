@@ -31,6 +31,9 @@ class ControlCenter:
 
         self.create_replacement_frame()
 
+    def main(self):
+        self.root.mainloop()
+
     def create_top_frame(self):
         team_color = "Yellow" if self.configuracao.team_is_yellow_team else "Blue"
         is_left_team = self.configuracao.get_is_left_team()

@@ -62,6 +62,7 @@ class GameController:
                 self.register_as_team()
             else:
                 return False
+            
         return True
 
     def main(self):

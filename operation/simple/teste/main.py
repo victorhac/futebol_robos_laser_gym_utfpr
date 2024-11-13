@@ -1,35 +1,32 @@
 from configuration.configuration import Configuration
+from domain.field import Field
 from game_controller.game_controller import GameController
-# from communication.sender.ros_sender import RosSender
 import threading
 import signal
 import os
 
 from executor import Executor
-
-threads = []
+from gui.control_center import ControlCenter
+import tkinter as tk
 
 configuration = Configuration.get_object()
 
+threads = []
+
+root = tk.Tk()
+
 executor = Executor()
-#game_controller = GameController()
+game_controller = GameController()
+control_center = ControlCenter(root)
 
 def main():
-    # field = Field()
+    control_center_thread = threading.Thread(target=control_center.main)
+    threads.append(control_center_thread)
+    control_center_thread.start()
 
-    # receiver = GrSimReceiver(field)
-    # sender = GrSimSender()
-
-    # if configuration.mode == "MANUAL":
-    #     receiver = GrSimReceiver(field)
-    #     sender = GrSimSender()
-    # else:
-    #     receiver = SSLVisionReceiver(field)
-    #     sender = RosSender()
-
-    # game_controller_thread = threading.Thread(target=game_controller.main)
-    # threads.append(game_controller_thread)
-    # game_controller_thread.start()
+    game_controller_thread = threading.Thread(target=game_controller.main)
+    threads.append(game_controller_thread)
+    game_controller_thread.start()
 
     executor_thread = threading.Thread(target=executor.main)
     threads.append(executor_thread)
@@ -42,7 +39,7 @@ def main():
         item.join()
 
 def handle_signal(signum, frame):
-    #game_controller.close_socket()
+    game_controller.close_socket()
     os._exit(0)
 
 if __name__ == "__main__":

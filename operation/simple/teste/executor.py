@@ -1,8 +1,3 @@
-from communication.receiver.grsim_receiver import GrSimReceiver
-from communication.receiver.remote_computer_receiver import RemoteComputerReceiver
-from communication.receiver.ssl_vision_receiver import SSLVisionReceiver
-from communication.sender.grsim_sender import GrSimSender
-from communication.sender.ros_sender import RosSender
 from configuration.configuration import Configuration
 from domain.field import Field
 from threads.thread_common_objects import ThreadCommonObjects
@@ -17,21 +12,34 @@ class Executor:
         self.configuration = Configuration.get_object()
         self.field = Field()
 
-        # if self.configuration.environment_mode == "REAL":
-        #     self.receiver = SSLVisionReceiver(self.field)
-        #     self.sender = RosSender()
-        # else:
-        self.receiver = RemoteComputerReceiver(self.field)
-        self.sender = RosSender()
-        
-        #self.receiver = GrSimReceiver(self.field)
-        #self.sender = GrSimSender()
+        self.set_receiver_and_sender()
 
         self.last_state = Referee.Command.DIRECT_FREE_YELLOW
         self.goalkeeper_penalty_flag = True
         self.time_saved = False
         self.last_ball_pos_saved = False
         self.flag_defensor_orbit = False
+
+    def set_receiver_and_sender(self):
+        if self.configuration.environment_mode == "SIMULATION":
+            from communication.receiver.grsim_receiver import GrSimReceiver
+            from communication.sender.grsim_sender import GrSimSender
+
+            self.receiver = GrSimReceiver(self.field)
+            self.sender = GrSimSender()
+        else:
+            from communication.sender.ros_sender import RosSender
+
+            if self.configuration.receive_data_from_remote:
+                from communication.receiver.remote_computer_receiver import RemoteComputerReceiver
+
+                self.receiver = RemoteComputerReceiver(self.field)
+            else:
+                from communication.receiver.ssl_vision_receiver import SSLVisionReceiver
+
+                self.receiver = SSLVisionReceiver(self.field)
+
+            self.sender = RosSender()
 
     def stop_robot(self, robot, ball_position, is_left_team):
         robotPosition = robot.get_position_tuple() 
