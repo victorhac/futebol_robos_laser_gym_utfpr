@@ -19,9 +19,9 @@ class RosSender(Sender):
         twist.linear.y = -left_speed
 
         pub_map = {
-            1: self.pub_robot3,
-            2: self.pub_robot1,
-            0: self.pub_robot2
+            0: self.pub_robot1,
+            1: self.pub_robot2,
+            2: self.pub_robot3
         }
 
         pub_map[robot_id].publish(twist)

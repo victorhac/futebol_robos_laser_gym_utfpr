@@ -50,6 +50,8 @@ class SSLVisionReceiver(Receiver):
 
         detection = packet.detection
 
+        print(packet)
+
         return json.loads(MessageToJson(detection))
 
     def receive_field_data(self):

@@ -83,11 +83,11 @@ class MotionUtils:
         
         return -spinPower, spinPower
     
-    def FaceDirection(Robot, targetPosition:'tuple[float, float]', isLeftTeam = True):
+    def FaceDirection(Robot, targetPosition:'tuple[float, float]', isLeftTeam):
         
         configuration = Configuration.get_object()
 
-        position = robot.position
+        position = Robot.position
 
         positionX = position.x
         positionY = position.y
@@ -100,11 +100,11 @@ class MotionUtils:
         error = GeometryUtils.smallestAngleDiff(angleToTarget, robotAngle)
 
         if abs(error) > math.pi / 2.0 + math.pi / 20.0:
-            reversed = True
+            reversed = not isLeftTeam
             robotAngle = GeometryUtils.normalizeInPI(robotAngle + math.pi)
             error = GeometryUtils.smallestAngleDiff(angleToTarget, robotAngle)
         else:
-            reversed = False
+            reversed = isLeftTeam
             
         kP = configuration.motion_pid_constants_kp
         kD = configuration.motion_pid_constants_kd
@@ -124,10 +124,11 @@ class MotionUtils:
         return leftMotorSpeed, rightMotorSpeed, error
             
 
-    def GoOnDirection(direction, robot, fieldData, lastError: float = 0):
+    def GoOnDirection(direction, robot, is_left_team, lastError: float = 0):
         configuration = Configuration.get_object()
 
         position =  robot.position
+
         positionX = position.x
         positionY = position.y
         robotAngle = position.theta
@@ -140,11 +141,11 @@ class MotionUtils:
         error = GeometryUtils.smallestAngleDiff(angleToTarget, robotAngle)
 
         if abs(error) > math.pi / 2.0 + math.pi / 20.0:
-            reversed = True
+            reversed = not is_left_team
             robotAngle = GeometryUtils.normalizeInPI(robotAngle + math.pi)
             error = GeometryUtils.smallestAngleDiff(angleToTarget, robotAngle)
         else:
-            reversed = False
+            reversed = is_left_team
 
         kP = configuration.motion_pid_constants_kp
         kD = configuration.motion_pid_constants_kd
@@ -160,13 +161,12 @@ class MotionUtils:
         return leftMotorSpeed, rightMotorSpeed, error
     
     
-    
     def goToOrbitPoint(robot,
                 targetPosition: 'tuple[float, float]',
                 isLeftTeam: bool,
                 orientation: int,
                 lastError: float = 0,
-                phaseShift: float = -math.pi / 5,
+                phaseShift: float = -math.pi*1.25,
                 deslocamento: int = 0.075): 
             configuration = Configuration.get_object()
 

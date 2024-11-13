@@ -102,7 +102,7 @@ class GeometryUtils:
             else:
                 vetor_unitario = (0, 0)  
 
-            return tuple(vetor_unitario)
+            return vetor_unitario[0] * 2, vetor_unitario[1] * 2
     
     def PointOnDirection(position: 'tuple[float, float]', direction: 'tuple[float, float]', raio):
         

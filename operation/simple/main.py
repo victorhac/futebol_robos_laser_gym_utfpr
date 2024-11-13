@@ -478,10 +478,11 @@ def atackerPlayerThread(
                     else:
                         contdef = 0
             
-                        position = goalkeeper.position
             """/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////""" 
                  
             """-------------------------------------------------------GOLEIRO-------------------------------------------------------"""
+            position = goalkeeper.position
+
             robotAngle = position.theta
             if(abs(ball.position.y) > 0.300):
                 ballY = 0.300
