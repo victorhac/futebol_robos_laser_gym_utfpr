@@ -8,7 +8,10 @@ client.bind(("64:32:A8:A9:1", 4))
 message = "Teste"
 
 while True:
-    client.send(message.encode("utf-8"))
-    time.sleep(1)
+    try:
+        client.send(message.encode("utf-8"))
+        time.sleep(1)
+    except:
+        break
 
 client.close()
