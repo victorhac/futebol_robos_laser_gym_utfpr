@@ -24,3 +24,13 @@ class Field:
 
     def __repr__(self):
         return f'FieldData({self})'
+    
+    def load_from_dict(self, data: dict):
+        if 'ball' in data:
+            self.ball = data['ball']
+        if 'robots' in data:
+            for i in range(3):
+                self.robots[i] = data['robots'].get(i, Entity())
+        if 'foes' in data:
+            for i in range(3):
+                self.foes[i] = data['foes'].get(i, Entity())

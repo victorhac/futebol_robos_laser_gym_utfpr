@@ -1,5 +1,7 @@
 import socket
 import time
+import pickle
+from domain.field import Field
 
 client = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
 
@@ -14,10 +16,12 @@ except Exception as e:
     client.close()
     exit(1)
 
-message = "Teste"
+field_data = Field()
+message = pickle.dumps(field_data)
+
 while True:
     try:
-        client.send(message.encode("utf-8"))
+        client.send(message)
         print("Mensagem enviada:", message)
         time.sleep(1)
     except Exception as e:
