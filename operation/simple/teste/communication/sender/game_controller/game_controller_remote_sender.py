@@ -1,7 +1,7 @@
 from configuration.configuration import Configuration
 import socket
 
-from game_controller.game_controller import GameController
+from game_controller.clients.ssl_referee_client import SSLRefereeClient
 
 class GameControllerRemoteSender:
     def __init__(self):
@@ -12,16 +12,9 @@ class GameControllerRemoteSender:
         self.server_address = self.configuration.remote_computer_bluetooth_address
         self.channel = self.configuration.remote_computer_bluetooth_game_controller_channel
 
-        self.game_controller = GameController()
+        self.ssl_referee_client = SSLRefereeClient()
 
         self.connect()
-
-    # def try_close_socket_connection(self):
-    #     try:
-    #         if self.client:
-    #             self.client.close()
-    #     except Exception as e:
-    #         print(f"Error while closing socket connection: {e}")
 
     def connect(self):
         try:
@@ -35,9 +28,10 @@ class GameControllerRemoteSender:
     def main(self):
         while True:
             try:
-                game_controller_message = self.game_controller.consume()
+                game_controller_message, error = self.ssl_referee_client.consume()
 
-                if game_controller_message is not None:
+                if not error:
+                    print(game_controller_message)
                     message = game_controller_message.SerializeToString()
                     self.client.sendall(message)
             except Exception as e:
