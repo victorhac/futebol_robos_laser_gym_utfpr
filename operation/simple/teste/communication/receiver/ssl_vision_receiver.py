@@ -115,13 +115,13 @@ class SSLVisionReceiver(Receiver):
         for received_robot in team_list_of_dicts:
             index = self.get_index(received_robot)
 
-            if index:
+            if index is not None:
                 self._entity_from_dict(received_robot, self.field.robots[index])
 
         for received_robot in foes_list_of_dicts:
             index = self.get_foe_index(received_robot)
 
-            if index:
+            if index is not None:
                 self._entity_from_dict(received_robot, self.field.foes[index])
 
 class ProtoVisionThread(Job):
