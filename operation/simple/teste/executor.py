@@ -196,8 +196,7 @@ class Executor:
                 if self.configuration.team_is_yellow_left_team:
                     is_team_prepare_kickoff = self.last_state == Referee.Command.PREPARE_KICKOFF_YELLOW
                 else:
-                    is_team_prepare_penalty = self.last_state == Referee.Command.PREPARE_KICKOFF_BLUE
-                        
+                    is_team_prepare_kickoff = self.last_state == Referee.Command.PREPARE_KICKOFF_BLUE
                 if(is_team_prepare_kickoff):
                     self.strategy()
                 else:
@@ -211,7 +210,6 @@ class Executor:
                 
                 if is_team_prepare_free_kick:
                     self.direct_free_team()
-                    print("ksjadhaskjhdk")
                 else:
                     self.direct_free_foe_team()
 

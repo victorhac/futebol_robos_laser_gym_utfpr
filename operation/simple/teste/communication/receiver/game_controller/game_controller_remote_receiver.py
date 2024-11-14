@@ -27,7 +27,6 @@ class GameControllerRemoteReceiver:
         self.server.listen(1)
 
         self.client, addr = self.server.accept()
-        self.reader = self.client.makefile("rb")
     
     def close_connection(self):
         try:
@@ -39,7 +38,12 @@ class GameControllerRemoteReceiver:
     def receive(self):
         try:
             message = Referee()
-            receive_message(self.reader, message)
+            data = self.client.recv(10000)
+
+            te = pickle.loads(data)
+
+            message.command = te.command
+
             return message
         except:
             self.close_connection()
