@@ -19,13 +19,21 @@ class GameControllerRemoteReceiver:
         self.server = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
 
         self.server.bind((
-            self.configuration.referee_address,
+            self.configuration.remote_computer_bluetooth_address,
             self.configuration.remote_computer_bluetooth_game_controller_channel
         ))
         
         self.server.listen(1)
 
         self.client, addr = self.server.accept()
+    
+    def close_connection(self):
+        try:
+            self.client.close()
+            self.server.close()
+        except:
+            print("Não foi possível desconectar")
+            pass
 
     def receive(self):
         try:
@@ -37,4 +45,5 @@ class GameControllerRemoteReceiver:
 
             return message
         except:
-            return None
+            self.close_connection()
+            self.connect()
