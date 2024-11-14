@@ -306,6 +306,44 @@ class Executor:
         else:
             self.prepare_penalty_foe_team()
 
+    def transmit_robot_go_to_point(
+        self,
+        robot_id: int,
+        target_position: 'tuple[float, float]',
+        role_name: str
+    ):
+        left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name(role_name)] = MotionUtils.go_to_point(
+            self.attacker,
+            target_position,
+            self.is_left_team,
+            self.errors[self.get_id_by_name(role_name)]
+        )
+
+        self.sender.transmit_robot(robot_id, left_motor_speed, right_motor_speed)
+
+    def direct_free_team(self):
+        attacker_target_position_x, attacker_target_position_y = self.ball.get_position_tuple()
+        attacker_target_position_x -= 0.3
+
+        attacker_target_position = (attacker_target_position_x, attacker_target_position_y)
+
+        self.transmit_robot_go_to_point(self.attacker_id, attacker_target_position, "attacker")
+
+    def direct_free_foe_team(self):
+        pass
+
+    def direct_free_yellow(self):
+        if self.configuration.team_is_yellow_team:
+            self.direct_free_team()
+        else:
+            self.direct_free_foe_team()
+
+    def direct_free_blue(self):
+        if self.configuration.team_is_yellow_team:
+            self.direct_free_foe_team()
+        else:
+            self.direct_free_team()
+
     def strategy(self):
         pass
 
@@ -329,8 +367,10 @@ class Executor:
                 self.prepare_penalty_blue()
             elif message.command == Referee.Command.PREPARE_PENALTY_YELLOW:
                 self.prepare_penalty_yellow()
-            else:
-                self.strategy()
+            elif message.command == Referee.Command.DIRECT_FREE_YELLOW:
+                self.direct_free_yellow()
+            elif message.command == Referee.Command.DIRECT_FREE_BLUE:
+                self.direct_free_blue()
 
 
     # def strategy(self, is_left_team):
