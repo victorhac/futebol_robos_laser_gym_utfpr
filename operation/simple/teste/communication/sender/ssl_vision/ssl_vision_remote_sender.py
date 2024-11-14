@@ -9,8 +9,10 @@ from domain.field import Field
 class SSLVisionRemoteSender:
     def __init__(self):
         self.configuration = Configuration.get_object()
+
         self.field = Field()
         self.ssl_vision = SSLVisionReceiver(self.field)
+
         self.client: socket.socket = None
         self.server_address = self.configuration.remote_computer_bluetooth_address
         self.channel = self.configuration.remote_computer_bluetooth_channel
@@ -41,6 +43,11 @@ class SSLVisionRemoteSender:
             finally:
                 self.client = None
 
+    def send_message(self):
+        self.ssl_vision.update()
+        message = pickle.dumps(self.field)
+        self.client.send(message)
+
     def main(self):
         while True:
             try:
@@ -51,10 +58,7 @@ class SSLVisionRemoteSender:
 
             while True:
                 try:
-                    self.ssl_vision.update()
-                    message = pickle.dumps(self.field)
-
-                    self.client.send(message)
+                    self.send_message()
                 except Exception as e:
                     print(f"Unexpected error: {e}")
                     self.close_socket()
