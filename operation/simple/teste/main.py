@@ -17,12 +17,12 @@ root = tk.Tk()
 
 executor = Executor()
 game_controller = GameController()
-control_center = ControlCenter(root)
+# control_center = ControlCenter(root)
 
 def main():
-    control_center_thread = threading.Thread(target=control_center.main)
-    threads.append(control_center_thread)
-    control_center_thread.start()
+    # control_center_thread = threading.Thread(target=control_center.main)
+    # threads.append(control_center_thread)
+    # control_center_thread.start()
 
     game_controller_thread = threading.Thread(target=game_controller.main)
     threads.append(game_controller_thread)

@@ -27,14 +27,18 @@ class GameController:
             self.ssl_referee_client = SSLRefereeClient()
             self.game_controller_remote_receiver = None
 
-        self.ssl_team_client = SSLTeamClient()
+        if self.configuration.game_controller_register_as_team:
+            self.ssl_team_client = SSLTeamClient()
+
         self.threads = []
         self.send_advantage_choice_thread = None
         self.history = deque(maxlen=10)
 
     def close_socket(self):
         self.ssl_referee_client.close_socket()
-        self.ssl_team_client.close_socket()
+
+        if self.configuration.game_controller_register_as_team:
+            self.ssl_team_client.close_socket()
 
     def send_advantage_choice(self):
         choice = AdvantageChoice.CONTINUE
@@ -60,6 +64,7 @@ class GameController:
         if self.configuration.game_controller_register_as_team:
             if self.ssl_team_client.register():
                 self.register_as_team()
+                return True
             else:
                 return False
             
@@ -67,7 +72,7 @@ class GameController:
 
     def main(self):
         while True:
-            if self.try_register_as_team():
+            if not self.try_register_as_team():
                 continue
 
             while True:
