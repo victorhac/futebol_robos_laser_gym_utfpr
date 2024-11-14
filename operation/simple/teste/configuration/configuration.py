@@ -4,6 +4,9 @@ from domain.enums.manual_command_enum import ManualCommandEnum
 from domain.enums.robot_behavior_enum import RobotBehaviorEnum
 
 CONFIGURATION_FILE_PATH = "./configuration/configuration.json"
+CONFIGURATION_PLAYING_FILE_PATH = "./configuration/configuration.Playing.json"
+CONFIGURATION_SIMULATED_FILE_PATH = "./configuration/configuration.Simulated.json"
+LAUNCH_FILE_PATH = "./configuration/launch.json"
 
 class Configuration:
     _instance = None
@@ -334,5 +337,19 @@ class Configuration:
     
     @staticmethod
     def load_json():
-        with open(CONFIGURATION_FILE_PATH, 'r') as f:
+        launch_data = Configuration.load_launch_json()
+
+        if launch_data["mode"].lower() == "playing":
+            with open(CONFIGURATION_PLAYING_FILE_PATH, 'r') as f:
+                return json.load(f)
+        elif launch_data["mode"].lower() == "simulated":
+            with open(CONFIGURATION_SIMULATED_FILE_PATH, 'r') as f:
+                return json.load(f)
+        else:
+            with open(CONFIGURATION_FILE_PATH, 'r') as f:
+                return json.load(f)
+        
+    @staticmethod
+    def load_launch_json():
+        with open(LAUNCH_FILE_PATH, 'r') as f:
             return json.load(f)

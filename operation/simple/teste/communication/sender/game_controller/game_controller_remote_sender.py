@@ -1,9 +1,9 @@
-from communication.utils.game_controller.sslconn import send_message
+import pickle
 from configuration.configuration import Configuration
 import socket
 import time
 
-from domain.field import Field
+from domain.referee_message_domain import RefereeMessageDomain
 from game_controller.clients.ssl_referee_client import SSLRefereeClient
 
 class GameControllerRemoteSender:
@@ -45,7 +45,8 @@ class GameControllerRemoteSender:
     def send_message(self):
         game_controller_message, error = self.ssl_referee_client.consume()
         if not error:
-            send_message(self.client, game_controller_message)
+            message = pickle.dumps(RefereeMessageDomain(game_controller_message.command))
+            self.client.send(message)
 
     def main(self):
         try:

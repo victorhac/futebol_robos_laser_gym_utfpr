@@ -21,7 +21,7 @@
         "game-controller": {
             "receiver": {
                 "buffer": {
-                    "size": 10000
+                    "size": 2048
                 }
             }
         }
