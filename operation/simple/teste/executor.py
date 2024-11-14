@@ -14,7 +14,7 @@ class Executor:
 
         self.set_receiver_and_sender()
 
-        self.last_state = Referee.Command.PREPARE_PENALTY_BLUE
+        self.last_state = None
         self.current_state = None
         self.goalkeeper_penalty_flag = True
         self.command_initial_time = None
@@ -94,8 +94,6 @@ class Executor:
         self.is_left_team = self.configuration.get_is_left_team()
 
         self.message = ThreadCommonObjects.get_gc_to_executor_message()
-        self.message = Referee()
-        self.message.command = 17
 
         if self.current_state != self.message.command:
             self.last_state = self.current_state
@@ -194,10 +192,31 @@ class Executor:
                         self.errors[self.get_id_by_name("defensor")])
                 else:
                     left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("defensor")] = 0, 0, 0
-            else:
-                print("naoépenalti")
+            elif is_prepare_kickoff:
+                if self.configuration.team_is_yellow_left_team:
+                    is_team_prepare_kickoff = self.last_state == Referee.Command.PREPARE_KICKOFF_YELLOW
+                else:
+                    is_team_prepare_penalty = self.last_state == Referee.Command.PREPARE_KICKOFF_BLUE
+                        
+                if(is_team_prepare_kickoff):
+                    self.strategy()
+                else:
+                    self.halt()
 
-                pass
+            else:
+                if self.configuration.team_is_yellow_left_team:
+                    is_team_prepare_free_kick = self.last_state == Referee.Command.DIRECT_FREE_YELLOW
+                else:
+                    is_team_prepare_free_kick = self.last_state == Referee.Command.DIRECT_FREE_BLUE
+                
+                if is_team_prepare_free_kick:
+                    self.direct_free_team()
+                    print("ksjadhaskjhdk")
+                else:
+                    self.direct_free_foe_team()
+
+
+                
 
     def prepare_kickoff_team(self):
         positions = self.configuration.get_prepare_kickoff_team_positions()
@@ -335,16 +354,7 @@ class Executor:
         self.sender.transmit_robot(robot_id, left_motor_speed, right_motor_speed)
 
     def direct_free_team(self):
-        attacker_target_position_x, attacker_target_position_y = self.ball.get_position_tuple()
-        attacker_target_position_x -= 0.3
-
-        attacker_target_position = (attacker_target_position_x, attacker_target_position_y)
-
-        self.transmit_robot_go_to_point(self.attacker_id, attacker_target_position, "attacker")
-
-        defensor_target_position = -self.configuration.field_length / 4, 0
-
-        self.transmit_robot_go_to_point(self.defensor_id, defensor_target_position, "defensor")
+       self.strategy()
 
     def direct_free_foe_team(self):
         defensor_target_position = -self.configuration.field_length / 4, 0
@@ -352,16 +362,13 @@ class Executor:
         self.transmit_robot_go_to_point(self.defensor_id, defensor_target_position, "defensor")
 
     def direct_free_yellow(self):
-        if self.configuration.team_is_yellow_team:
-            self.direct_free_team()
-        else:
-            self.direct_free_foe_team()
+        self.last_state = Referee.Command.DIRECT_FREE_YELLOW
+        self.normal_start()
 
     def direct_free_blue(self):
-        if self.configuration.team_is_yellow_team:
-            self.direct_free_foe_team()
-        else:
-            self.direct_free_team()
+        self.last_state = Referee.Command.DIRECT_FREE_BLUE
+        self.normal_start()
+
 
     def strategy(self):
         self.defensor_strategy()
@@ -373,6 +380,10 @@ class Executor:
             self.set_iteration_variables()
 
             message = self.message
+
+            if not message:
+                time.sleep(2)
+                return
 
             if message.command == Referee.Command.HALT:
                 self.halt()
