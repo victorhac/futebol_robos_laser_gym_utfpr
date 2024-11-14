@@ -17,7 +17,7 @@ class Executor:
         self.last_state = Referee.Command.PREPARE_PENALTY_BLUE
         self.current_state = None
         self.goalkeeper_penalty_flag = True
-        self.time_saved = False
+        self.command_initial_time = None
         self.last_ball_pos_saved = False
         self.flag_defensor_orbit = False
 
@@ -93,13 +93,14 @@ class Executor:
     def set_iteration_variables(self):
         self.is_left_team = self.configuration.get_is_left_team()
 
-        #self.message = ThreadCommonObjects.get_gc_to_executor_message()
+        self.message = ThreadCommonObjects.get_gc_to_executor_message()
         self.message = Referee()
         self.message.command = 17
 
         if self.current_state != self.message.command:
             self.last_state = self.current_state
             self.current_state = self.message.command
+            self.command_initial_time = time.time()
 
         #PREPARE_PENALTY_YELLOW
         #NORMAL_START
@@ -147,20 +148,14 @@ class Executor:
         if not self.last_ball_pos_saved:
             self.last_ball_position = self.ball.get_position_tuple()
             self.last_ball_pos_saved = True
-        if not self.time_saved:
-            self.timmer = time.time()
-            self.time_saved = True
-
 
         is_prepare_kickoff = self.last_state == Referee.Command.PREPARE_KICKOFF_YELLOW or\
             self.last_state == Referee.Command.PREPARE_KICKOFF_BLUE
         
         ball_moved = self.get_ball_moved(self.ball.get_position_tuple(), self.last_ball_position)
         
-        if self.can_run_after_normal_start(self.timmer) or (is_prepare_kickoff and ball_moved):
+        if self.can_run_after_normal_start(self.command_initial_time) or (is_prepare_kickoff and ball_moved):
             self.strategy()
-
-            
         else:
             if self.configuration.team_is_yellow_left_team:
                 is_team_prepare_penalty = self.last_state == Referee.Command.PREPARE_PENALTY_YELLOW
@@ -347,8 +342,14 @@ class Executor:
 
         self.transmit_robot_go_to_point(self.attacker_id, attacker_target_position, "attacker")
 
+        defensor_target_position = -self.configuration.field_length / 4, 0
+
+        self.transmit_robot_go_to_point(self.defensor_id, defensor_target_position, "defensor")
+
     def direct_free_foe_team(self):
-        pass
+        defensor_target_position = -self.configuration.field_length / 4, 0
+
+        self.transmit_robot_go_to_point(self.defensor_id, defensor_target_position, "defensor")
 
     def direct_free_yellow(self):
         if self.configuration.team_is_yellow_team:
