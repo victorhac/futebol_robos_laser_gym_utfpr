@@ -47,7 +47,7 @@ class GeometryUtils:
         return dist
 
     @staticmethod
-    def isClose(
+    def is_close(
         position1: 'tuple[float, float]', 
         position2: 'tuple[float, float]',
         tolerance: float):

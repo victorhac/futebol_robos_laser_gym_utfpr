@@ -80,15 +80,34 @@ class Configuration:
 
         self.stop_distance_to_ball = None
 
-        self.kickoff_position_left_team_attacker_y = None
-        self.kickoff_position_left_team_attacker_x = None
-        self.kickoff_position_left_team_defensor_y = None
-        self.kickoff_position_left_team_defensor_x = None
-        self.kickoff_position_left_team_goalkeeper_first_y = None
-        self.kickoff_position_left_team_goalkeeper_first_x = None
-        self.kickoff_position_left_team_goalkeeper_second_y = None
-        self.kickoff_position_left_team_goalkeeper_second_x = None
+        self.prepare_kickoff_team_position_attacker_x = None
+        self.prepare_kickoff_team_position_attacker_y = None
+        self.prepare_kickoff_team_position_defensor_x = None
+        self.prepare_kickoff_team_position_defensor_y = None
+        self.prepare_kickoff_team_position_goalkeeper_x = None
+        self.prepare_kickoff_team_position_goalkeeper_y = None
+        self.prepare_kickoff_foe_team_position_attacker_x = None
+        self.prepare_kickoff_foe_team_position_attacker_y = None
+        self.prepare_kickoff_foe_team_position_defensor_x = None
+        self.prepare_kickoff_foe_team_position_defensor_y = None
+        self.prepare_kickoff_foe_team_position_goalkeeper_x = None
+        self.prepare_kickoff_foe_team_position_goalkeeper_y = None
 
+        self.prepare_penalty_team_position_attacker_x = None
+        self.prepare_penalty_team_position_attacker_y = None
+        self.prepare_penalty_team_position_defensor_x = None
+        self.prepare_penalty_team_position_defensor_y = None
+        self.prepare_penalty_team_position_goalkeeper_x = None
+        self.prepare_penalty_team_position_goalkeeper_y = None
+        self.prepare_penalty_foe_team_position_attacker_x = None
+        self.prepare_penalty_foe_team_position_attacker_y = None
+        self.prepare_penalty_foe_team_position_defensor_x = None
+        self.prepare_penalty_foe_team_position_defensor_y = None
+        self.prepare_penalty_foe_team_position_goalkeeper_x = None
+        self.prepare_penalty_foe_team_position_goalkeeper_y = None
+
+        self.normal_start_after_penalty_target_attacker_position_y=None
+        self.normal_start_after_penalty_target_attacker_position_x =None
         self.time_to_run = None
 
         self.runtime_manual_command = ManualCommandEnum.NONE
@@ -139,17 +158,65 @@ class Configuration:
     def get_is_left_team(self):
         return self.team_is_yellow_left_team == self.team_is_yellow_team
 
-    def get_kickoff_defensor_position(self):
-        return self.kickoff_position_left_team_defensor_x, self.kickoff_position_left_team_defensor_y
+    def get_prepare_kickoff_defensor_position(self):
+        return self.prepare_kickoff_team_position_defensor_x, self.prepare_kickoff_team_position_defensor_y
     
-    def get_kickoff_attacker_position(self):
-        return self.kickoff_position_left_team_attacker_x, self.kickoff_position_left_team_attacker_y
+    def get_prepare_kickoff_attacker_position(self):
+        return self.prepare_kickoff_team_position_attacker_x, self.prepare_kickoff_team_position_attacker_y
     
-    def get_kickoff_goalkeeper_first_position(self):
-        return self.kickoff_position_left_team_goalkeeper_first_x, self.kickoff_position_left_team_goalkeeper_first_y
+    def get_prepare_kickoff_goalkeeper_position(self):
+        return self.prepare_kickoff_team_position_goalkeeper_x, self.prepare_kickoff_team_position_goalkeeper_y
     
-    def get_kickoff_goalkeeper_second_position(self):
-        return self.kickoff_position_left_team_goalkeeper_second_x, self.kickoff_position_left_team_goalkeeper_second_y
+    def get_foe_team_prepare_kickoff_defensor_position(self):
+        return self.prepare_kickoff_foe_team_position_defensor_x, self.prepare_kickoff_foe_team_position_defensor_y
+    
+    def get_foe_team_prepare_kickoff_attacker_position(self):
+        return self.prepare_kickoff_foe_team_position_attacker_x, self.prepare_kickoff_foe_team_position_attacker_y
+    
+    def get_foe_team_prepare_kickoff_goalkeeper_position(self):
+        return self.prepare_kickoff_foe_team_position_goalkeeper_x, self.prepare_kickoff_foe_team_position_goalkeeper_y
+    
+    def get_positions(
+        self,
+        attacker_position: 'tuple[float, float]',
+        defensor_position: 'tuple[float, float]',
+        goalkeeper_position: 'tuple[float, float]'
+    ):
+        return {
+            self.team_roles_attacker_id: attacker_position,
+            self.team_roles_defensor_id: defensor_position,
+            self.team_roles_goalkeeper_id: goalkeeper_position
+        }
+    
+    def get_prepare_penalty_team_positions(self):
+        return self.get_positions(
+            (self.prepare_penalty_team_position_attacker_x, self.prepare_penalty_team_position_attacker_y),
+            (self.prepare_penalty_team_position_defensor_x, self.prepare_penalty_team_position_defensor_y),
+            (self.prepare_penalty_team_position_goalkeeper_x, self.prepare_penalty_team_position_goalkeeper_y)
+        )
+    
+    def get_prepare_penalty_foe_team_positions(self):
+        return self.get_positions(
+            (self.prepare_penalty_foe_team_position_attacker_x, self.prepare_penalty_foe_team_position_attacker_y),
+            (self.prepare_penalty_foe_team_position_defensor_x, self.prepare_penalty_foe_team_position_defensor_y),
+            (self.prepare_penalty_foe_team_position_goalkeeper_x, self.prepare_penalty_foe_team_position_goalkeeper_y)
+        )
+    
+    def get_prepare_kickoff_team_positions(self):
+        return self.get_positions(
+            self.get_prepare_kickoff_attacker_position(),
+            self.get_prepare_kickoff_defensor_position(),
+            self.get_prepare_kickoff_goalkeeper_position()
+        )
+    
+    def get_prepare_kickoff_foe_team_positions(self):
+        return self.get_positions(
+            self.get_foe_team_prepare_kickoff_attacker_position(),
+            self.get_foe_team_prepare_kickoff_defensor_position(),
+            self.get_foe_team_prepare_kickoff_goalkeeper_position()
+        )
+    def get_normal_start_after_penalty_attacker_position(self):
+        return (self.normal_start_after_penalty_target_attacker_position_x, self.normal_start_after_penalty_target_attacker_position_y)
 
     def get_object():
         if Configuration._instance is None:
@@ -230,15 +297,35 @@ class Configuration:
             
             instance.stop_distance_to_ball = data["stop"]["distance-to-ball"]
             
-            instance.kickoff_position_left_team_attacker_y = data["kickoff"]["position"]["left-team"]["attacker"]["y"]
-            instance.kickoff_position_left_team_attacker_x = data["kickoff"]["position"]["left-team"]["attacker"]["x"]
-            instance.kickoff_position_left_team_defensor_y = data["kickoff"]["position"]["left-team"]["defensor"]["y"]
-            instance.kickoff_position_left_team_defensor_x = data["kickoff"]["position"]["left-team"]["defensor"]["x"]
-            instance.kickoff_position_left_team_goalkeeper_first_y = data["kickoff"]["position"]["left-team"]["goalkeeper-first"]["y"]
-            instance.kickoff_position_left_team_goalkeeper_first_x = data["kickoff"]["position"]["left-team"]["goalkeeper-first"]["x"]
-            instance.kickoff_position_left_team_goalkeeper_second_x = data["kickoff"]["position"]["left-team"]["goalkeeper-second"]["x"]
-            instance.kickoff_position_left_team_goalkeeper_second_y = data["kickoff"]["position"]["left-team"]["goalkeeper-second"]["y"]
+            instance.prepare_kickoff_team_position_attacker_y = data["prepare-kickoff"]["team"]["position"]["attacker"]["y"]
+            instance.prepare_kickoff_team_position_attacker_x = data["prepare-kickoff"]["team"]["position"]["attacker"]["x"]
+            instance.prepare_kickoff_team_position_defensor_y = data["prepare-kickoff"]["team"]["position"]["defensor"]["y"]
+            instance.prepare_kickoff_team_position_defensor_x = data["prepare-kickoff"]["team"]["position"]["defensor"]["x"]
+            instance.prepare_kickoff_team_position_goalkeeper_y = data["prepare-kickoff"]["team"]["position"]["goalkeeper"]["y"]
+            instance.prepare_kickoff_team_position_goalkeeper_x = data["prepare-kickoff"]["team"]["position"]["goalkeeper"]["x"]
+            instance.prepare_kickoff_foe_team_position_attacker_y = data["prepare-kickoff"]["foe-team"]["position"]["attacker"]["y"]
+            instance.prepare_kickoff_foe_team_position_attacker_x = data["prepare-kickoff"]["foe-team"]["position"]["attacker"]["x"]
+            instance.prepare_kickoff_foe_team_position_defensor_y = data["prepare-kickoff"]["foe-team"]["position"]["defensor"]["y"]
+            instance.prepare_kickoff_foe_team_position_defensor_x = data["prepare-kickoff"]["foe-team"]["position"]["defensor"]["x"]
+            instance.prepare_kickoff_foe_team_position_goalkeeper_y = data["prepare-kickoff"]["foe-team"]["position"]["goalkeeper"]["y"]
+            instance.prepare_kickoff_foe_team_position_goalkeeper_x = data["prepare-kickoff"]["foe-team"]["position"]["goalkeeper"]["x"]
             
+            instance.prepare_penalty_team_position_attacker_x = data["prepare-penalty"]["team"]["position"]["attacker"]["x"]
+            instance.prepare_penalty_team_position_attacker_y = data["prepare-penalty"]["team"]["position"]["attacker"]["y"]
+            instance.prepare_penalty_team_position_defensor_x = data["prepare-penalty"]["team"]["position"]["defensor"]["x"]
+            instance.prepare_penalty_team_position_defensor_y = data["prepare-penalty"]["team"]["position"]["defensor"]["y"]
+            instance.prepare_penalty_team_position_goalkeeper_x = data["prepare-penalty"]["team"]["position"]["goalkeeper"]["x"]
+            instance.prepare_penalty_team_position_goalkeeper_y = data["prepare-penalty"]["team"]["position"]["goalkeeper"]["y"]
+            instance.prepare_penalty_foe_team_position_attacker_x = data["prepare-penalty"]["foe-team"]["position"]["attacker"]["x"]
+            instance.prepare_penalty_foe_team_position_attacker_y = data["prepare-penalty"]["foe-team"]["position"]["attacker"]["y"]
+            instance.prepare_penalty_foe_team_position_defensor_x = data["prepare-penalty"]["foe-team"]["position"]["defensor"]["x"]
+            instance.prepare_penalty_foe_team_position_defensor_y = data["prepare-penalty"]["foe-team"]["position"]["defensor"]["y"]
+            instance.prepare_penalty_foe_team_position_goalkeeper_x = data["prepare-penalty"]["foe-team"]["position"]["goalkeeper"]["x"]
+            instance.prepare_penalty_foe_team_position_goalkeeper_y = data["prepare-penalty"]["foe-team"]["position"]["goalkeeper"]["y"]
+            
+            instance.normal_start_after_penalty_target_attacker_position_x=data["normal-start"]["after-penalty"]["target-attacker-position"]["x"]
+            instance.normal_start_after_penalty_target_attacker_position_y=data["normal-start"]["after-penalty"]["target-attacker-position"]["y"]
+
             instance.time_to_run = data["time"]["to-run"]
 
         return Configuration._instance

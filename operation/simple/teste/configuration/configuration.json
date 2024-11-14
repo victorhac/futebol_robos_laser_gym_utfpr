@@ -1,7 +1,7 @@
 {
     "mode": "MANUAL",
     "environment-mode": "SIMULATION",
-    "receive-data-from-remote": true,
+    "receive-data-from-remote": false,
     "keys": {
         "private-key": {
             "path": "./communication/keys/UTBots.key.pem"
@@ -118,7 +118,7 @@
             "radius": 0.0325
         },
         "speed": {
-            "max-radians-seconds": 100
+            "max-radians-seconds": 30
         },
         "width": 0.075,
         "length": 0.075
@@ -126,7 +126,7 @@
     "team": {
         "name": "UTBots",
         "is-yellow-left-team": false,
-        "is-yellow-team": false,
+        "is-yellow-team": false  ,
         "blue": {
             "number-robots": 3
         },
@@ -148,24 +148,78 @@
     "stop": {
         "distance-to-ball": 0.5
     },
-    "kickoff":{
-        "position": {
-            "left-team":{
+    "normal-start":{
+        "after-penalty":{
+            "target-attacker-position":{
+                "x":1.6,
+                "y":0
+            }
+        }
+    },
+    "prepare-kickoff":{
+        "team": {
+            "position": {
                 "attacker": {
-                    "x": -0.6,
+                    "x": -0.4,
+                    "y": 0
+                },
+                "defensor": {
+                    "x": -1.5,
                     "y": 0.6
                 },
-                "defensor":  {
-                    "x": -0.6,
-                    "y": -0.6
+                "goalkeeper": {
+                    "x": -2.2,
+                    "y": 0
+                }
+            }
+        },
+        "foe-team": {
+            "position": {
+                "attacker": {
+                    "x": -1,
+                    "y": 0.5
                 },
-                "goalkeeper-first":{
-                    "x": -1.5,
-                    "y": 0.0
+                "defensor": {
+                    "x": -1,
+                    "y": -0.5
                 },
-                "goalkeeper-second":{
-                    "x": -2.1,
-                    "y": 0.0
+                "goalkeeper": {
+                    "x": -2.2,
+                    "y": 0
+                }
+            }
+        }
+    },
+    "prepare-penalty": {
+        "team": {
+            "position": {
+                "attacker": {
+                    "x": -0.75,
+                    "y": 0
+                },
+                "defensor": {
+                    "x": -1,
+                    "y": -1
+                },
+                "goalkeeper": {
+                    "x": -2.2,
+                    "y": 0
+                }
+            }
+        },
+        "foe-team": {
+            "position": {
+                "attacker": {
+                    "x": 1,
+                    "y": 1
+                },
+                "defensor": {
+                    "x": 1,
+                    "y": -1
+                },
+                "goalkeeper": {
+                    "x": -2.2,
+                    "y": 0
                 }
             }
         }

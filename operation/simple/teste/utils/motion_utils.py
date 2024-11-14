@@ -18,7 +18,7 @@ class MotionUtils:
         return motorSpeed
     
     @staticmethod
-    def goToPoint(
+    def go_to_point(
             robot: Entity, 
             targetPosition: 'tuple[float, float]',
             isLeftTeam: bool,

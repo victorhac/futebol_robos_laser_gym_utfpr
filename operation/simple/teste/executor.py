@@ -1,11 +1,11 @@
 from configuration.configuration import Configuration
+from domain.entity import Entity
 from domain.field import Field
 from threads.thread_common_objects import ThreadCommonObjects
 from communication.protobuf.ssl_gc_referee_message_pb2 import Referee
 import time
 from utils.geometry_utils import GeometryUtils
 from utils.motion_utils import MotionUtils
-import math
 
 class Executor:
     def __init__(self):
@@ -14,11 +14,29 @@ class Executor:
 
         self.set_receiver_and_sender()
 
-        self.last_state = Referee.Command.DIRECT_FREE_YELLOW
+        self.last_state = Referee.Command.PREPARE_PENALTY_BLUE
         self.goalkeeper_penalty_flag = True
         self.time_saved = False
         self.last_ball_pos_saved = False
         self.flag_defensor_orbit = False
+
+        self.is_left_team = True
+        self.attacker_id = self.configuration.team_roles_attacker_id
+        self.defensor_id = self.configuration.team_roles_defensor_id
+        self.goalkeeper_id = self.configuration.team_roles_goalkeeper_id
+
+        self.attacker: Entity = None
+        self.defensor: Entity = None
+        self.goalkeeper: Entity = None
+        self.ball: Entity = None
+
+        self.message = None
+
+        self.errors = {
+            0: 0,
+            1: 0,
+            2: 0
+        }
 
     def set_receiver_and_sender(self):
         if self.configuration.environment_mode == "SIMULATION":
@@ -41,10 +59,14 @@ class Executor:
 
             self.sender = RosSender()
 
-    def stop_robot(self, robot, ball_position, is_left_team):
+    def stop_robot(
+        self,
+        robot: Entity,
+        ball_position: 'tuple[float, float]'
+    ):
         robotPosition = robot.get_position_tuple() 
         
-        if(GeometryUtils.isClose(robotPosition, ball_position,self.configuration.stop_distance_to_ball)):
+        if GeometryUtils.is_close(robotPosition, ball_position,self.configuration.stop_distance_to_ball):
             direction = 1
             if(ball_position[1] != robotPosition[1]): 
                 direction = ball_position[1] - robotPosition[1] / abs(ball_position[1] - robotPosition[1])
@@ -54,7 +76,7 @@ class Executor:
             
             targetPosition = (0, ball_position[1] + (0.5 * direction))
 
-            return MotionUtils.goToPoint(robot, targetPosition, is_left_team)
+            return MotionUtils.go_to_point(robot, targetPosition, self.is_left_team)
         else:
             return 0, 0, 0
         
@@ -65,215 +87,235 @@ class Executor:
         return time.time() - initial_time 
 
     def can_run_after_normal_start(self, initial_time):
-        return self.get_time_passed(initial_time) > 10 
+        return self.get_time_passed(initial_time) > 10
+    
+    def set_iteration_variables(self):
+        self.is_left_team = self.configuration.get_is_left_team()
 
+        #self.message = ThreadCommonObjects.get_gc_to_executor_message()
+        self.message = Referee()
+        self.message.command = Referee.Command.NORMAL_START
+        #PREPARE_PENALTY_YELLOW
+        #NORMAL_START
+
+        self.receiver.update()
+
+        self.attacker_id = self.configuration.team_roles_attacker_id
+        self.defensor_id = self.configuration.team_roles_defensor_id
+        self.goalkeeper_id = self.configuration.team_roles_goalkeeper_id
+
+        self.attacker = self.field.robots[self.attacker_id]
+        self.defensor = self.field.robots[self.defensor_id]
+        self.goalkeeper = self.field.robots[self.goalkeeper_id]
+        self.ball = self.field.ball
+
+    def halt(self):
+        self.sender.transmit_robot(self.attacker_id, 0, 0)
+        self.sender.transmit_robot(self.defensor_id, 0, 0)
+        self.sender.transmit_robot(self.goalkeeper_id, 0, 0)
+
+    def get_id_by_name(self, role: str):
+        configuration = self.configuration
+        if role == "attacker":
+            return self.errors[configuration.team_roles_attacker_id]
+        elif role == "defensor":
+            return self.errors[configuration.team_roles_defensor_id]
+        elif role == "goalkeeper":
+            return self.errors[configuration.team_roles_goalkeeper_id]
+        return 0
+
+    def stop(self):
+        ball_position = self.ball.get_position_tuple()
+        left_motor_speed, right_motor_speed, self.get = self.stop_robot(self.attacker, ball_position)
+        self.sender.transmit_robot(self.attacker_id, left_motor_speed, right_motor_speed)      
+
+        left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("attacker")] = self.stop_robot(
+            self.defensor,
+            ball_position
+        )
+
+        self.sender.transmit_robot(self.defensor_id, left_motor_speed, right_motor_speed)      
+
+        self.sender.transmit_robot(self.goalkeeper_id, 0, 0)
+
+    def normal_start(self):
+        if not self.last_ball_pos_saved:
+            self.last_ball_position = self.ball.get_position_tuple()
+            self.last_ball_pos_saved = True
+        if not self.time_saved:
+            self.timmer = time.time()
+            self.time_saved = True
+
+
+        is_prepare_kickoff = self.last_state == Referee.Command.PREPARE_KICKOFF_YELLOW or\
+            self.last_state == Referee.Command.PREPARE_KICKOFF_BLUE
+        
+        ball_moved = self.get_ball_moved(self.ball.get_position_tuple(), self.last_ball_position)
+        
+        if self.can_run_after_normal_start(self.timmer) or (is_prepare_kickoff and ball_moved):
+            #Estrategia jogo corrido
+            attacker_target_position = self.ball.get_position_tuple()
+            print("estrategia")
+            left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("attacker")] = MotionUtils.go_to_point(
+                self.attacker,
+                (attacker_target_position[0] + 0.2, attacker_target_position[1]),
+                self.is_left_team
+            )
+            
+            self.sender.transmit_robot(self.attacker_id, left_motor_speed, right_motor_speed)
+
+            defensor_target_position = self.ball.get_position_tuple()
+
+            left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("defensor")] = MotionUtils.go_to_point(
+                self.defensor,
+                (defensor_target_position[0] + 0.2, defensor_target_position[1]),
+                self.is_left_team
+            )
+
+            self.sender.transmit_robot(self.defensor_id, left_motor_speed, right_motor_speed)
+        else:
+            if self.configuration.team_is_yellow_left_team:
+                is_team_prepare_penalty = self.last_state == Referee.Command.PREPARE_PENALTY_YELLOW
+            else:
+                is_team_prepare_penalty = self.last_state == Referee.Command.PREPARE_PENALTY_BLUE
+                        
+            is_last_state_prepare_penalty = self.last_state == Referee.Command.PREPARE_PENALTY_BLUE or\
+                self.last_state == Referee.Command.PREPARE_PENALTY_YELLOW
+                
+            if is_team_prepare_penalty:
+                #Time cobra penlti]
+                print("cobrando")
+                targetPosition = self.configuration.get_normal_start_after_penalty_attacker_position()
+                if(GeometryUtils.is_close(targetPosition, self.attacker.get_position_tuple(),0.2)):
+                    self.halt()
+                else:
+                    left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("attacker")] = MotionUtils.go_to_point(
+                        self.attacker,
+                        self.ball.get_position_tuple(),
+                        self.is_left_team)
+                    
+                    self.sender.transmit_robot(self.attacker_id, left_motor_speed, right_motor_speed)
+    
+            elif is_last_state_prepare_penalty:
+                #goleiro defende penalti
+                print("defesa")
+
+                if abs(self.ball.position.y) > 0.800:
+                    ballY = 0.800 * self.ball.position.y / abs(self.ball.position.y)
+                else:
+                    ballY = self.ball.position.y
+
+                goalkeeper_target_position = (-1.9, ballY)
+
+                if not GeometryUtils.is_close(self.goalkeeper.get_position_tuple(), goalkeeper_target_position, 0.3):
+                    left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("defensor")] = MotionUtils.go_to_point(
+                        self.goalkeeper,
+                        goalkeeper_target_position,
+                        self.is_left_team,
+                        self.errors[self.get_id_by_name("defensor")])
+                else:
+                    left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("defensor")] = 0, 0, 0
+            else:
+                print("naoépenalti")
+
+                pass
+
+    def prepare_kickoff_team(self):
+        positions = self.configuration.get_prepare_kickoff_team_positions()
+        self.go_to_positions(positions)
+
+    def prepare_kickoff_foe_team(self):
+        positions = self.configuration.get_prepare_kickoff_foe_team_positions()
+        self.go_to_positions(positions)
+
+    def go_to_positions(self, positions: 'dict[int, tuple[float, float]]'):
+        tolerance = 0.3
+        for item in positions:
+            robot = self.field.robots[item]
+
+            if not GeometryUtils.is_close(robot.get_position_tuple(), positions[item], tolerance):
+                left_motor_speed, right_motor_speed, self.errors[item] = MotionUtils.go_to_point(
+                    robot,
+                    positions[item],
+                    self.is_left_team,
+                    self.errors[item])
+                
+                self.sender.transmit_robot(item, left_motor_speed, right_motor_speed)
+            else:
+                self.sender.transmit_robot(item, 0, 0)
+
+    def prepare_kickoff_yellow(self):
+        if self.configuration.team_is_yellow_team:
+            self.prepare_kickoff_team()
+        else:
+            self.prepare_kickoff_foe_team()
+
+    def prepare_kickoff_blue(self):
+        if self.configuration.team_is_yellow_team:
+            self.prepare_kickoff_foe_team()
+        else:
+            self.prepare_kickoff_team()
+
+    def prepare_penalty_team(self):
+        positions = self.configuration.get_prepare_penalty_team_positions()
+        self.go_to_positions(positions)
+
+    def prepare_penalty_foe_team(self):
+        positions = self.configuration.get_prepare_penalty_foe_team_positions()
+        self.go_to_positions(positions)
+
+    def prepare_penalty_blue(self):
+        if self.configuration.team_is_yellow_team:
+            self.prepare_penalty_foe_team()
+        else:
+            self.prepare_penalty_team()
+
+    def prepare_penalty_yellow(self):
+        if self.configuration.team_is_yellow_team:
+            self.prepare_penalty_team()
+        else:
+            self.prepare_penalty_foe_team()
+
+    def strategy(self):
+        pass
 
     def main(self):
         while True:
+            self.set_iteration_variables()
 
-            is_left_team = self.configuration.get_is_left_team()
+            message = self.message
 
-            #message = ThreadCommonObjects.get_gc_to_executor_message()
-            message = Referee()
-            message.command = Referee.Command.NORMAL_START
-            #PREPARE_PENALTY_BLUE
-            #NORMAL_START
-            #PREPARE_KICKOFF_BLUE
-            self.receiver.update()
-
-            atacker_id = self.configuration.team_roles_attacker_id
-            defensor_id = self.configuration.team_roles_defensor_id
-            goalkeeper_id = self.configuration.team_roles_goalkeeper_id
-
-            atacker = self.field.robots[atacker_id]
-            defensor = self.field.robots[defensor_id]
-            goalkeeper = self.field.robots[goalkeeper_id]
-            ball = self.field.ball
-
-            print(atacker.position)
             if message.command == Referee.Command.HALT:
-
-                self.sender.transmit_robot(atacker_id, 0, 0)
-                self.sender.transmit_robot(defensor_id, 0, 0)
-                self.sender.transmit_robot(goalkeeper_id, 0, 0)
-
+                self.halt()
             elif message.command == Referee.Command.STOP:
-                
-                ball_position = ball.get_position_tuple()
-                leftMotorSpeed, rightMotorSpeed, error =self.stop_robot(atacker, ball_position, is_left_team)
-                self.sender.transmit_robot(atacker_id, leftMotorSpeed, rightMotorSpeed)      
-
-                leftMotorSpeed, rightMotorSpeed, error = self.stop_robot(defensor, ball_position, is_left_team)
-                self.sender.transmit_robot(defensor_id, leftMotorSpeed, rightMotorSpeed)      
-
-                self.sender.transmit_robot(goalkeeper_id, 0, 0)    
-
-                print(f"ataque --> {atacker.position}")  
-                print(f"bola --> {ball.position}")  
-            
+                self.stop()
             elif message.command == Referee.Command.NORMAL_START:
-
-                if(not self.last_ball_pos_saved):
-                    last_ball_position = ball.get_position_tuple()
-                    self.last_ball_pos_saved = True
-                if(not self.time_saved):
-                    timmer = time.time()
-                    self.time_saved = True
-            
-                if self.can_run_after_normal_start(timmer) or \
-                    ((self.last_state == Referee.Command.PREPARE_KICKOFF_YELLOW or self.last_state == Referee.Command.PREPARE_KICKOFF_BLUE) and \
-                        self.get_ball_moved(ball.get_position_tuple(), last_ball_position)):
-                #############################################------ESTRATEGIA------####################################################
-                    atacker_target_position = ball.get_position_tuple()
-
-                    leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(atacker, (atacker_target_position[0] + 0.2, atacker_target_position[1]), is_left_team)
-                    self.sender.transmit_robot(atacker_id, leftMotorSpeed, rightMotorSpeed)
-
-
-                    defensor_target_position = ball.get_position_tuple()
-                    leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(defensor, (defensor_target_position[0] + 0.2, defensor_target_position[1]), is_left_team)
-                    self.sender.transmit_robot(defensor_id, leftMotorSpeed, rightMotorSpeed)
-                  
-
-                    self.sender.transmit_robot(defensor_id, 0, 0)
-
-
-
-
-                else:
-                    if(self.last_state == Referee.Command.PREPARE_PENALTY_BLUE and not self.configuration.team_is_yellow_team or\
-                        self.last_state == Referee.Command.PREPARE_PENALTY_YELLOW and self.configuration.team_is_yellow_team):
-                        targetPosition = -self.configuration.kickoff_position_left_team_goalkeeper_first_x,0
-
-                        leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(atacker, (targetPosition[0] + 0.2, targetPosition[1]), is_left_team)
-                        self.sender.transmit_robot(atacker_id, leftMotorSpeed, rightMotorSpeed)
-            
-                    elif(self.last_state == Referee.Command.PREPARE_PENALTY_BLUE or self.last_state == Referee.Command.PREPARE_PENALTY_YELLOW):
-                        if(abs(ball.position.y) > 0.800):
-                            ballY = 0.800 * ball.position.y / abs(ball.position.y)
-                        else:
-                            ballY = ball.position.y    
-                        goalkeeper_target_position = (-1.9, ballY)
-
-                        if(not GeometryUtils.isClose(goalkeeper.get_position_tuple(), goalkeeper_target_position, 0.3)):
-                            leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(goalkeeper, goalkeeper_target_position, is_left_team)
-                        else:
-                            leftMotorSpeed, rightMotorSpeed, error = 0, 0, 0
-                                    
-                        pass
-                    else:
-                        pass
+                self.normal_start()
             elif message.command == Referee.Command.PREPARE_KICKOFF_YELLOW:
+                self.prepare_kickoff_yellow()
+                self.last_state = self.message.command
 
-                self.last_state = Referee.Command.PREPARE_KICKOFF_YELLOW
-                atk_target_position = (self.configuration.kickoff_position_left_team_attacker_x, self.configuration.kickoff_position_left_team_attacker_y)
-                gk_target_position = self.configuration.kickoff_position_left_team_goalkeeper_first_x, self.configuration.kickoff_position_left_team_goalkeeper_first_y
-                def_target_position = self.configuration.kickoff_position_left_team_defensor_x, self.configuration.kickoff_position_left_team_defensor_y
-
-                if(not GeometryUtils.isClose(atacker.get_position_tuple(), atk_target_position, 0.3)):
-                    leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(atacker, (atk_target_position), is_left_team)
-                    self.sender.transmit_robot(atacker_id, leftMotorSpeed, rightMotorSpeed)
-                else:
-                    self.sender.transmit_robot(atacker_id, 0, 0)
-                if(not GeometryUtils.isClose(defensor.get_position_tuple(), def_target_position, 0.3)):
-
-                    leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(defensor, (def_target_position), is_left_team)
-                    self.sender.transmit_robot(defensor_id, leftMotorSpeed, rightMotorSpeed)
-                else:
-                    self.sender.transmit_robot(defensor_id, 0, 0)
-                if(not GeometryUtils.isClose(goalkeeper.get_position_tuple(), gk_target_position, 0.3)):
-
-                    leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(goalkeeper, (gk_target_position), is_left_team)
-                    self.sender.transmit_robot(goalkeeper_id, leftMotorSpeed, rightMotorSpeed)
-                else:
-                    self.sender.transmit_robot(goalkeeper_id, 0, 0)
-                    
             elif message.command == Referee.Command.PREPARE_KICKOFF_BLUE:
-                self.last_state = Referee.Command.PREPARE_KICKOFF_BLUE
-                atk_target_position = (self.configuration.kickoff_position_left_team_attacker_x, self.configuration.kickoff_position_left_team_attacker_y)
-                gk_target_position = self.configuration.kickoff_position_left_team_goalkeeper_first_x, self.configuration.kickoff_position_left_team_goalkeeper_first_y
-                def_target_position = self.configuration.kickoff_position_left_team_defensor_x, self.configuration.kickoff_position_left_team_defensor_y
+                self.prepare_kickoff_blue()
+                self.last_state = self.message.command
 
-                if(not GeometryUtils.isClose(atacker.get_position_tuple(), atk_target_position, 0.3)):
-                    leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(atacker, (atk_target_position), is_left_team)
-                    self.sender.transmit_robot(atacker_id, leftMotorSpeed, rightMotorSpeed)
-                else:
-                    self.sender.transmit_robot(atacker_id, 0, 0)
-                if(not GeometryUtils.isClose(defensor.get_position_tuple(), def_target_position, 0.3)):
+            elif message.command == Referee.Command.PREPARE_PENALTY_BLUE:
+                self.prepare_penalty_blue()
+                self.last_state = self.message.command
 
-                    leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(defensor, (def_target_position), is_left_team)
-                    self.sender.transmit_robot(defensor_id, leftMotorSpeed, rightMotorSpeed)
-                else:
-                    self.sender.transmit_robot(defensor_id, 0, 0)
-
-                if(not GeometryUtils.isClose(goalkeeper.get_position_tuple(), gk_target_position, 0.3)):
-                    leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(goalkeeper, (gk_target_position), is_left_team)
-                    self.sender.transmit_robot(goalkeeper_id, leftMotorSpeed, rightMotorSpeed)
-                
-                else:
-                    self.sender.transmit_robot(goalkeeper_id, 0, 0)
-
-            elif message.command == Referee.Command.PREPARE_PENALTY_BLUE or message.command == Referee.Command.PREPARE_PENALTY_YELLOW:
-
-
-                self.last_state = message.command
-                
-                gk_target_position = self.configuration.get_kickoff_goalkeeper_first_position()
-
-                if(message.command == Referee.Command.PREPARE_PENALTY_BLUE):
-                    if(not self.configuration.team_is_yellow_team):
-                        atk_target_position = (0.750, 0)
-                        def_target_position = self.configuration.get_kickoff_defensor_position()
-                    else:
-                        atk_target_position = (0.3, 0.5)
-                        def_target_position = (0.3, -0.5)
-
-
-                if(message.command == Referee.Command.PREPARE_PENALTY_YELLOW):
-                    if(self.configuration.team_is_yellow_team):
-                        atk_target_position = (0.750, 0)
-                        def_target_position = self.configuration.get_kickoff_defensor_position()
-                    else:
-                        atk_target_position = (0.3, 0.5)
-                        def_target_position = (0.3, -0.5)
-
-
-                if(not GeometryUtils.isClose(atacker.get_position_tuple(), atk_target_position, 0.3)):
-
-                    leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(atacker, atk_target_position, is_left_team)
-                    self.sender.transmit_robot(atacker_id, leftMotorSpeed, rightMotorSpeed)
-                else:
-                    self.sender.transmit_robot(atacker_id, 0, 0)
-
-                if(not GeometryUtils.isClose(goalkeeper.get_position_tuple(), gk_target_position, 0.3) and not self.goalkeeper_penalty_flag):
-
-                    leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(goalkeeper, (gk_target_position), is_left_team)
-                    self.sender.transmit_robot(goalkeeper_id, leftMotorSpeed, rightMotorSpeed)
-                else:
-                    self.sender.transmit_robot(goalkeeper_id, 0, 0)
-
-                if(not GeometryUtils.isClose(defensor.get_position_tuple(), def_target_position, 0.3)):
-
-                    leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(defensor, (def_target_position), is_left_team)
-                    self.sender.transmit_robot(defensor_id, leftMotorSpeed, rightMotorSpeed)
-                else:
-                    self.sender.transmit_robot(defensor_id, 0, 0)
+            elif message.command == Referee.Command.PREPARE_PENALTY_YELLOW:
+                self.prepare_penalty_yellow()
+                self.last_state = self.message.command
 
             else:
-                pass
-
-#               
-
-
-
-
+                self.strategy()
 
 
     # def strategy(self, is_left_team):
-    #     atacker_id = self.configuration.team_roles_attacker_id
+    #     attacker_id = self.configuration.team_roles_attacker_id
     #     defensor_id = self.configuration.team_roles_defensor_id
     #     goalkeeper_id = self.configuration.team_roles_goalkeeper_id
-    #     atacker = self.field.robots[atacker_id]
+    #     attacker = self.field.robots[attacker_id]
     #     defensor = self.field.robots[defensor_id]
     #     goalkeeper = self.field.robots[goalkeeper_id]
     #     ball = self.field.ball
@@ -285,32 +327,32 @@ class Executor:
     #             #go on direction
     #             targetPosition = ball.get_position_tuple()
 
-    #             leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(atacker, (targetPosition[0] + 0.2, targetPosition[1]), is_left_team)
-    #             self.sender.transmit_robot(atacker_id, leftMotorSpeed, rightMotorSpeed)
+    #             left_motor_speed, right_motor_speed, error = MotionUtils.goToPoint(attacker, (targetPosition[0] + 0.2, targetPosition[1]), is_left_team)
+    #             self.sender.transmit_robot(attacker_id, left_motor_speed, right_motor_speed)
     #         else:
     #             atk_target_position = (0,0)
 
-    #             leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(atacker, atk_target_position, is_left_team, -1)
-    #             self.sender.transmit_robot(atacker_id, leftMotorSpeed, rightMotorSpeed)
+    #             left_motor_speed, right_motor_speed, error = MotionUtils.goToPoint(attacker, atk_target_position, is_left_team, -1)
+    #             self.sender.transmit_robot(attacker_id, left_motor_speed, right_motor_speed)
                 
-    #             leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(defensor, ball.get_position_tuple(), is_left_team)
-    #             self.sender.transmit_robot(defensor_id, leftMotorSpeed, rightMotorSpeed)  
+    #             left_motor_speed, right_motor_speed, error = MotionUtils.goToPoint(defensor, ball.get_position_tuple(), is_left_team)
+    #             self.sender.transmit_robot(defensor_id, left_motor_speed, right_motor_speed)  
             
     #         if(ball.position.x > 0.4):
     #             targetPosition = (-1.2, ball.position.y)
 
-    #             leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(defensor, targetPosition, is_left_team)
+    #             left_motor_speed, right_motor_speed, error = MotionUtils.goToPoint(defensor, targetPosition, is_left_team)
 
-    #             self.sender.transmit_robot(defensor_id, leftMotorSpeed, rightMotorSpeed)  
+    #             self.sender.transmit_robot(defensor_id, left_motor_speed, right_motor_speed)  
 
     #     else:
     #         atk_target_position = (0.5, ball.position.y)
-    #         if(not GeometryUtils.isClose(atacker.get_position_tuple(), atk_target_position, 0.3)):
-    #             leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(atacker, atk_target_position, is_left_team)
+    #         if(not GeometryUtils.isClose(attacker.get_position_tuple(), atk_target_position, 0.3)):
+    #             left_motor_speed, right_motor_speed, error = MotionUtils.goToPoint(attacker, atk_target_position, is_left_team)
     #         else:
-    #             leftMotorSpeed, rightMotorSpeed, error = MotionUtils.FaceDirection(atacker, atk_target_position, is_left_team)
+    #             left_motor_speed, right_motor_speed, error = MotionUtils.FaceDirection(attacker, atk_target_position, is_left_team)
 
-    #         self.sender.transmit_robot(atacker_id, leftMotorSpeed, rightMotorSpeed) 
+    #         self.sender.transmit_robot(attacker_id, left_motor_speed, right_motor_speed) 
 
     #         ball_position = ball.get_position_tuple()
 
@@ -319,24 +361,24 @@ class Executor:
     #         if(ball.position.x > defensor.position.x):
     #             defensor_target_position = GeometryUtils.directionalVector(defensor.get_position_tuple(), (ball_position[0] + 0.1, ball_position[1]) )
 
-    #             leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(defensor, defensor_target_position, is_left_team)
+    #             left_motor_speed, right_motor_speed, error = MotionUtils.goToPoint(defensor, defensor_target_position, is_left_team)
 
     #         else:
     #             defensor_target_position = (self.configuration.kickoff_position_left_team_goalkeeper_first_x, ball.position.y)
     #             if(not GeometryUtils.isClose(defensor.get_position_tuple(), defensor_target_position, is_left_team) and not self.flag_defensor_orbit):
-    #                 leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(defensor, defensor_target_position, is_left_team)
+    #                 left_motor_speed, right_motor_speed, error = MotionUtils.goToPoint(defensor, defensor_target_position, is_left_team)
     #             else:
     #                 self.flag_defensor_orbit = True
                 
     #             defensor_target_position = ball.get_position_tuple()
     #             if(not GeometryUtils.isClose(defensor.get_position_tuple(), defensor_target_position, is_left_team)and self.flag_defensor_orbit):
-    #                 leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(defensor, defensor_target_position, is_left_team)
+    #                 left_motor_speed, right_motor_speed, error = MotionUtils.goToPoint(defensor, defensor_target_position, is_left_team)
     #             else:
     #                 self.sender.transmit_robot(defensor_id, 0, 0)
     #                 self.flag_defensor_orbit = False
 
                 
-    #         self.sender.transmit_robot(defensor_id, leftMotorSpeed, rightMotorSpeed)  
+    #         self.sender.transmit_robot(defensor_id, left_motor_speed, right_motor_speed)  
               
         # if(abs(ball.position.y) > 0.800):
         #     ballY = 0.800 * ball.position.y / abs(ball.position.y)
@@ -345,11 +387,11 @@ class Executor:
         # goalkeeper_target_position = (-1.9, ballY)
 
         # if(not GeometryUtils.isClose(goalkeeper.get_position_tuple(), goalkeeper_target_position, 0.3)):
-        #     leftMotorSpeed, rightMotorSpeed, error = MotionUtils.goToPoint(goalkeeper, goalkeeper_target_position, is_left_team)
+        #     left_motor_speed, right_motor_speed, error = MotionUtils.goToPoint(goalkeeper, goalkeeper_target_position, is_left_team)
         # else:
-        #     leftMotorSpeed, rightMotorSpeed, error = 0, 0, 0
+        #     left_motor_speed, right_motor_speed, error = 0, 0, 0
             
-    #     self.sender.transmit_robot(goalkeeper_id, leftMotorSpeed, rightMotorSpeed)  
+    #     self.sender.transmit_robot(goalkeeper_id, left_motor_speed, right_motor_speed)  
 
             
 
