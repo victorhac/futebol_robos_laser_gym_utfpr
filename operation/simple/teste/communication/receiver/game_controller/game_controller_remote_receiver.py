@@ -2,6 +2,7 @@ import socket
 import pickle
 from communication.protobuf.ssl_gc_referee_message_pb2 import Referee
 
+from communication.utils.game_controller.sslconn import receive_message
 from configuration.configuration import Configuration
 
 class GameControllerRemoteReceiver:
@@ -26,6 +27,7 @@ class GameControllerRemoteReceiver:
         self.server.listen(1)
 
         self.client, addr = self.server.accept()
+        self.reader = self.client.makefile("rb")
     
     def close_connection(self):
         try:
@@ -33,16 +35,11 @@ class GameControllerRemoteReceiver:
             self.server.close()
         except:
             print("Não foi possível desconectar")
-            pass
 
     def receive(self):
         try:
             message = Referee()
-
-            data = self.client.recv(self.buffer_size)
-
-            message.ParseFromString(data)
-
+            receive_message(self.reader, message)
             return message
         except:
             self.close_connection()
