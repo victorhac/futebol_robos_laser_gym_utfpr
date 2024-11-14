@@ -50,9 +50,9 @@ class Executor:
             from communication.sender.ros_sender import RosSender
 
             if self.configuration.receive_data_from_remote:
-                from communication.receiver.remote_computer_receiver import RemoteComputerReceiver
+                from communication.receiver.ssl_vision_remote_receiver import SSLVisionRemoteReceiver
 
-                self.receiver = RemoteComputerReceiver(self.field)
+                self.receiver = SSLVisionRemoteReceiver(self.field)
             else:
                 from communication.receiver.ssl_vision_receiver import SSLVisionReceiver
 

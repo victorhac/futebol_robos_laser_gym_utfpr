@@ -7,7 +7,7 @@ import pickle
 from configuration.configuration import Configuration
 from domain.field import Field
 
-class RemoteComputerReceiver(Receiver):
+class SSLVisionRemoteReceiver(Receiver):
     def __init__(self, field: Field):
         self.configuration = Configuration.get_object()
         self.connect()
