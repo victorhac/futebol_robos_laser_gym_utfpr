@@ -62,6 +62,7 @@ class Configuration:
         self.field_goal_depth = None
         self.field_goalkeeper_area_length =None
         self.field_goalkeeper_area_width = None
+        self.field_goalkeeper_area_radius = None
         self.field_ball_radius = None
 
         self.robot_wheel_radius = None
@@ -279,6 +280,7 @@ class Configuration:
             instance.field_goal_depth = data["field"]["goal"]["depth"]
             instance.field_goalkeeper_area_length = data["field"]["goalkeeper-area"]["length"]
             instance.field_goalkeeper_area_width = data["field"]["goalkeeper-area"]["width"]
+            instance.field_goalkeeper_area_radius = data["field"]["goalkeeper-area"]["radius"]
             instance.field_ball_radius = data["field"]["ball"]["radius"]
             
             instance.robot_wheel_radius = data["robot"]["wheel"]["radius"]

@@ -107,7 +107,8 @@
         },
         "goalkeeper-area": {
             "length": 0.500,
-            "width": 1.350
+            "width": 1.350,
+            "radius": 0.860
         },
         "ball": {
             "radius": 0.0215
