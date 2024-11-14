@@ -300,14 +300,14 @@ class Executor:
 
     def goalkeeper_strategy(self):
 
-        if(abs(self.ball.position.y) > 0.600):
-            ballY = 0.600 * self.ball.position.y / abs(self.ball.position.y)
+        if(abs(self.ball.position.y) > 0.500):
+            ballY = 0.500 * self.ball.position.y / abs(self.ball.position.y)
         else:
             ballY = self.ball.position.y 
 
 
         if(GeometryUtils.is_close((-self.configuration.field_length/2, 0.0), self.goalkeeper.get_position_tuple(),self.configuration.field_goalkeeper_area_radius)):
-            goalkeeper_target_position = (-1.9, ballY)
+            goalkeeper_target_position = (-2.1, ballY)
         else:
             goalkeeper_target_position = (-2.1, 0.0)
 
