@@ -55,7 +55,7 @@
             "port": 20011
         },
         "vision": {
-            "ip": "224.5.23.5",
+            "ip": "224.5.23.2",
             "port": 10020
         }
     },
@@ -127,7 +127,7 @@
     "team": {
         "name": "UTBots",
         "is-yellow-left-team": false,
-        "is-yellow-team": false  ,
+        "is-yellow-team": true  ,
         "blue": {
             "number-robots": 3
         },

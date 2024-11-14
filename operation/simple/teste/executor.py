@@ -95,7 +95,7 @@ class Executor:
 
         self.message = ThreadCommonObjects.get_gc_to_executor_message()
         self.message = Referee()
-        self.message.command = Referee.Command.NORMAL_START
+        self.message.command = 17
 
         if self.current_state != self.message.command:
             self.last_state = self.current_state
@@ -124,11 +124,11 @@ class Executor:
     def get_id_by_name(self, role: str):
         configuration = self.configuration
         if role == "attacker":
-            return self.errors[configuration.team_roles_attacker_id]
+            return configuration.team_roles_attacker_id
         elif role == "defensor":
-            return self.errors[configuration.team_roles_defensor_id]
+            return configuration.team_roles_defensor_id
         elif role == "goalkeeper":
-            return self.errors[configuration.team_roles_goalkeeper_id]
+            return configuration.team_roles_goalkeeper_id
         return 0
 
     def stop(self):
@@ -173,7 +173,8 @@ class Executor:
                     left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("attacker")] = MotionUtils.go_to_point(
                         self.attacker,
                         self.ball.get_position_tuple(),
-                        self.is_left_team)
+                        self.is_left_team,
+                        self.errors[self.get_id_by_name("attacker")])
                     
                     self.sender.transmit_robot(self.attacker_id, left_motor_speed, right_motor_speed)
     
@@ -255,48 +256,57 @@ class Executor:
             self.prepare_penalty_foe_team()
 
     def attacker_strategy(self):
+        #OK
         if(self.ball.position.x > 0):
-            if(GeometryUtils.is_close((self.configuration.field_length/2, 0.0), self.attacker.get_position_tuple(),self.configuration.field_goalkeeper_area_radius)):
+            if(GeometryUtils.is_close((self.configuration.field_length/2, 0.0), self.ball.get_position_tuple(),self.configuration.field_goalkeeper_area_radius)):
                 attacker_target_position = (0.0, 0.0)
             else:
                 attacker_target_position = self.ball.get_position_tuple()
+                attacker_target_position = attacker_target_position[0], attacker_target_position[1]
         else:
             attacker_target_position = (0.3, self.ball.position.y)
         
         left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("attacker")] = MotionUtils.go_to_point(
             self.attacker,
-            (attacker_target_position[0] + 0.2, attacker_target_position[1]),
-            self.is_left_team)
+            (attacker_target_position[0], attacker_target_position[1]),
+            self.is_left_team,
+            self.errors[self.get_id_by_name("attacker")])
             
         self.sender.transmit_robot(self.attacker_id, left_motor_speed, right_motor_speed)
+        
     def defensor_strategy(self):
-    
+        half_defensive_area_x = -self.configuration.field_length / 4
         if self.ball.position.x > 0:
-            defensor_target_position = self.ball.get_position_tuple()
-            defensor_target_position = (-self.configuration.field_length/4, defensor_target_position[1])
+            defensor_target_position = (half_defensive_area_x, self.ball.position.y)
         else: 
-            if(GeometryUtils.is_close((-self.configuration.field_length/2, 0.0), self.defensor.get_position_tuple(),self.configuration.field_goalkeeper_area_radius)):
+            if GeometryUtils.is_close(
+                (-self.configuration.field_length / 2, 0.0),
+                self.defensor.get_position_tuple(),
+                self.configuration.field_goalkeeper_area_radius
+            ):
                 defensor_target_position = (0.0,0.0)
             else:
-                defensor_target_position = self.ball.get_position_tuple()
+             defensor_target_position = self.ball.get_position_tuple()
 
         left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("defensor")] = MotionUtils.go_to_point(
             self.defensor,
-            self.ball.get_position_tuple(),
+            defensor_target_position,
             self.is_left_team,
             self.errors[self.get_id_by_name("defensor")])
+        
+
         
         self.sender.transmit_robot(self.defensor_id, left_motor_speed, right_motor_speed)
 
     def goalkeeper_strategy(self):
 
-        if(abs(self.ball.position.y) > 0.800):
-            ballY = 0.800 * self.ball.position.y / abs(self.ball.position.y)
+        if(abs(self.ball.position.y) > 0.600):
+            ballY = 0.600 * self.ball.position.y / abs(self.ball.position.y)
         else:
             ballY = self.ball.position.y 
 
 
-        if(GeometryUtils.is_close((-self.configuration.field_length/2, 0.0), self.defensor.get_position_tuple(),self.configuration.field_goalkeeper_area_radius)):
+        if(GeometryUtils.is_close((-self.configuration.field_length/2, 0.0), self.goalkeeper.get_position_tuple(),self.configuration.field_goalkeeper_area_radius)):
             goalkeeper_target_position = (-1.9, ballY)
         else:
             goalkeeper_target_position = (-2.1, 0.0)
@@ -307,8 +317,7 @@ class Executor:
             self.is_left_team,
             self.errors[self.get_id_by_name("goalkeeper")])
 
-        self.sender.transmit_robot(self.goalkeeper_id, left_motor_speed, right_motor_speed)
-        self.sender.transmit_robot(self.defensor_id, left_motor_speed, right_motor_speed)
+        self.sender.transmit_robot(self.goalkeeper_id, left_motor_speed, right_motor_speed)  
 
     def transmit_robot_go_to_point(
         self,
@@ -355,8 +364,8 @@ class Executor:
             self.direct_free_team()
 
     def strategy(self):
-        self.attacker_strategy()
         self.defensor_strategy()
+        self.attacker_strategy()
         self.goalkeeper_strategy()
 
     def main(self):
@@ -385,6 +394,8 @@ class Executor:
                 self.direct_free_blue()
             elif message.command == Referee.Command.TIMEOUT_BLUE or message.command == Referee.Command.TIMEOUT_YELLOW:
                 self.halt()
+            else:
+                self.strategy()
 
     # def strategy(self, is_left_team):
     #     attacker_id = self.configuration.team_roles_attacker_id
