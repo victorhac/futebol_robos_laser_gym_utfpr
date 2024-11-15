@@ -23,6 +23,8 @@ class Executor:
 
         self.last_attacker_touched_ball = False
         self.last_attacker_strategy_speeds = 0, 0
+        self.time_first_touched = None
+        self.time_to_go_to_goal = 2
 
         self.is_left_team = True
         self.attacker_id = self.configuration.team_roles_attacker_id
@@ -119,12 +121,23 @@ class Executor:
         self.defensor = self.field.robots[self.defensor_id]
         self.goalkeeper = self.field.robots[self.goalkeeper_id]
         self.ball = self.field.ball
+        # print(self.message.command)
+        # print(self.attacker.position)
 
     def set_on_end_iteration_variables(self):
-        self.last_attacker_touched_ball = GeometryUtils.is_close(
+        last_attacker_touched_ball = GeometryUtils.is_close(
             self.ball.get_position_tuple(),
             self.attacker.get_position_tuple(),
-            0.2)
+            0.1)
+        
+        #colocado
+        if not self.last_attacker_touched_ball and last_attacker_touched_ball:
+            self.time_first_touched = time.time()
+        elif self.last_attacker_touched_ball and not last_attacker_touched_ball:
+            self.time_first_touched = None
+        #colocado
+
+        self.last_attacker_touched_ball = last_attacker_touched_ball
 
     def halt(self):
         self.sender.transmit_robot(self.attacker_id, 0, 0)
@@ -283,22 +296,38 @@ class Executor:
 
     def attacker_strategy(self):
         is_close_to_foe_goal = GeometryUtils.is_close(
-            (self.configuration.field_length / 2, 0),
+            (self.configuration.field_length / 2 + 0.1, 0),
             self.attacker.get_position_tuple(),
             self.configuration.field_goalkeeper_area_radius
         )
 
-        if self.last_attacker_touched_ball and not is_close_to_foe_goal:
-            left_motor_speed, right_motor_speed = self.last_attacker_strategy_speeds
-        else:
-            if self.ball.position.x > 0:
-                if is_close_to_foe_goal:
-                    attacker_target_position = (0, 0)
-                else:
-                    attacker_target_position = self.ball.get_position_tuple()
-                    attacker_target_position = attacker_target_position[0], attacker_target_position[1]
+        is_close_to_own_goal = GeometryUtils.is_close(
+            (-self.configuration.field_length / 2, 0),
+            self.attacker.get_position_tuple(),
+            self.configuration.field_goalkeeper_area_radius
+        )
+
+        is_to_either_goals = is_close_to_own_goal or is_close_to_foe_goal
+
+        if self.last_attacker_touched_ball and not is_to_either_goals:
+            #colocado
+            if self.time_first_touched is not None and time.time() - self.time_first_touched > self.time_to_go_to_goal:
+                left_motor_speed, right_motor_speed = 30, 30
             else:
-                attacker_target_position = (0.3, self.ball.position.y)
+            #colocado
+                left_motor_speed, right_motor_speed = self.last_attacker_strategy_speeds
+
+            print("estou indo reto")
+        else:
+            if is_to_either_goals:
+                print("estou indo 0,0")
+                attacker_target_position = (0, 0)
+            else:
+                print("estou indo pra bola")
+
+                attacker_target_position = self.ball.get_position_tuple()
+
+            attacker_target_position = GeometryUtils.directionalVector(self.attacker.get_position_tuple(), attacker_target_position)
             
             left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("attacker")] = MotionUtils.go_to_point(
                 self.attacker,
@@ -309,7 +338,10 @@ class Executor:
         self.sender.transmit_robot(self.attacker_id, left_motor_speed, right_motor_speed)
 
         self.last_attacker_strategy_speeds = left_motor_speed, right_motor_speed
-        
+
+        #self.sender.transmit_robot(self.attacker_id, -255, 255)
+
+
     def defensor_strategy(self):
         half_defensive_area_x = -self.configuration.field_length / 4
         if self.ball.position.x > 0:
