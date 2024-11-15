@@ -117,10 +117,10 @@ class GeometryUtils:
             normalized_result = (result[0] / norm, result[1] / norm)
         else:
             normalized_result = (0, 0)
-        return normalized_result
+        return normalized_result[0] * 3, normalized_result[1] * 3
     
     def perpendicularVector(directionalVector: 'tuple[float, float]'):
-        return (directionalVector[1], -directionalVector[0])
+        return (directionalVector[1], directionalVector[0])
 
    
 

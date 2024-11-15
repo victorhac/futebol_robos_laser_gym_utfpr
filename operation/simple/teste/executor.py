@@ -113,6 +113,9 @@ class Executor:
         self.defensor = self.field.robots[self.defensor_id]
         self.goalkeeper = self.field.robots[self.goalkeeper_id]
         self.ball = self.field.ball
+        print(self.attacker.position)
+        print(self.message.command)
+
 
     def halt(self):
         self.sender.transmit_robot(self.attacker_id, 0, 0)
@@ -274,21 +277,18 @@ class Executor:
 
     def attacker_strategy(self):
         #OK
-        if(self.ball.position.x > 0):
-            if(GeometryUtils.is_close((self.configuration.field_length/2, 0.0), self.ball.get_position_tuple(),self.configuration.field_goalkeeper_area_radius)):
-                attacker_target_position = (0.0, 0.0)
-            else:
-                attacker_target_position = self.ball.get_position_tuple()
-                attacker_target_position = attacker_target_position[0], attacker_target_position[1]
+        if(GeometryUtils.is_close((self.configuration.field_length/2, 0.0), self.attacker.get_position_tuple(),self.configuration.field_goalkeeper_area_radius- 0.1) or\
+            GeometryUtils.is_close((-self.configuration.field_length/2, 0.0), self.attacker.get_position_tuple(),self.configuration.field_goalkeeper_area_radius) or\
+            GeometryUtils.is_close( self.defensor.get_position_tuple(), self.attacker.get_position_tuple(), 0.25)):
+            attacker_target_position = (0.0, 0.0)
         else:
-            attacker_target_position = (0.3, self.ball.position.y)
-        
+            attacker_target_position = GeometryUtils.directionalVector(self.attacker.get_position_tuple(), self.ball.get_position_tuple())
+            
         left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("attacker")] = MotionUtils.go_to_point(
             self.attacker,
-            (attacker_target_position[0], attacker_target_position[1]),
+            attacker_target_position,
             self.is_left_team,
             self.errors[self.get_id_by_name("attacker")])
-            
         self.sender.transmit_robot(self.attacker_id, left_motor_speed, right_motor_speed)
         
     def defensor_strategy(self):
@@ -316,24 +316,25 @@ class Executor:
         self.sender.transmit_robot(self.defensor_id, left_motor_speed, right_motor_speed)
 
     def goalkeeper_strategy(self):
+        mid_goal_position = (-self.configuration.field_length / 2 + 0.4, 0)
 
-        if(abs(self.ball.position.y) > 0.500):
-            ballY = 0.500 * self.ball.position.y / abs(self.ball.position.y)
-        else:
-            ballY = self.ball.position.y 
+        target_position_x, target_position_y = mid_goal_position
 
+        if abs(self.ball.position.y) <= 0.8:
+            target_position_y = self.ball.position.y
 
-        if(GeometryUtils.is_close((-self.configuration.field_length/2, 0.0), self.goalkeeper.get_position_tuple(),self.configuration.field_goalkeeper_area_radius)):
-            goalkeeper_target_position = (-2.1, ballY)
-        else:
-            goalkeeper_target_position = (-2.1, 0.0)
+        if GeometryUtils.is_close(
+            mid_goal_position,
+            self.field.ball.get_position_tuple(),
+            self.configuration.field_goalkeeper_area_radius
+        ):
+            target_position_x, target_position_y = self.field.ball.get_position_tuple()
 
         left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("goalkeeper")] = MotionUtils.go_to_point(
             self.goalkeeper,
-            goalkeeper_target_position,
+            (target_position_x, target_position_y),
             self.is_left_team,
             self.errors[self.get_id_by_name("goalkeeper")])
-
         self.sender.transmit_robot(self.goalkeeper_id, left_motor_speed, right_motor_speed)  
 
     def transmit_robot_go_to_point(

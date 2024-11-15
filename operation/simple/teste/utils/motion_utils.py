@@ -124,7 +124,7 @@ class MotionUtils:
         return leftMotorSpeed, rightMotorSpeed, error
             
 
-    def GoOnDirection(direction, robot, is_left_team, lastError: float = 0):
+    def GoOnDirection(robot, direction, is_left_team, lastError: float = 0):
         configuration = Configuration.get_object()
 
         position =  robot.position
