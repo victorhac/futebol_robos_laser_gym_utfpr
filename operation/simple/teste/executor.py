@@ -316,7 +316,6 @@ class Executor:
         self.sender.transmit_robot(self.defensor_id, left_motor_speed, right_motor_speed)
 
     def goalkeeper_strategy(self):
-
         if(abs(self.ball.position.y) > 0.500):
             ballY = 0.500 * self.ball.position.y / abs(self.ball.position.y)
         else:

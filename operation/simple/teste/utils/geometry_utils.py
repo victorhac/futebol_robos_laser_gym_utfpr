@@ -3,6 +3,16 @@ import numpy as np
 
 class GeometryUtils:
     @staticmethod
+    def angle_between_points(
+        position1: 'tuple[float, float]',
+        position2: 'tuple[float, float]'
+    ):
+        x1, y1 = position1
+        x2, y2 = position2
+
+        return math.atan2(y2 - y1, x2 - x1)
+    
+    @staticmethod
     def smallestAngleDiff(angle1: float, angle2: float):
         PI = math.pi
         angle = (angle2 - angle1) % (2 * PI)
