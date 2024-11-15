@@ -83,7 +83,7 @@ class MotionUtils:
         
         return -spinPower, spinPower
     
-    def FaceDirection(Robot, targetPosition:'tuple[float, float]', isLeftTeam):
+    def FaceDirection(Robot, targetPosition:'tuple[float, float]', isLeftTeam, lastError):
         
         configuration = Configuration.get_object()
 
@@ -109,7 +109,7 @@ class MotionUtils:
         kP = configuration.motion_pid_constants_kp
         kD = configuration.motion_pid_constants_kd
 
-        motorSpeed = (kP * error) + (kD * (error))
+        motorSpeed = (kP * error) + (kD * (error - lastError))
 
         baseSpeed = configuration.robot_speed_max_radians_seconds
 
