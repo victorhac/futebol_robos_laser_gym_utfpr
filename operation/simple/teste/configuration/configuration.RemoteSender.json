@@ -1,7 +1,7 @@
 {
     "mode": "PLAYING",
     "environment-mode": "REAL",
-    "receive-data-from-remote": true,
+    "receive-data-from-remote": false,
     "keys": {
         "private-key": {
             "path": "./communication/keys/UTBots.key.pem"

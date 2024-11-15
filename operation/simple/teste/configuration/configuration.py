@@ -6,6 +6,7 @@ from domain.enums.robot_behavior_enum import RobotBehaviorEnum
 CONFIGURATION_FILE_PATH = "./configuration/configuration.json"
 CONFIGURATION_PLAYING_FILE_PATH = "./configuration/configuration.Playing.json"
 CONFIGURATION_SIMULATED_FILE_PATH = "./configuration/configuration.Simulated.json"
+CONFIGURATION_REMOTE_SENDER_FILE_PATH = "./configuration/configuration.RemoteSender.json"
 LAUNCH_FILE_PATH = "./configuration/launch.json"
 
 class Configuration:
@@ -344,6 +345,9 @@ class Configuration:
                 return json.load(f)
         elif launch_data["mode"].lower() == "simulated":
             with open(CONFIGURATION_SIMULATED_FILE_PATH, 'r') as f:
+                return json.load(f)
+        elif launch_data["mode"].lower() == "remotesender":
+            with open(CONFIGURATION_REMOTE_SENDER_FILE_PATH, 'r') as f:
                 return json.load(f)
         else:
             with open(CONFIGURATION_FILE_PATH, 'r') as f:
