@@ -21,6 +21,9 @@ class Executor:
         self.last_ball_pos_saved = False
         self.flag_defensor_orbit = False
 
+        self.last_attacker_touched_ball = False
+        self.last_attacker_strategy_speeds = 0, 0
+
         self.is_left_team = True
         self.attacker_id = self.configuration.team_roles_attacker_id
         self.defensor_id = self.configuration.team_roles_defensor_id
@@ -93,9 +96,10 @@ class Executor:
     def set_iteration_variables(self):
         self.is_left_team = self.configuration.get_is_left_team()
 
-        # self.message = ThreadCommonObjects.get_gc_to_executor_message()
-
-        self.message = Referee(command=17)
+        if self.configuration.environment_mode == "SIMULATION":
+            self.message = Referee(command=17)
+        else:
+            self.message = ThreadCommonObjects.get_gc_to_executor_message()
 
         if self.current_state != self.message.command:
             self.last_state = self.current_state
@@ -115,6 +119,12 @@ class Executor:
         self.defensor = self.field.robots[self.defensor_id]
         self.goalkeeper = self.field.robots[self.goalkeeper_id]
         self.ball = self.field.ball
+
+    def set_on_end_iteration_variables(self):
+        self.last_attacker_touched_ball = GeometryUtils.is_close(
+            self.ball.get_position_tuple(),
+            self.attacker.get_position_tuple(),
+            0.2)
 
     def halt(self):
         self.sender.transmit_robot(self.attacker_id, 0, 0)
@@ -214,10 +224,7 @@ class Executor:
                     self.direct_free_team()
                 else:
                     self.direct_free_foe_team()
-
-
-                
-
+                    
     def prepare_kickoff_team(self):
         positions = self.configuration.get_prepare_kickoff_team_positions()
         self.go_to_positions(positions)
@@ -275,23 +282,33 @@ class Executor:
             self.prepare_penalty_foe_team()
 
     def attacker_strategy(self):
-        #OK
-        if(self.ball.position.x > 0):
-            if(GeometryUtils.is_close((self.configuration.field_length/2, 0.0), self.ball.get_position_tuple(),self.configuration.field_goalkeeper_area_radius)):
-                attacker_target_position = (0.0, 0.0)
-            else:
-                attacker_target_position = self.ball.get_position_tuple()
-                attacker_target_position = attacker_target_position[0], attacker_target_position[1]
+        is_close_to_foe_goal = GeometryUtils.is_close(
+            (self.configuration.field_length / 2, 0),
+            self.attacker.get_position_tuple(),
+            self.configuration.field_goalkeeper_area_radius
+        )
+
+        if self.last_attacker_touched_ball and not is_close_to_foe_goal:
+            left_motor_speed, right_motor_speed = self.last_attacker_strategy_speeds
         else:
-            attacker_target_position = (0.3, self.ball.position.y)
-        
-        left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("attacker")] = MotionUtils.go_to_point(
-            self.attacker,
-            (attacker_target_position[0], attacker_target_position[1]),
-            self.is_left_team,
-            self.errors[self.get_id_by_name("attacker")])
+            if self.ball.position.x > 0:
+                if is_close_to_foe_goal:
+                    attacker_target_position = (0, 0)
+                else:
+                    attacker_target_position = self.ball.get_position_tuple()
+                    attacker_target_position = attacker_target_position[0], attacker_target_position[1]
+            else:
+                attacker_target_position = (0.3, self.ball.position.y)
+            
+            left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("attacker")] = MotionUtils.go_to_point(
+                self.attacker,
+                (attacker_target_position[0], attacker_target_position[1]),
+                self.is_left_team,
+                self.errors[self.get_id_by_name("attacker")])
             
         self.sender.transmit_robot(self.attacker_id, left_motor_speed, right_motor_speed)
+
+        self.last_attacker_strategy_speeds = left_motor_speed, right_motor_speed
         
     def defensor_strategy(self):
         half_defensive_area_x = -self.configuration.field_length / 4
@@ -313,12 +330,10 @@ class Executor:
             self.is_left_team,
             self.errors[self.get_id_by_name("defensor")])
         
-
-        
         self.sender.transmit_robot(self.defensor_id, left_motor_speed, right_motor_speed)
 
     def goalkeeper_strategy(self):
-        mid_goal_position = (-self.configuration.field_length / 2, 0)
+        mid_goal_position = (-self.configuration.field_length / 2 + 0.2, 0)
 
         target_position_x, target_position_y = mid_goal_position
 
@@ -409,6 +424,8 @@ class Executor:
                 self.halt()
             else:
                 self.strategy()
+
+            self.set_on_end_iteration_variables()
 
     # def strategy(self, is_left_team):
     #     attacker_id = self.configuration.team_roles_attacker_id

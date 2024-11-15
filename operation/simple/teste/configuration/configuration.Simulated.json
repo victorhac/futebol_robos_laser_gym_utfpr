@@ -1,5 +1,5 @@
 {
-    "mode": "MANUAL",
+    "mode": "PLAYING",
     "environment-mode": "SIMULATION",
     "receive-data-from-remote": false,
     "keys": {
