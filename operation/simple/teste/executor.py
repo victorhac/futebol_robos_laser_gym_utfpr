@@ -93,7 +93,9 @@ class Executor:
     def set_iteration_variables(self):
         self.is_left_team = self.configuration.get_is_left_team()
 
-        self.message = ThreadCommonObjects.get_gc_to_executor_message()
+        # self.message = ThreadCommonObjects.get_gc_to_executor_message()
+
+        self.message = Referee(command=17)
 
         if self.current_state != self.message.command:
             self.last_state = self.current_state
@@ -316,20 +318,23 @@ class Executor:
         self.sender.transmit_robot(self.defensor_id, left_motor_speed, right_motor_speed)
 
     def goalkeeper_strategy(self):
-        if(abs(self.ball.position.y) > 0.500):
-            ballY = 0.500 * self.ball.position.y / abs(self.ball.position.y)
-        else:
-            ballY = self.ball.position.y 
+        mid_goal_position = (-self.configuration.field_length / 2, 0)
 
+        target_position_x, target_position_y = mid_goal_position
 
-        if(GeometryUtils.is_close((-self.configuration.field_length/2, 0.0), self.goalkeeper.get_position_tuple(),self.configuration.field_goalkeeper_area_radius)):
-            goalkeeper_target_position = (-2.1, ballY)
-        else:
-            goalkeeper_target_position = (-2.1, 0.0)
+        if abs(self.ball.position.y) <= 0.8:
+            target_position_y = self.ball.position.y
+
+        if GeometryUtils.is_close(
+            mid_goal_position,
+            self.field.ball.get_position_tuple(),
+            self.configuration.field_goalkeeper_area_radius
+        ):
+            target_position_x, target_position_y = self.field.ball.get_position_tuple()
 
         left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("goalkeeper")] = MotionUtils.go_to_point(
             self.goalkeeper,
-            goalkeeper_target_position,
+            (target_position_x, target_position_y),
             self.is_left_team,
             self.errors[self.get_id_by_name("goalkeeper")])
 
