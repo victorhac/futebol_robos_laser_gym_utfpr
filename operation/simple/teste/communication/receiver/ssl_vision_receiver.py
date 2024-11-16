@@ -32,13 +32,6 @@ class SSLVisionReceiver(Receiver):
             str(self.configuration.sslvision_team_robot_id_mapping_1): 1,
             str(self.configuration.sslvision_team_robot_id_mapping_2): 2
         }
-    
-    def get_foe_team_robot_id_mapping(self):
-        return {
-            str(self.configuration.sslvision_foe_team_robot_id_mapping_0): 0,
-            str(self.configuration.sslvision_foe_team_robot_id_mapping_1): 1,
-            str(self.configuration.sslvision_foe_team_robot_id_mapping_2): 2
-        }
 
     def receive(self):
         return super().receive()
@@ -93,10 +86,6 @@ class SSLVisionReceiver(Receiver):
     def get_index(self, received_robot):
         robot_id = str(received_robot.get("robotId"))
         return self.get_team_robot_id_mapping().get(robot_id)
-    
-    def get_foe_index(self, received_robot):
-        robot_id = str(received_robot.get("robotId"))
-        return self.get_foe_team_robot_id_mapping().get(robot_id)
 
     def _field_data_from_dict(self, raw_data_dict):
         if self.configuration.team_is_yellow_team:
@@ -119,11 +108,30 @@ class SSLVisionReceiver(Receiver):
             if index is not None:
                 self._entity_from_dict(received_robot, self.field.robots[index])
 
-        for received_robot in foes_list_of_dicts:
-            index = self.get_foe_index(received_robot)
+        #TODO: testar
+        received_goalkeeper_robot = None
+        sslvision_foe_team_desired_goalkeeper_mapped_id = self.configuration.sslvision_foe_team_desired_goalkeeper_mapped_id
 
-            if index is not None:
-                self._entity_from_dict(received_robot, self.field.foes[index])
+        for received_robot in foes_list_of_dicts:
+            robot_id = received_robot.get("robotId")
+
+            if robot_id == self.configuration.game_controller_foe_team_goalkeeper_desired_id:
+                received_goalkeeper_robot = received_robot
+
+        if received_goalkeeper_robot is not None:
+            self._entity_from_dict(
+                received_goalkeeper_robot,
+                self.field.foes[sslvision_foe_team_desired_goalkeeper_mapped_id])
+            
+        counter = sslvision_foe_team_desired_goalkeeper_mapped_id
+
+        for received_robot in foes_list_of_dicts:
+            robot_id = received_robot.get("robotId")
+            counter = (counter + 1) % 3
+
+            if robot_id != sslvision_foe_team_desired_goalkeeper_mapped_id:
+                self._entity_from_dict(received_robot, self.field.foes[counter])
+            
 
 class ProtoVisionThread(Job):
     def __init__(

@@ -28,12 +28,10 @@ class Configuration:
         self.sslvision_team_robot_id_mapping_0 = None
         self.sslvision_team_robot_id_mapping_1 = None
         self.sslvision_team_robot_id_mapping_2 = None
-        self.sslvision_foe_team_robot_id_mapping_0 = None
-        self.sslvision_foe_team_robot_id_mapping_1 = None
-        self.sslvision_foe_team_robot_id_mapping_2 = None
         self.sslvision_ip = None
         self.sslvision_port = None
         self.sslvision_receiver_buffer_size = None
+        self.sslvision_foe_team_desired_goalkeeper_mapped_id = None
 
         self.grsim_control_ip = None
         self.grsim_control_port = None
@@ -48,6 +46,7 @@ class Configuration:
         self.game_controller_address = None
         self.game_controller_port = None
         self.game_controller_register_as_team = None
+        self.game_controller_foe_team_goalkeeper_desired_id = None
 
         self.referee_address = None
         self.referee_port = None
@@ -130,38 +129,18 @@ class Configuration:
             self.sslvision_team_robot_id_mapping_2: 2
         }
     
-    def _get_foe_team_robot_id_to_internal_mapping(self):
-        return {
-            self.sslvision_foe_team_robot_id_mapping_0: 0,
-            self.sslvision_foe_team_robot_id_mapping_1: 1,
-            self.sslvision_foe_team_robot_id_mapping_2: 2
-        }
-    
     def _get_team_robot_id_to_external_mapping(self):
         return {
             0: self.sslvision_team_robot_id_mapping_0,
             1: self.sslvision_team_robot_id_mapping_1,
             2: self.sslvision_team_robot_id_mapping_2
         }
-    
-    def _get_foe_team_robot_id_to_external_mapping(self):
-        return {
-            0: self.sslvision_foe_team_robot_id_mapping_0,
-            1: self.sslvision_foe_team_robot_id_mapping_1,
-            2: self.sslvision_foe_team_robot_id_mapping_2
-        }
 
     def get_robot_id_to_internal_mapped(self, robot_id):
         return self._get_team_robot_id_to_internal_mapping().get(robot_id)
     
-    def get_foe_robot_id_to_internal_mapped(self, robot_id):
-        return self._get_foe_team_robot_id_to_internal_mapping().get(robot_id)
-    
     def get_robot_id_to_external_mapped(self, robot_id):
         return self._get_team_robot_id_to_external_mapping().get(robot_id)
-    
-    def get_foe_robot_id_to_external_mapped(self, robot_id):
-        return self._get_foe_team_robot_id_to_external_mapping().get(robot_id)
     
     def get_is_left_team(self):
         return self.team_is_yellow_left_team == self.team_is_yellow_team
@@ -249,12 +228,10 @@ class Configuration:
             instance.sslvision_team_robot_id_mapping_0 = data["sslvision"]["team"]["robot-id-mapping"]["0"]
             instance.sslvision_team_robot_id_mapping_1 = data["sslvision"]["team"]["robot-id-mapping"]["1"]
             instance.sslvision_team_robot_id_mapping_2 = data["sslvision"]["team"]["robot-id-mapping"]["2"]
-            instance.sslvision_foe_team_robot_id_mapping_0 = data["sslvision"]["foe-team"]["robot-id-mapping"]["0"]
-            instance.sslvision_foe_team_robot_id_mapping_1 = data["sslvision"]["foe-team"]["robot-id-mapping"]["1"]
-            instance.sslvision_foe_team_robot_id_mapping_2 = data["sslvision"]["foe-team"]["robot-id-mapping"]["2"]
             instance.sslvision_ip = data["sslvision"]["ip"]
             instance.sslvision_port = data["sslvision"]["port"]
             instance.sslvision_receiver_buffer_size = data["sslvision"]["receiver"]["buffer"]["size"]
+            instance.sslvision_foe_team_desired_goalkeeper_mapped_id = data["sslvision"]["foe-team"]["desired-goalkeeper-mapped-id"]
             
             instance.grsim_control_ip = data["grsim"]["control"]["ip"]
             instance.grsim_control_port = data["grsim"]["control"]["port"]
@@ -269,6 +246,7 @@ class Configuration:
             instance.game_controller_address = data["game-controller"]["address"]
             instance.game_controller_port = data["game-controller"]["port"]
             instance.game_controller_register_as_team = data["game-controller"]["register-as-team"]
+            instance.game_controller_foe_team_goalkeeper_desired_id = data["game-controller"]["foe-team"]["goalkeeper"]["desired-id"]
             
             instance.referee_address = data["referee"]["address"]
             instance.referee_port = data["referee"]["port"]

@@ -34,12 +34,8 @@
                 "2": 3
             }
         },
-        "foe-team": {
-            "robot-id-mapping": {
-                "0": 1,
-                "1": 2,
-                "2": 3
-            }
+        "foe-team":{
+            "desired-goalkeeper-mapped-id": 3
         },
         "ip": "224.5.23.2",
         "port": 10006,
@@ -72,7 +68,12 @@
     "game-controller": {
         "address": "127.0.0.1",
         "port": 10008,
-        "register-as-team": false
+        "register-as-team": false,
+        "foe-team": {
+            "goalkeeper": {
+                "desired-id": 3
+            }
+        }
     },
     "referee": {
         "address": "224.5.23.1",

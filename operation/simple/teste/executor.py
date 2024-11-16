@@ -435,13 +435,7 @@ class Executor:
             abs(ball_position.y) <= 0.675 + ball_close_to_goal_area_tolerance:
             target_position_x, target_position_y = self.field.ball.get_position_tuple()
 
-        left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("goalkeeper")] = MotionUtils.go_to_point(
-            self.goalkeeper,
-            (target_position_x, target_position_y),
-            self.is_left_team,
-            self.errors[self.get_id_by_name("goalkeeper")])
-
-        self.sender.transmit_robot(self.goalkeeper_id, left_motor_speed, right_motor_speed)  
+        self.transmit_robot_go_to_point(self.goalkeeper_id, (target_position_x, target_position_y), "goalkeeper")
 
     def transmit_robot_go_to_point(
         self,
@@ -513,35 +507,6 @@ class Executor:
                 self.strategy()
 
             self.set_on_end_iteration_variables()
-
-            # // The yellow team may take a direct free kick.
-            # DIRECT_FREE_YELLOW = 8;
-            # // The blue team may take a direct free kick.
-            # DIRECT_FREE_BLUE = 9;
-            # // The yellow team may take an indirect free kick.
-            # INDIRECT_FREE_YELLOW = 10 [deprecated = true];
-            # // The blue team may take an indirect free kick.
-            # INDIRECT_FREE_BLUE = 11 [deprecated = true];
-            # // The yellow team is currently in a timeout.
-            # TIMEOUT_YELLOW = 12;
-            # // The blue team is currently in a timeout.
-            # TIMEOUT_BLUE = 13;
-            # // The yellow team just scored a goal.
-            # // For information only.
-            # // Deprecated: Use the score field from the team infos instead. That way, you can also detect revoked goals.
-            # GOAL_YELLOW = 14 [deprecated = true];
-            # // The blue team just scored a goal. See also GOAL_YELLOW.
-            # GOAL_BLUE = 15 [deprecated = true];
-            # // Equivalent to STOP, but the yellow team must pick up the ball and
-            # // drop it in the Designated Position.
-            # BALL_PLACEMENT_YELLOW = 16;
-            # // Equivalent to STOP, but the blue team must pick up the ball and drop
-            # // it in the Designated Position.
-            # BALL_PLACEMENT_BLUE = 17;
-
-
-
-
 
 def main():
     executor = Executor()
