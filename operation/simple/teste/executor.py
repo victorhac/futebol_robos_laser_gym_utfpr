@@ -336,7 +336,7 @@ class Executor:
 
     def attacker_strategy(self):
         is_close_to_foe_goal = GeometryUtils.is_close(
-            (self.configuration.field_length / 2, 0),
+            (self.configuration.field_length / 2 + 0.1, 0),
             self.attacker.get_position_tuple(),
             self.configuration.field_goalkeeper_area_radius
         )
