@@ -113,6 +113,9 @@ class Configuration:
 
         self.normal_start_after_penalty_target_attacker_position_y=None
         self.normal_start_after_penalty_target_attacker_position_x =None
+
+        self.strategy_defensor_defense_line_x = None
+
         self.time_to_run = None
 
         self.runtime_manual_command = ManualCommandEnum.NONE
@@ -331,6 +334,8 @@ class Configuration:
             
             instance.normal_start_after_penalty_target_attacker_position_x=data["normal-start"]["after-penalty"]["target-attacker-position"]["x"]
             instance.normal_start_after_penalty_target_attacker_position_y=data["normal-start"]["after-penalty"]["target-attacker-position"]["y"]
+
+            instance.strategy_defensor_defense_line_x = data["strategy"]["defensor"]["defense-line"]["x"]
 
             instance.time_to_run = data["time"]["to-run"]
 

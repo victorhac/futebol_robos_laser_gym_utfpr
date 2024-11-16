@@ -97,10 +97,7 @@ class Executor:
     def set_iteration_variables(self):
         self.is_left_team = self.configuration.get_is_left_team()
 
-        if self.configuration.environment_mode == "SIMULATION":
-            self.message = Referee(command=Referee.Command.NORMAL_START)
-        else:
-            self.message = ThreadCommonObjects.get_gc_to_executor_message()
+        self.message = ThreadCommonObjects.get_gc_to_executor_message()
 
         if self.current_state != self.message.command:
             self.last_state = self.current_state
@@ -362,10 +359,14 @@ class Executor:
             self.configuration.field_goalkeeper_area_radius
         )
 
-        if self.is_attacker_almost_in_line_ball_to_goal_line() and not is_close_to_foe_goal:
+        is_in_defense_area = self.attacker.position.x < self.configuration.strategy_defensor_defense_line_x
+
+        must_go_to_center = is_in_defense_area or is_close_to_foe_goal
+
+        if self.is_attacker_almost_in_line_ball_to_goal_line() and not must_go_to_center:
             left_motor_speed, right_motor_speed = 30, 30
         else:
-            if is_close_to_foe_goal:
+            if must_go_to_center:
                 attacker_target_position = (0, 0)
             else:
                 attacker_target_position = self.ball.get_position_tuple()
@@ -382,7 +383,7 @@ class Executor:
         self.last_attacker_strategy_speeds = left_motor_speed, right_motor_speed
         
     def defensor_strategy(self):
-        defense_line_x = -0.5
+        defense_line_x = self.configuration.strategy_defensor_defense_line_x
 
         ball_goal_position_interest_point = GeometryUtils.closest_point_on_segment(
             self.defensor.get_position_tuple(),
@@ -422,18 +423,16 @@ class Executor:
         self.sender.transmit_robot(self.defensor_id, left_motor_speed, right_motor_speed)
 
     def goalkeeper_strategy(self):
-        mid_goal_position = (-self.configuration.field_length / 2 + 0.2, 0)
+        mid_goal_position = (-self.configuration.field_length / 2 + 0.1, 0)
 
         target_position_x, target_position_y = mid_goal_position
 
-        if abs(self.ball.position.y) <= 0.8:
-            target_position_y = self.ball.position.y
+        ball_position = self.field.ball.position
 
-        if GeometryUtils.is_close(
-            mid_goal_position,
-            self.field.ball.get_position_tuple(),
-            self.configuration.field_goalkeeper_area_radius
-        ):
+        ball_close_to_goal_area_tolerance = 0.15
+
+        if ball_position.x <= -1.75 + ball_close_to_goal_area_tolerance and\
+            abs(ball_position.y) <= 0.675 + ball_close_to_goal_area_tolerance:
             target_position_x, target_position_y = self.field.ball.get_position_tuple()
 
         left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("goalkeeper")] = MotionUtils.go_to_point(

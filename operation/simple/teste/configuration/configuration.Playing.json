@@ -225,6 +225,13 @@
             }
         }
     },
+    "strategy": {
+        "defensor": {
+            "defense-line": {
+                "x": -0.5
+            }
+        }
+    },
     "time":{
         "to-run": 10
     }
