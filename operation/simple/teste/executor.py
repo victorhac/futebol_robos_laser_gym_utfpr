@@ -364,13 +364,19 @@ class Executor:
             return 30, -30
         else:
             return -30, 30
+        
+    def is_close_to_own_goal(self, robot_id: int):
+        tolerance = 0.3
+        robot_position = self.field.robots[robot_id].position
+        return robot_position.x < -1.75 + tolerance and abs(robot_position.y) < 0.675 + tolerance
+        
+    def is_close_to_foe_goal(self, robot_id: int):
+        tolerance = 0.3
+        robot_position = self.field.robots[robot_id].position
+        return robot_position.x > 1.75 - tolerance and abs(robot_position.y) < 0.675 + tolerance
 
     def attacker_strategy(self):
-        is_close_to_foe_goal = GeometryUtils.is_close(
-            (self.configuration.field_length / 2 + 0.1, 0),
-            self.attacker.get_position_tuple(),
-            self.configuration.field_goalkeeper_area_radius
-        )
+        is_close_to_foe_goal = self.is_close_to_foe_goal(self.attacker_id)
 
         is_in_defense_area = self.attacker.position.x < self.configuration.strategy_defensor_defense_line_x
 
@@ -409,11 +415,7 @@ class Executor:
             (-self.configuration.field_length / 2, 0)
         )
 
-        is_close_to_own_goal = GeometryUtils.is_close(
-            (-self.configuration.field_length / 2, 0.0),
-            self.defensor.get_position_tuple(),
-            self.configuration.field_goalkeeper_area_radius
-        )
+        is_close_to_own_goal = self.is_close_to_own_goal(self.defensor_id)
 
         is_ball_in_attack_area = self.ball.position.x > defense_line_x
 
@@ -441,7 +443,7 @@ class Executor:
         self.sender.transmit_robot(self.defensor_id, left_motor_speed, right_motor_speed)
 
     def goalkeeper_strategy(self):
-        mid_goal_position = (-self.configuration.field_length / 2, 0)
+        mid_goal_position = (-self.configuration.field_length / 2 + 0.2, 0)
 
         target_position_x, target_position_y = mid_goal_position
 
@@ -455,17 +457,10 @@ class Executor:
         if is_ball_inside_goal_area:
             target_position_x, target_position_y = self.ball.get_position_tuple()
 
-        if GeometryUtils.is_close(
-            self.goalkeeper.get_position_tuple(),
-            (target_position_x, target_position_y),
-            0.1
-        ):
-            self.stop_goalkeeper()
-        else:
-            self.transmit_robot_go_to_point(
-                self.goalkeeper_id,
-                (target_position_x, target_position_y)
-            )
+        self.transmit_robot_go_to_point(
+            self.goalkeeper_id,
+            (target_position_x, target_position_y)
+        )
 
     def transmit_robot_go_to_point(
         self,
