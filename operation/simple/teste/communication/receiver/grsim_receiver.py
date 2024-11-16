@@ -79,9 +79,7 @@ class GrSimReceiver(Receiver):
                 GrSimUtils.normalize_angle(
                     self._assert_angle(data_dict.get('orientation', 0) + sum_to_angle))
         else:
-            entity_data.position.theta = \
-                GrSimUtils.normalize_angle(
-                    self._assert_angle(data_dict.get('orientation', 0)))
+            entity_data.position.theta = data_dict.get('orientation', 0)
 
         entity_data.velocity.x, entity_data.velocity.y = \
             GrSimUtils.normalize_speed(

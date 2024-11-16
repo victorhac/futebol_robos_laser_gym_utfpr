@@ -132,7 +132,48 @@ class GeometryUtils:
     def perpendicularVector(directionalVector: 'tuple[float, float]'):
         return (directionalVector[1], -directionalVector[0])
 
-   
+    def point_to_line_distance(
+        point: 'tuple[float, float]',
+        line_coeffs: 'tuple[float, float, float]'
+    ):
+        """
+        Calculate the perpendicular distance from a point to a line.
 
+        :param point: A tuple (x, y) representing the point's coordinates.
+        :param line_coeffs: A tuple (A, B, C) representing the line's coefficients (Ax + By + C = 0).
+        :return: The distance from the point to the line.
+        """
+        x, y = point
+        A, B, C = line_coeffs
 
+        # Calculate the distance using the formula
+        numerator = abs(A * x + B * y + C)
+        denominator = math.sqrt(A**2 + B**2)
+        
+        return numerator / denominator
+    
+    def line_angle(A, B):
+        """
+        Calculate the angle of a line with respect to the positive x-axis.
 
+        :param A: Coefficient of x in the line equation (Ax + By = C).
+        :param B: Coefficient of y in the line equation (Ax + By = C).
+        :return: Angle in radians.
+        """
+
+        if B == 0:
+            return np.pi / 2
+        
+        slope = -A / B
+        
+        return math.atan(slope)
+    
+    @staticmethod
+    def calculate_slope(point1: 'tuple[float, float]', point2: 'tuple[float, float]'):
+        x1, y1 = point1
+        x2, y2 = point2
+
+        if x1 == x2:
+            return None
+        
+        return (y2 - y1) / (x2 - x1)

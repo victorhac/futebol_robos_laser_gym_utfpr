@@ -38,11 +38,11 @@ class MotionUtils:
         error = GeometryUtils.smallestAngleDiff(angleToTarget, robotAngle)   
 
         if abs(error) > math.pi / 2.0 + math.pi / 20.0:
-            reversed = not isLeftTeam
+            reversed = isLeftTeam
             robotAngle = GeometryUtils.normalizeInPI(robotAngle + math.pi)
             error = GeometryUtils.smallestAngleDiff(angleToTarget, robotAngle)
         else:
-            reversed = isLeftTeam
+            reversed = not isLeftTeam
 
         kP = configuration.motion_pid_constants_kp
         kD = configuration.motion_pid_constants_kd
