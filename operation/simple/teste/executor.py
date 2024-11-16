@@ -98,7 +98,7 @@ class Executor:
         self.is_left_team = self.configuration.get_is_left_team()
 
         if self.configuration.environment_mode == "SIMULATION":
-            self.message = Referee(command=17)
+            self.message = Referee(command=Referee.Command.NORMAL_START)
         else:
             self.message = ThreadCommonObjects.get_gc_to_executor_message()
 
@@ -330,6 +330,27 @@ class Executor:
             return False
         
         return self.attacker.position.x < self.field.ball.position.x
+    
+    def is_defensor_aligned_with_ball(self, margin=0.2):        
+        angle_robot_to_ball = GeometryUtils.calculate_slope(
+            self.field.ball.get_position_tuple(),
+            self.defensor.get_position_tuple()
+        )
+
+        if angle_robot_to_ball is None:
+            return False
+
+        is_robot_right_to_ball_to_goal_line = abs(
+            GeometryUtils.smallestAngleDiff(
+                self.defensor.position.theta,
+                angle_robot_to_ball
+                )
+            ) < margin
+
+        if not is_robot_right_to_ball_to_goal_line:
+            return False
+        
+        return self.defensor.position.x < self.field.ball.position.x
 
     def is_attacker_almost_in_line_ball_to_goal_line(self):
         return self.is_aligned_with_goal()
@@ -361,24 +382,42 @@ class Executor:
         self.last_attacker_strategy_speeds = left_motor_speed, right_motor_speed
         
     def defensor_strategy(self):
-        half_defensive_area_x = -self.configuration.field_length / 4
-        if self.ball.position.x > 0:
-            defensor_target_position = (half_defensive_area_x, self.ball.position.y)
-        else: 
-            if GeometryUtils.is_close(
-                (-self.configuration.field_length / 2, 0.0),
-                self.defensor.get_position_tuple(),
-                self.configuration.field_goalkeeper_area_radius
-            ):
-                defensor_target_position = (0.0,0.0)
-            else:
-             defensor_target_position = self.ball.get_position_tuple()
+        defense_line_x = -0.5
 
-        left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("defensor")] = MotionUtils.go_to_point(
-            self.defensor,
-            defensor_target_position,
-            self.is_left_team,
-            self.errors[self.get_id_by_name("defensor")])
+        ball_goal_position_interest_point = GeometryUtils.closest_point_on_segment(
+            self.defensor.get_position_tuple(),
+            self.ball.get_position_tuple(),
+            (-self.configuration.field_length / 2, 0)
+        )
+
+        is_close_to_own_goal = GeometryUtils.is_close(
+            (-self.configuration.field_length / 2, 0.0),
+            self.defensor.get_position_tuple(),
+            self.configuration.field_goalkeeper_area_radius
+        )
+
+        is_ball_in_attack_area = self.ball.position.x > defense_line_x
+
+        if is_close_to_own_goal:
+            defensor_target_position = (0.0,0.0)
+        elif is_ball_in_attack_area:
+            defensor_target_position = ball_goal_position_interest_point
+
+        if is_close_to_own_goal or is_ball_in_attack_area:
+            left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("defensor")] = MotionUtils.go_to_point(
+                self.defensor,
+                defensor_target_position,
+                self.is_left_team,
+                self.errors[self.get_id_by_name("defensor")])
+        else:
+            if self.is_defensor_aligned_with_ball():
+                left_motor_speed, right_motor_speed = 30, 30
+            else:
+                left_motor_speed, right_motor_speed, self.errors[self.get_id_by_name("defensor")] = MotionUtils.go_to_point(
+                    self.defensor,
+                    self.ball.get_position_tuple(),
+                    self.is_left_team,
+                    self.errors[self.get_id_by_name("defensor")])
         
         self.sender.transmit_robot(self.defensor_id, left_motor_speed, right_motor_speed)
 
@@ -435,7 +474,6 @@ class Executor:
     def direct_free_blue(self):
         self.last_state = Referee.Command.DIRECT_FREE_BLUE
         self.normal_start()
-
 
     def strategy(self):
         self.defensor_strategy()

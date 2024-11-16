@@ -177,3 +177,33 @@ class GeometryUtils:
             return None
         
         return (y2 - y1) / (x2 - x1)
+    
+    @staticmethod
+    def closest_point_on_segment(
+        point: 'tuple[float, float]',
+        point_segment_1: 'tuple[float, float]',
+        point_segment_2: 'tuple[float, float]'
+    ):
+        x1, y1 = point_segment_1
+        x2, y2 = point_segment_2
+        px, py = point
+        
+        ab_x = x2 - x1
+        ab_y = y2 - y1
+
+        ap_x = px - x1
+        ap_y = py - y1
+
+        ab_len_sq = ab_x**2 + ab_y**2
+
+        if ab_len_sq == 0:
+            return x1, y1
+        
+        t = (ap_x * ab_x + ap_y * ab_y) / ab_len_sq
+        
+        t = max(0, min(1, t))
+        
+        x_closest = x1 + t * ab_x
+        y_closest = y1 + t * ab_y
+
+        return x_closest, y_closest
