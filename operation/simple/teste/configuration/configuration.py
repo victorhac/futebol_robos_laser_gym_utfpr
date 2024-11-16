@@ -114,6 +114,7 @@ class Configuration:
         self.normal_start_after_penalty_target_attacker_position_x =None
 
         self.strategy_defensor_defense_line_x = None
+        self.strategy_attacker_spin_radius_to_spin = None
 
         self.time_to_run = None
 
@@ -314,6 +315,7 @@ class Configuration:
             instance.normal_start_after_penalty_target_attacker_position_y=data["normal-start"]["after-penalty"]["target-attacker-position"]["y"]
 
             instance.strategy_defensor_defense_line_x = data["strategy"]["defensor"]["defense-line"]["x"]
+            instance.strategy_attacker_spin_radius_to_spin = data["strategy"]["attacker"]["spin"]["radius-to-spin"]
 
             instance.time_to_run = data["time"]["to-run"]
 

@@ -20,7 +20,10 @@ class GrSimSender(Sender):
         self.socket_sender.transmit(packet)
 
     def transmit_robot(self, robot_id, left_speed, right_speed):
-        packet = self._fill_robot_command_packet(robot_id, left_speed, right_speed)
+        if self.configuration.get_is_left_team():
+            packet = self._fill_robot_command_packet(robot_id, left_speed, right_speed)
+        else:
+            packet = self._fill_robot_command_packet(robot_id, right_speed, left_speed)
         self._transmit(packet)
 
     def _fill_robot_command_packet(self, robot_id, left_speed, right_speed):

@@ -31,7 +31,6 @@ class SSLVisionRemoteReceiver(Receiver):
             self.server.close()
         except:
             print("Não foi possível desconectar")
-            pass
 
     def update(self):
         try:

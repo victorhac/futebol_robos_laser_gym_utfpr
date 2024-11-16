@@ -51,10 +51,6 @@ class GrSimReceiver(Receiver):
             logging.error('FieldData not instantiated', exc_info=True)
         else:
             vision_data_dict = self.receive_dict()
-
-            if vision_data_dict.get('robotsYellow'):
-                pass
-
             self._field_data_from_dict(self.field, vision_data_dict)
 
     def _entity_from_dict(
