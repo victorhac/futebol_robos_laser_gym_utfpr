@@ -26,7 +26,7 @@ class GrSimSender(Sender):
             packet = self._fill_robot_command_packet(robot_id, right_speed, left_speed)
         self._transmit(packet)
 
-    def _fill_robot_command_packet(self, robot_id, left_speed, right_speed):
+    def _fill_robot_command_packet(self, robot_id, Omini_left: 'tuple[float, float]', Omini_right: 'tuple[float, float]'):
         cmd_packet = grSim_Commands()
         cmd_packet.isteamyellow = self.configuration.team_is_yellow_team
         cmd_packet.timestamp = time.time()
@@ -40,10 +40,10 @@ class GrSimSender(Sender):
         robot.velangular  = 0
         robot.spinner     = False
         robot.wheelsspeed = True
-        robot.wheel1 = -left_speed
-        robot.wheel2 = -left_speed
-        robot.wheel3  = right_speed
-        robot.wheel4  = right_speed
+        robot.wheel1 = Omini_left[1] #cima esquerda
+        robot.wheel2 = Omini_left[0] #baixo esquerda
+        robot.wheel3  = Omini_right[0] #baixo direita
+        robot.wheel4  = Omini_right[1] #cima direita
 
         packet = grSim_Packet()
         packet.commands.CopyFrom(cmd_packet)

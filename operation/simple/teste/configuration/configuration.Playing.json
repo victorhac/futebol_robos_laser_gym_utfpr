@@ -1,6 +1,6 @@
 {
-    "mode": "PLAYING",
-    "environment-mode": "REAL",
+    "mode": "SIMULATION",
+    "environment-mode": "SIMULATION",
     "receive-data-from-remote": true,
     "keys": {
         "private-key": {
